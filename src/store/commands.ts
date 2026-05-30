@@ -1,225 +1,185 @@
-import { NextResponse } from 'next/server';
+'use client';
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Command {
   id: string;
-  label: string; // compatibility with Store Command interface
-  name: string;  // compatibility with existing SlashCommand type
+  label: string;
   description: string;
   shortcut?: string;
   icon?: string;
   action: string;
   context?: 'all' | 'conversation' | 'new-chat';
-  hasArgs?: boolean;
-  argPlaceholder?: string;
 }
 
-// In-memory command registry
-const commands: Command[] = [
+interface CommandsState {
+  commands: Command[];
+  isPaletteOpen: boolean;
+  selectedCommand: Command | null;
+  filterQuery: string;
+  
+  openPalette: () => void;
+  closePalette: () => void;
+  setFilterQuery: (query: string) => void;
+  selectCommand: (command: Command | null) => void;
+  reset: () => void;
+}
+
+const DEFAULT_COMMANDS: Command[] = [
   {
     id: 'summarize',
     label: '/summarize',
-    name: '/summarize',
     description: 'Summarize the current conversation thread',
     shortcut: 'Tab',
     icon: 'FileText',
     action: '/summarize',
     context: 'conversation',
-    hasArgs: false,
   },
   {
     id: 'explain',
     label: '/explain',
-    name: '/explain',
     description: 'Explain the selected code or concept',
     shortcut: 'Tab',
     icon: 'HelpCircle',
     action: '/explain',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'refactor',
     label: '/refactor',
-    name: '/refactor',
     description: 'Refactor code for readability or performance',
     shortcut: 'Tab',
     icon: 'Code2',
     action: '/refactor',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'debug',
     label: '/debug',
-    name: '/debug',
     description: 'Find and fix bugs in code',
     shortcut: 'Tab',
     icon: 'Bug',
     action: '/debug',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'test',
     label: '/test',
-    name: '/test',
     description: 'Generate unit tests for the code',
     shortcut: 'Tab',
     icon: 'CheckSquare',
     action: '/test',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'document',
     label: '/document',
-    name: '/document',
     description: 'Generate documentation or comments',
     shortcut: 'Tab',
     icon: 'BookOpen',
     action: '/document',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'optimize',
     label: '/optimize',
-    name: '/optimize',
     description: 'Optimize code performance and efficiency',
     shortcut: 'Tab',
     icon: 'Zap',
     action: '/optimize',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'improve',
     label: '/improve',
-    name: '/improve',
     description: 'Improve writing clarity and style',
     shortcut: 'Tab',
     icon: 'Sparkles',
     action: '/improve',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'translate',
     label: '/translate',
-    name: '/translate',
     description: 'Translate text to another language',
     shortcut: 'Tab',
     icon: 'Languages',
     action: '/translate',
     context: 'all',
-    hasArgs: true,
-    argPlaceholder: 'language',
   },
   {
     id: 'mock',
     label: '/mock',
-    name: '/mock',
     description: 'Generate mock data or API structures',
     shortcut: 'Tab',
     icon: 'Database',
     action: '/mock',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'clear',
     label: '/clear',
-    name: '/clear',
     description: 'Clear the active message input',
     shortcut: 'Tab',
     icon: 'Trash2',
     action: '/clear',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'format',
     label: '/format',
-    name: '/format',
     description: 'Format code or markdown text',
     shortcut: 'Tab',
     icon: 'WrapText',
     action: '/format',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'help',
     label: '/help',
-    name: '/help',
     description: 'Show list of available commands',
     shortcut: 'Tab',
     icon: 'Info',
     action: '/help',
     context: 'all',
-    hasArgs: false,
   },
   {
     id: 'newchat',
     label: '/new',
-    name: '/new',
     description: 'Start a fresh conversation',
     shortcut: 'Tab',
     icon: 'PlusCircle',
     action: '/new',
     context: 'new-chat',
-    hasArgs: false,
   },
   {
     id: 'analyze',
     label: '/analyze',
-    name: '/analyze',
     description: 'Deeply analyze a system design or problem',
     shortcut: 'Tab',
     icon: 'Activity',
     action: '/analyze',
     context: 'conversation',
-    hasArgs: false,
   },
 ];
 
-export async function GET(request: Request): Promise<Response> {
-  const { searchParams } = new URL(request.url);
-  const context = searchParams.get('context');
+export const useCommandsStore = create<CommandsState>()(
+  persist(
+    (set) => ({
+      commands: DEFAULT_COMMANDS,
+      isPaletteOpen: false,
+      selectedCommand: null,
+      filterQuery: '',
 
-  if (context) {
-    const filtered = commands.filter(
-      (cmd) => cmd.context === 'all' || cmd.context === context
-    );
-    return NextResponse.json(filtered);
-  }
-
-  return NextResponse.json(commands);
-}
-
-export async function POST(request: Request): Promise<Response> {
-  try {
-    const body = await request.json();
-    const { commandId, args } = body;
-
-    const command = commands.find((c) => c.id === commandId);
-    if (!command) {
-      return NextResponse.json(
-        { success: false, error: 'Command not found' },
-        { status: 404 }
-      );
+      openPalette: () => set({ isPaletteOpen: true }),
+      closePalette: () => set({ isPaletteOpen: false, selectedCommand: null, filterQuery: '' }),
+      setFilterQuery: (query: string) => set({ filterQuery: query }),
+      selectCommand: (command: Command | null) => set({ selectedCommand: command }),
+      reset: () => set({ isPaletteOpen: false, selectedCommand: null, filterQuery: '' }),
+    }),
+    {
+      name: 'pi-commands',
     }
-
-    return NextResponse.json({
-      success: true,
-      message: `Executed ${command.label}${args ? ` with arguments: ${args}` : ''}`,
-      command,
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 400 }
-    );
-  }
-}
+  )
+);

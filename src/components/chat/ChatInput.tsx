@@ -1,6 +1,6 @@
 'use client';
 
-import Composer from '../common/Composer';
+import Composer from './Composer';
 
 interface ChatInputProps {
   onSend: (_content: string) => void;

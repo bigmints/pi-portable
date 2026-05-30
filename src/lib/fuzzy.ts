@@ -1,60 +1,78 @@
-import type { SlashCommand } from '@/types/chat';
-
-interface FuzzyResult {
-  item: SlashCommand;
+/**
+ * Fuzzy string matching utility.
+ * Case-insensitive, score based on consecutive matches, word boundaries, and match positions.
+ */
+export interface FuzzyMatchResult {
+  index: number;
   score: number;
 }
 
-function computeScore(query: string, text: string): number {
-  const q = query.toLowerCase();
-  const t = text.toLowerCase();
-  if (t === q) {
-    return 1000;
+export function fuzzyMatch(query: string, targets: string[]): FuzzyMatchResult[] {
+  if (!query) {
+    return targets.map((_, index) => ({ index, score: 0 }));
   }
-  if (t.startsWith(q)) {
-    return 500;
+
+  const q = query.toLowerCase().trim();
+  if (q === '') {
+    return targets.map((_, index) => ({ index, score: 0 }));
   }
-  if (t.includes(q)) {
-    return 100;
-  }
-  // Fuzzy: check if all query chars appear in order
-  let qi = 0;
-  let consecutive = 0;
-  let maxConsecutive = 0;
-  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
-    if (t[ti] === q[qi]) {
-      consecutive++;
-      if (consecutive > maxConsecutive) {
-        maxConsecutive = consecutive;
+
+  const results: FuzzyMatchResult[] = [];
+
+  targets.forEach((target, index) => {
+    const t = target.toLowerCase();
+    
+    let qIdx = 0;
+    let tIdx = 0;
+    let score = 0;
+    let consecutive = 0;
+    let firstMatchIndex = -1;
+    
+    while (tIdx < t.length && qIdx < q.length) {
+      if (t[tIdx] === q[qIdx]) {
+        if (firstMatchIndex === -1) {
+          firstMatchIndex = tIdx;
+        }
+        
+        // Base match score
+        score += 10;
+        
+        // Consecutive match bonus
+        if (consecutive > 0) {
+          score += 15 * consecutive;
+        }
+        consecutive++;
+        
+        // Word boundary bonus
+        if (tIdx === 0 || t[tIdx - 1] === ' ' || t[tIdx - 1] === '-' || t[tIdx - 1] === '_') {
+          score += 30;
+        }
+        
+        qIdx++;
+      } else {
+        consecutive = 0;
       }
-      qi++;
-    } else {
-      consecutive = 0;
+      tIdx++;
     }
-  }
-  if (qi === q.length) {
-    // All chars matched in order
-    return maxConsecutive * 10 + (t.length - q.length) * -1;
-  }
-  return 0;
-}
-
-export function fuzzyMatch(query: string, items: SlashCommand[]): SlashCommand[] {
-  if (!query || query.length === 0) {
-    return items;
-  }
-
-  const results: FuzzyResult[] = [];
-
-  for (const item of items) {
-    const nameScore = computeScore(query, item.name);
-    const descScore = computeScore(query, item.description);
-    const score = Math.max(nameScore, descScore);
-    if (score > 0) {
-      results.push({ item, score });
+    
+    // If we matched the entire query sequence
+    if (qIdx === q.length) {
+      // Exact start match bonus
+      if (firstMatchIndex === 0) {
+        score += 50;
+      }
+      
+      // Position penalty: matches that start later score slightly lower
+      score -= firstMatchIndex;
+      
+      // Exact match bonus
+      if (t === q) {
+        score += 100;
+      }
+      
+      results.push({ index, score });
     }
-  }
+  });
 
-  results.sort((a, b) => b.score - a.score);
-  return results.map((r) => r.item);
+  return results.sort((a, b) => b.score - a.score);
 }

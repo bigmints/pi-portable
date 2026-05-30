@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { Suggestion } from '@/types/chat';
-import Composer from '../common/Composer';
+import Composer from './Composer';
 import styles from './NewConversation.module.css';
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
@@ -69,6 +69,7 @@ export default function NewConversation({ onSendMessage }: NewConversationProps)
             placeholder="What would you like to ask?"
             onSubmit={onSendMessage}
             autoFocus
+            context="new-chat"
           />
         </div>
       </div>

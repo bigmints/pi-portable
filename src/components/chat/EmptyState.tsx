@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import type { Suggestion } from '@/types/chat';
-import Composer, { ComposerHandle } from '@/components/common/Composer';
+import Composer, { ComposerHandle } from './Composer';
 import styles from './EmptyState.module.css';
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
@@ -108,6 +108,7 @@ export default function EmptyState({ onSendMessage, disabled = false }: EmptySta
             onSubmit={onSendMessage}
             autoFocus
             disabled={disabled}
+            context="new-chat"
           />
         </div>
       </div>
