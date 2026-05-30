@@ -65,7 +65,7 @@
 
 .inputContainer {
   padding: var(--space-md);
-  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(var(--space-lg), var(--safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
@@ -76,6 +76,6 @@
 
   .inputContainer {
     padding: var(--space-sm);
-    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+    padding-bottom: max(var(--space-md), var(--safe-area-inset-bottom));
   }
 }

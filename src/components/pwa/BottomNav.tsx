@@ -19,7 +19,7 @@ export default function BottomNav({ pathname }: BottomNavProps) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 flex items-center border-t border-border bg-background/95 backdrop-blur-sm lg:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      style={{ paddingBottom: 'var(--safe-area-inset-bottom)' }}
     >
       {navItems.map(({ href, icon: Icon, label }) => {
         const isActive = pathname.startsWith(href);
