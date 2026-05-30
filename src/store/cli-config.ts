@@ -1,65 +1,59 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface ConfigField {
-  key: string;
-  label: string;
-  type: 'text' | 'number' | 'toggle';
-  value: string;
-  description: string;
+export interface CliConfig {
+  wsUrl: string;
+  apiEndpoint: string;
+  apiToken: string;
+  connectionStatus: 'connected' | 'disconnected' | 'unknown';
 }
 
+const DEFAULT_CONFIG: CliConfig = {
+  wsUrl: process.env.NEXT_PUBLIC_PI_WS_URL || 'ws://localhost:8080',
+  apiEndpoint: process.env.NEXT_PUBLIC_PI_API_URL || 'http://localhost:8080',
+  apiToken: '',
+  connectionStatus: 'unknown',
+};
+
 interface CliConfigState {
-  fields: ConfigField[];
-  originalFields: ConfigField[];
-  loading: boolean;
-  error: string | null;
-  fetchConfig: () => Promise<void>;
-  updateField: (key: string, value: string) => void;
-  saveConfig: () => Promise<boolean>;
-  resetChanges: () => void;
+  config: CliConfig;
+  isTesting: boolean;
+  testResult: string | null;
+  updateConfig: (partial: Partial<CliConfig>) => void;
+  setConnectionStatus: (status: CliConfig['connectionStatus']) => void;
+  testConnection: () => Promise<boolean>;
+  resetConfig: () => void;
 }
 
 export const useCliConfigStore = create<CliConfigState>()(
   persist(
     (set, get) => ({
-      fields: [],
-      originalFields: [],
-      loading: false,
-      error: null,
-      fetchConfig: async () => {
-        set({ loading: true, error: null });
+      config: DEFAULT_CONFIG,
+      isTesting: false,
+      testResult: null,
+      updateConfig: (partial) => set((s) => ({ config: { ...s.config, ...partial } })),
+      setConnectionStatus: (status) => set((s) => ({ config: { ...s.config, connectionStatus: status } })),
+      testConnection: async () => {
+        set({ isTesting: true, testResult: null });
         try {
-          const res = await fetch('/api/cli-config');
-          const data = await res.json();
-          set({ fields: data.fields, originalFields: data.fields, loading: false });
-        } catch (err) {
-          set({ error: 'Failed to fetch config', loading: false });
-        }
-      },
-      updateField: (key, value) => {
-        set({ fields: get().fields.map(f => (f.key === key ? { ...f, value } : f)) });
-      },
-      saveConfig: async () => {
-        try {
-          const res = await fetch('/api/cli-config', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(get().fields),
+          const { config } = get();
+          const ws = new WebSocket(config.wsUrl);
+          await new Promise<void>((resolve, reject) => {
+            ws.onopen = () => {
+              ws.close();
+              resolve();
+            };
+            ws.onerror = () => reject(new Error('Connection failed'));
+            setTimeout(() => reject(new Error('Timeout')), 5000);
           });
-          const data = await res.json();
-          if (data.success) {
-            set({ originalFields: get().fields });
-            return true;
-          }
-          return false;
-        } catch {
+          set({ isTesting: false, testResult: 'Connection successful', config: { ...get().config, connectionStatus: 'connected' } });
+          return true;
+        } catch (e: any) {
+          set({ isTesting: false, testResult: e.message || 'Connection failed', config: { ...get().config, connectionStatus: 'disconnected' } });
           return false;
         }
       },
-      resetChanges: () => {
-        set({ fields: get().originalFields });
-      },
+      resetConfig: () => set({ config: DEFAULT_CONFIG, testResult: null }),
     }),
     { name: 'pi-cli-config' }
   )

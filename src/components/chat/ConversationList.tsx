@@ -1,21 +1,14 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, MessageSquare, Trash2, Download, Edit, Pin } from 'lucide-react';
+import { Plus, MessageSquare } from 'lucide-react';
 import { useConversationsStore } from '@/store/conversations';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { SwipeToDelete, PullToRefreshIndicator } from '@/components/gestures';
-import type { Conversation, ConversationGroup } from '@/types/chat';
+import SwipeToDelete from '@/components/gestures/SwipeToDelete';
+import PullToRefreshIndicator from '@/components/gestures/PullToRefreshIndicator';
+import type { Conversation } from '@/types/chat';
 import styles from './ConversationList.module.css';
-
-const GROUP_LABELS: Record<ConversationGroup, string> = {
-  pinned: 'Pinned',
-  today: 'Today',
-  yesterday: 'Yesterday',
-  thisWeek: 'This Week',
-  older: 'Older',
-};
 
 function formatRelativeTime(timestamp: number): string {
   const diffMs = Date.now() - timestamp;
@@ -38,156 +31,92 @@ interface ConversationItemProps {
   conversation: Conversation;
   isSelected: boolean;
   onSelect: (_id: string) => void;
-  onDelete: (_id: string) => void;
-  onTogglePin: (_conv: Conversation) => void;
-  onExport: (_id: string) => void;
 }
 
 function ConversationItem({
   conversation,
   isSelected,
   onSelect,
-  onDelete,
-  onTogglePin,
-  onExport,
 }: ConversationItemProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handlePointerDown = useCallback(() => {
-    longPressTimer.current = setTimeout(() => {
-      setMenuOpen(true);
-    }, 500);
-  }, []);
-
-  const handlePointerUp = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
   return (
     <div className={styles.itemWrapper}>
       <button
         className={`${styles.item} ${isSelected ? styles.selected : ''}`}
         onClick={() => onSelect(conversation.id)}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
       >
         <div className={styles.itemContent}>
           <div className={styles.itemHeader}>
             <MessageSquare size={14} strokeWidth={1.5} className={styles.itemIcon} />
-            <span className={styles.itemTitle}>{truncate(conversation.title, 28)}</span>
+            <span className={styles.itemTitle}>
+              {truncate(conversation.title, 50)}
+            </span>
           </div>
           <div className={styles.itemPreview}>
-            {truncate(conversation.lastMessagePreview, 40)}
+            {truncate(conversation.lastMessagePreview, 50)}
           </div>
         </div>
         <span className={styles.itemTime}>
           {formatRelativeTime(conversation.lastMessageAt)}
         </span>
       </button>
-      {menuOpen && (
-        <>
-          <div className={styles.overlay} onClick={() => setMenuOpen(false)} />
-          <div className={styles.contextMenu}>
-            <button
-              className={styles.contextMenuItem}
-              onClick={() => {
-                onTogglePin(conversation);
-                setMenuOpen(false);
-              }}
-            >
-              <Pin size={14} strokeWidth={1.5} />
-              {conversation.isPinned ? 'Unpin' : 'Pin'}
-            </button>
-            <button className={styles.contextMenuItem} onClick={() => setMenuOpen(false)}>
-              <Edit size={14} strokeWidth={1.5} />
-              Rename
-            </button>
-            <button
-              className={styles.contextMenuItem}
-              onClick={() => {
-                onExport(conversation.id);
-                setMenuOpen(false);
-              }}
-            >
-              <Download size={14} strokeWidth={1.5} />
-              Export
-            </button>
-            <button
-              className={`${styles.contextMenuItem} ${styles.contextMenuDelete}`}
-              onClick={() => {
-                onDelete(conversation.id);
-                setMenuOpen(false);
-              }}
-            >
-              <Trash2 size={14} strokeWidth={1.5} />
-              Delete
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
 export default function ConversationList() {
   const router = useRouter();
-  const { conversations, selectedId, selectConversation, removeConversation, updateConversation, clearSelection, setConversations } =
-    useConversationsStore();
-  const { getGrouped } = useConversationsStore.getState();
-  const grouped = getGrouped();
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const {
+    conversations,
+    selectedId,
+    selectConversation,
+    deleteConversation,
+    clearSelection,
+    refetchConversations,
+  } = useConversationsStore();
 
   // Pull-to-refresh integration
   const { pullProgress, isRefreshing, setRefreshing, setScrollElementRef } = usePullToRefresh({
     threshold: 64,
     onRelease: async () => {
       setRefreshing(true);
-      // Simulate a brief refresh delay
-      await new Promise((r) => setTimeout(r, 600));
-      // Re-read conversations from store (in production, fetch from API)
-      setConversations(conversations);
+      await refetchConversations();
       setRefreshing(false);
     },
     enabled: true,
   });
+
+  // Sync scroll element ref for pull-to-refresh
+  const handleListRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      listRef.current = el;
+      setScrollElementRef(el);
+    },
+    [setScrollElementRef],
+  );
+
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      selectConversation(id);
+      router.push(`/chat/${id}`);
+    },
+    [selectConversation, router],
+  );
+
+  const handleDeleteConversation = useCallback(
+    (id: string) => {
+      deleteConversation(id);
+    },
+    [deleteConversation],
+  );
 
   const handleNewChat = useCallback(() => {
     clearSelection();
     router.push('/chat');
   }, [clearSelection, router]);
 
-  const handleDelete = useCallback(
-    (id: string) => {
-      removeConversation(id);
-    },
-    [removeConversation]
-  );
-
-  const handleTogglePin = useCallback(
-    (conv: Conversation) => {
-      updateConversation(conv.id, { isPinned: !conv.isPinned });
-    },
-    [updateConversation]
-  );
-
-  const handleExport = useCallback(
-    (id: string) => {
-      const conv = conversations.find((c) => c.id === id);
-      if (!conv) return;
-      const blob = new Blob([JSON.stringify(conv, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${conv.title}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    },
-    [conversations]
-  );
+  // Group conversations
+  const grouped = useConversationsStore.getState().getGrouped();
 
   const renderGroup = useCallback(
     (label: string, items: Conversation[]) => {
@@ -198,24 +127,23 @@ export default function ConversationList() {
           {items.map((conv) => (
             <SwipeToDelete
               key={conv.id}
-              onDelete={() => handleDelete(conv.id)}
+              onDelete={() => handleDeleteConversation(conv.id)}
               deleteLabel="Delete"
             >
               <ConversationItem
                 conversation={conv}
                 isSelected={conv.id === selectedId}
-                onSelect={selectConversation}
-                onDelete={handleDelete}
-                onTogglePin={handleTogglePin}
-                onExport={handleExport}
+                onSelect={handleSelectConversation}
               />
             </SwipeToDelete>
           ))}
         </div>
       );
     },
-    [selectedId, selectConversation, handleDelete, handleTogglePin, handleExport]
+    [selectedId, handleSelectConversation, handleDeleteConversation],
   );
+
+  const hasConversations = conversations.length > 0;
 
   return (
     <div className={styles.container}>
@@ -225,12 +153,31 @@ export default function ConversationList() {
           New Chat
         </button>
       </div>
-      <div className={styles.list}>
-        {renderGroup(GROUP_LABELS.pinned, grouped.pinned)}
-        {renderGroup(GROUP_LABELS.today, grouped.today)}
-        {renderGroup(GROUP_LABELS.yesterday, grouped.yesterday)}
-        {renderGroup(GROUP_LABELS.thisWeek, grouped.thisWeek)}
-        {renderGroup(GROUP_LABELS.older, grouped.older)}
+
+      <div className={styles.list} ref={handleListRef}>
+        {/* Pull-to-refresh indicator */}
+        <PullToRefreshIndicator progress={pullProgress} isRefreshing={isRefreshing} />
+
+        {hasConversations ? (
+          <>
+            {renderGroup('Pinned', grouped.pinned)}
+            {renderGroup('Today', grouped.today)}
+            {renderGroup('Yesterday', grouped.yesterday)}
+            {renderGroup('This Week', grouped.thisWeek)}
+            {renderGroup('Older', grouped.older)}
+          </>
+        ) : (
+          <div className={styles.emptyState}>
+            <MessageSquare size={48} strokeWidth={1} className={styles.emptyIcon} />
+            <h3 className={styles.emptyTitle}>No conversations yet</h3>
+            <p className={styles.emptyDescription}>
+              Start a new conversation to begin chatting.
+            </p>
+            <button className={styles.emptyCta} onClick={handleNewChat}>
+              Start a conversation
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

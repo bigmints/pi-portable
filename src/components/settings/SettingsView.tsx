@@ -18,7 +18,9 @@ import {
 import { useSettingsStore, type ThemeMode, type CodeTheme } from '@/store/settings';
 import { usePushNotificationsStore } from '@/store/push-notifications';
 import { subscribeUser, unsubscribeUser } from '@/lib/push-manager';
+import AccountSettings from './AccountSettings';
 import styles from './SettingsView.module.css';
+import NotificationSettingsView from './NotificationSettingsView';
 
 // ─── Code Theme Options ──────────────────────────────────────────────────────
 
@@ -492,6 +494,9 @@ export default function SettingsView() {
           </button>
         </div>
       </Section>
+
+      {/* Advanced Notifications */}
+      <NotificationSettingsView />
 
       {/* Reset */}
       <div className={styles.resetSection}>

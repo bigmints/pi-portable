@@ -74,6 +74,11 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
   setConversations: (conversations: Conversation[]) => set(() => ({ conversations })),
 
+  // Data loading
+  refetchConversations: async () => {
+    // In production, fetch from API: const res = await fetch('/api/conversations');
+    // For now, no-op (store state persists in memory)
+  },
 
   // Convenience methods
   togglePin: (conversationId: string) => {

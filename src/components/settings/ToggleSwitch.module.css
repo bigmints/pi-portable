@@ -1,0 +1,40 @@
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background-color: var(--color-bg-tertiary, #374151);
+  border-radius: var(--radius-full, 9999px);
+  cursor: pointer;
+  transition: background-color var(--transition-fast, 0.2s ease);
+  outline: none;
+}
+
+.switch:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-brand, #3b82f6);
+}
+
+.switch.checked {
+  background-color: var(--color-brand, #3b82f6);
+}
+
+.switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: var(--radius-full, 50%);
+  transition: transform var(--transition-fast, 0.2s ease);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.switch.checked .slider {
+  transform: translateX(20px);
+}
