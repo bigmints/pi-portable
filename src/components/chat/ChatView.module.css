@@ -1,0 +1,81 @@
+/* ChatView.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.streamingIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.streamingText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.inputContainer {
+  padding: var(--space-md);
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .messagesContainer {
+    padding: var(--space-sm);
+  }
+
+  .inputContainer {
+    padding: var(--space-sm);
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+  }
+}

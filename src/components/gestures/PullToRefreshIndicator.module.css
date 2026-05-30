@@ -1,0 +1,40 @@
+/* PullToRefreshIndicator.module.css */
+
+.container {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-lg);
+  height: 64px;
+  pointer-events: none;
+}
+
+.iconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--color-brand);
+  will-change: transform, opacity;
+  transition: transform 100ms ease, opacity 100ms ease;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.chevron {
+  transition: transform 100ms ease;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

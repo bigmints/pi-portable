@@ -1,0 +1,104 @@
+/**
+ * ConnectionStatus — CSS module for WebSocket connection status bar
+ */
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: opacity 0.3s ease;
+}
+
+/* Connected — invisible */
+.connected {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Reconnecting — amber */
+.reconnecting {
+  opacity: 1;
+  background: var(--color-amber-50, rgba(245, 158, 11, 0.1));
+  color: var(--color-amber-700, #b45309);
+}
+
+/* Offline — red */
+.offline {
+  opacity: 1;
+  background: var(--color-red-50, rgba(239, 68, 68, 0.1));
+  color: var(--color-red-700, #b91c1c);
+}
+
+/* Spinner */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-amber-200, #fcd34d);
+  border-top-color: var(--color-amber-500, #f59e0b);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Status dot */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot--red {
+  background: var(--color-red-500, #ef4444);
+}
+
+.dot--amber {
+  background: var(--color-amber-500, #f59e0b);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.dot--green {
+  background: var(--color-green-500, #22c55e);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Retry button */
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid var(--color-red-300, #fca5a5);
+  border-radius: 4px;
+  background: var(--color-red-100, rgba(239, 68, 68, 0.1));
+  color: var(--color-red-700, #b91c1c);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.retryButton:hover {
+  background: var(--color-red-200, rgba(239, 68, 68, 0.2));
+}
+
+.retryButton:active {
+  background: var(--color-red-300, rgba(239, 68, 68, 0.3));
+}

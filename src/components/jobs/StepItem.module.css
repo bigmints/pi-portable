@@ -1,0 +1,253 @@
+.row {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 4px 12px;
+  position: relative;
+}
+
+/* Timeline dot */
+.dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dot:hover {
+  transform: scale(1.1);
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Header (clickable) */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.header:hover {
+  background: var(--color-surface-2);
+}
+
+.header:disabled {
+  cursor: default;
+}
+
+.header:disabled:hover {
+  background: none;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Badges row */
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Status dot */
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.statusDotPulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.statusText {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Duration badge */
+.durationBadge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shimmer animation */
+.shimmer {
+  display: inline-block;
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-info) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Chevron */
+.chevron {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  transition: transform 0.15s ease;
+}
+
+/* Expanded content */
+.expanded {
+  margin-top: 4px;
+  padding: 0 0 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Panel */
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--color-surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.panelBody {
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* Markdown inside panels */
+.markdown {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.markdown p {
+  margin: 0 0 8px 0;
+}
+
+.markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown code {
+  background: var(--color-surface-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.markdown pre {
+  background: var(--color-surface-1);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 4px 0;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Streaming placeholder */
+.streamingPlaceholder {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.streamingDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-info);
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+.streamingDot:nth-child(2) { animation-delay: 0.16s; }
+.streamingDot:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.streamingText {
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Connector line */
+.line {
+  width: 2px;
+  height: 16px;
+  background: var(--color-border);
+  margin-left: 27px;
+  margin-bottom: 4px;
+  border-radius: 1px;
+}

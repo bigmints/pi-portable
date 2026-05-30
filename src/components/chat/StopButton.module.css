@@ -1,0 +1,43 @@
+/* StopButton.module.css */
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-error, hsl(0 84.2% 60.2%));
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.button:hover:not(:disabled) {
+  background: hsl(0 74% 50%);
+  transform: scale(1.02);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-error, hsl(0 84.2% 60.2%));
+  outline-offset: 2px;
+}
+
+.label {
+  white-space: nowrap;
+}

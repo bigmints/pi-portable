@@ -1,0 +1,83 @@
+name: Implement slash command palette in chat composer
+description: >
+  When the user types "/" as the first character in the chat composer, a command
+  palette should appear above the input box showing available pi commands.
+  This feature was marked done in factory stories but was never actually implemented
+  (the factory agent stalled). Implement it now from scratch.
+
+  HOW IT WORKS:
+  - User types "/" in the textarea → palette opens
+  - User types "/file" → fuzzy filters to commands matching "file"
+  - Arrow up/down → navigate items; Enter → select and insert into textarea
+  - Escape → close palette
+  - Clicking a command → insert into textarea
+
+  AVAILABLE COMMANDS (hardcode these for now, no API needed):
+  const COMMANDS = [
+    { name: "/compact", description: "Summarize conversation to reduce context" },
+    { name: "/clear", description: "Clear current conversation" },
+    { name: "/help", description: "Show pi help and available commands" },
+    { name: "/model", description: "Switch AI model (usage: /model claude-sonnet)" },
+    { name: "/cost", description: "Show token usage and cost for this session" },
+    { name: "/diff", description: "Show git diff for current changes" },
+    { name: "/status", description: "Show current git status" },
+    { name: "/commit", description: "Create a git commit with pi" },
+  ]
+
+  WHERE TO IMPLEMENT:
+  The composer in src/app/chat/page.tsx has a textarea. Add palette logic there.
+  
+  IMPLEMENTATION STEPS:
+  1. Add state: showPalette (bool), paletteQuery (string), selectedIndex (number)
+  2. In handleInput: if value starts with "/" and has no space, set showPalette=true and paletteQuery=value.slice(1)
+     If value has a space or does not start with "/", set showPalette=false
+  3. Filter: const filtered = COMMANDS.filter(c => c.name.toLowerCase().includes(paletteQuery.toLowerCase()))
+  4. In handleKeyDown: if showPalette:
+     - ArrowDown → selectedIndex = min(selectedIndex+1, filtered.length-1)
+     - ArrowUp → selectedIndex = max(selectedIndex-1, 0)
+     - Enter → selectCommand(filtered[selectedIndex]); e.preventDefault()
+     - Escape → setShowPalette(false)
+  5. selectCommand(cmd): setInput(cmd.name + " "); setShowPalette(false); focus textarea
+  6. Render palette ABOVE the textarea (absolute positioned, bottom of parent, above textarea):
+     If showPalette and filtered.length > 0:
+     <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border bg-card shadow-xl overflow-hidden z-50">
+       {filtered.map((cmd, i) => (
+         <button key={cmd.name} onClick={() => selectCommand(cmd)}
+           className={cn("flex w-full items-start gap-3 px-4 py-2.5 text-sm text-left transition-colors",
+             i === selectedIndex ? "bg-violet-600/20 text-foreground" : "text-muted-foreground hover:bg-accent"
+           )}>
+           <span className="font-mono font-semibold text-violet-400">{cmd.name}</span>
+           <span className="truncate">{cmd.description}</span>
+         </button>
+       ))}
+     </div>
+  7. The outer composer div must have className="relative" for the absolute positioning
+
+  IMPORTANT: Also do the same for ChatView.tsx ChatInput component if that is used instead.
+  Check src/components/chat/ChatInput.tsx to see if it has its own textarea.
+
+status: ready
+feature:
+  name: Slash Commands
+  slug: slash-commands
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Typing "/" in the chat input opens a palette with 8+ commands above the textarea
+  - Typing "/mo" filters to show only commands matching "mo" (e.g. /model)
+  - Arrow keys navigate the highlighted item
+  - Enter selects the highlighted command and inserts it into the textarea
+  - Escape closes the palette without inserting
+  - Palette closes when user types a space (command argument phase)
+  - Palette is styled correctly in dark mode with violet active highlight
+  - npx tsc --noEmit passes
+phase: 3
+priority: 60
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

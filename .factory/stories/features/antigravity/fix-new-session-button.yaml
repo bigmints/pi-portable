@@ -1,0 +1,57 @@
+name: Add New Conversation button and session management to chat
+description: >
+  Currently there is no way to start a new pi session from the UI. When user
+  clicks "New Chat", it should clear the current messages and reset pi (via
+  wsClient.newSession() which sends type:new_session to server.js, which kills
+  the current pi process and spawns a fresh one).
+
+  WHERE TO ADD:
+  1. In Topbar.tsx: Add a PencilSquare (or Plus) icon button on the right side
+     (next to ConnectionStatus). Only show it when on /chat route.
+     On click: call wsClient.newSession() and clear the active conversation.
+
+  2. In src/app/chat/page.tsx and ChatView.tsx: After newSession():
+     - Clear current messages from state (setMessages([]) in local state,
+       or useMessagesStore.getState().clearActiveConversation())
+     - Set streaming to false
+     - Reset currentMsgId ref to null
+
+  3. In ConversationList (sidebar on desktop), add a "New Chat" button at the top.
+
+  TOPBAR BUTTON IMPLEMENTATION:
+  File: src/components/layout/Topbar.tsx
+  - Import PenSquare from lucide-react
+  - Import usePathname from next/navigation
+  - Import wsClient from @/lib/ws-client
+  - Import useMessagesStore from @/store/messages
+  - Add button between the logo div and ConnectionStatus div:
+    Only render when pathname === /chat or starts with /chat/
+    On click: wsClient.newSession() and clear messages for active conversation
+  - Style: Button variant ghost, size icon, text-muted-foreground hover:text-foreground
+
+  wsClient.newSession() is already implemented in ws-client.ts:
+  It sends: { type: new_session }
+  server.js handles this by killing current pi and spawning fresh.
+
+status: ready
+feature:
+  name: Chat Session Management
+  slug: chat-session
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - A pen/edit icon button is visible in the topbar when on /chat routes
+  - Clicking it calls wsClient.newSession() and clears current messages from UI
+  - The composer is re-enabled after new session is started
+  - A New Chat button also appears in the ConversationList sidebar area
+  - npx tsc --noEmit passes
+phase: 2
+priority: 78
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

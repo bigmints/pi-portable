@@ -1,0 +1,48 @@
+name: Fix all TypeScript errors in the codebase
+description: >
+  There are likely TypeScript errors accumulated from the factory build sessions.
+  All errors must be resolved so that npx tsc --noEmit passes with zero errors.
+  This is a prerequisite for production readiness.
+
+  WHAT TO DO:
+  1. Run: cd /home/bigmints/Projects/pi-app && npx tsc --noEmit 2>&1
+  2. For each error, fix the root cause (do NOT use @ts-ignore or any casts unless
+     genuinely necessary for a third-party type mismatch)
+  3. Common error categories to watch for:
+     a. "Property X does not exist on type Y" — add the property to the type/interface
+     b. "Type string is not assignable to type X" — add the string to the union type
+     c. "Cannot find module @/..." — check import path is correct
+     d. "Argument of type X is not assignable to parameter of type Y" — fix the type
+     e. React Server Component vs Client Component boundaries — add "use client" where needed
+  4. After fixing all errors, run npx tsc --noEmit again to confirm 0 errors
+  5. Run: npm run build 2>&1 | tail -20 to verify production build works
+     If the build fails, fix those issues too.
+
+  KNOWN LIKELY ERRORS based on code review:
+  - ws-client.ts imports types (WsInboundFrame, WsOutboundFrame, etc.) — verify these
+    are all exported from src/types/chat.ts
+  - ChatView.tsx message types — AnyMessage type should cover all message variants
+  - store/messages.ts AnyMessage vs ChatMessage union type inconsistencies
+
+  DO NOT just suppress errors with @ts-ignore. Fix the actual types.
+
+status: ready
+feature:
+  name: TypeScript Health
+  slug: typescript-health
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - npx tsc --noEmit exits with code 0 and 0 errors
+  - npm run build completes successfully
+  - No @ts-ignore or @ts-expect-error added (unless pre-existing and documented)
+  - No "any" type added as a fix (unless pre-existing)
+phase: 1
+priority: 98
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

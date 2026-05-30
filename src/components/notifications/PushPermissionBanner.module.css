@@ -1,0 +1,67 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface-2, #1e1e2e);
+  border: 1px solid var(--border, #333);
+  border-radius: 10px;
+  margin: 8px 12px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary, #e0e0e0);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btnEnable {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnEnable:hover {
+  opacity: 0.85;
+}
+
+.btnDismiss {
+  padding: 6px 14px;
+  border: 1px solid var(--border, #333);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary, #999);
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnDismiss:hover {
+  opacity: 0.7;
+}

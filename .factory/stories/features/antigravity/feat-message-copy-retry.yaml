@@ -1,0 +1,62 @@
+name: Add copy and retry actions to chat messages
+description: >
+  Assistant messages need a copy button and a retry/regenerate button.
+  User messages need an edit-and-resend capability.
+  These actions should appear as a hover toolbar below each message bubble.
+
+  CONTEXT:
+  - MessageBubble.tsx is at src/components/chat/MessageBubble.tsx
+  - MessageActionBar.tsx exists at src/components/chat/MessageActionBar.tsx — read it first
+  - wsClient.regenerate(conversationId, messageId) already exists in ws-client.ts
+  - The retry story (fix-retry-fork-edit-resend.yaml) is marked done but may not
+    have been wired up to the correct pi RPC protocol
+
+  FOR ASSISTANT MESSAGES, add a row of icon buttons that appears on hover:
+  - Copy button: copies message.content to clipboard; shows Check icon for 2s
+  - Retry/Regenerate button: calls wsClient.sendRaw({ type: "prompt", message: "[regenerate]", id })
+    OR calls wsClient.regenerate() if that correctly sends the right RPC frame
+  - The row should animate in on hover with opacity-0 → opacity-100 transition
+
+  FOR USER MESSAGES add:
+  - Copy button (same as above)
+  - Edit button: makes the message text editable in-place (or opens a new textarea
+    with the original content pre-filled) and sends a new prompt on confirm
+
+  IMPLEMENTATION for assistant message hover toolbar:
+  In MessageBubble.tsx, wrap the assistant bubble in a div with group class:
+  <div className="group relative flex gap-3 mb-6">
+    ... existing bubble ...
+    <div className="absolute -bottom-6 left-10 flex items-center gap-1
+                    opacity-0 group-hover:opacity-100 transition-opacity">
+      <button onClick={copy} title="Copy" className="h-6 w-6 rounded-md hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground">
+        {copied ? <Check size={12}/> : <Copy size={12}/>}
+      </button>
+    </div>
+  </div>
+
+  IMPORTANT: If MessageActionBar.tsx already provides this UI, just wire it correctly.
+  Read it first before implementing new code.
+
+status: ready
+feature:
+  name: Chat Message Actions
+  slug: chat-message-actions
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Hovering over an assistant message shows a row of action buttons below it
+  - Copy button copies message text to clipboard; icon changes to checkmark for 2s
+  - Retry button appears for assistant messages; sends a new prompt to pi
+  - User messages show a copy button on hover
+  - Action buttons do not appear during streaming (status !== complete)
+  - npx tsc --noEmit passes
+phase: 3
+priority: 55
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

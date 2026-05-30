@@ -1,10 +1,20 @@
+# dependencies
 node_modules/
+
+# build output
 .next/
 out/
+dist/
+
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# environment
 .env.local
 .env*.local
+
+# factory
 .factory/logs/
 .factory/.cache/
 .factory/run-app.log

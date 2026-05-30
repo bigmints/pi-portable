@@ -1,0 +1,52 @@
+name: Fix Settings page to use Tailwind instead of inline styles
+description: >
+  The settings page (src/app/settings/page.tsx) uses inline styles:
+  style={{ height: "100%", display: "flex", flexDirection: "column" }}
+  This conflicts with the Tailwind-based AppShell layout and causes the settings
+  page to not properly fill the available height.
+
+  Additionally, the settings components (AccountSection, CliConfigSection,
+  AppearanceSection, ShortcutsSection, NotificationsSection, AdvancedSection)
+  in src/components/settings/ may use CSS modules or legacy styles that do
+  not integrate well with the current dark theme CSS variables.
+
+  WHAT TO DO:
+  1. Read src/app/settings/page.tsx
+  2. Read src/components/settings/index.ts (or index.tsx) to see what is exported
+  3. Read src/components/settings/SettingsTabs.tsx to understand the tab structure
+  4. Replace inline styles in settings/page.tsx with Tailwind: className="flex flex-col h-full"
+  5. Check each settings section for hardcoded colors or broken dark mode:
+     - Run the app and look at /settings
+     - Any section with white backgrounds, black text, or invisible content is broken
+  6. For each broken section, replace hardcoded colors with CSS variable references:
+     - background: white -> bg-card or bg-background
+     - color: black -> text-foreground
+     - border: #e5e7eb -> border-border
+  7. Verify the tab navigation works (clicking between tabs shows correct section)
+
+  SPECIFIC KNOWN ISSUE: AppearanceSection likely has a light/dark mode toggle that
+  currently does nothing useful because theme is hardcoded to dark. Either:
+  a) Remove the toggle and note that dark mode is always on, OR
+  b) Wire it to the useSettingsStore theme field and update html data-theme attribute
+
+status: ready
+feature:
+  name: Settings
+  slug: settings
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Settings page fills available height without inline styles
+  - All settings sections are readable in dark mode (no white-on-white or invisible text)
+  - Tab navigation works correctly
+  - Appearance section correctly reflects that dark mode is always on, or is wired to a real toggle
+  - npx tsc --noEmit passes
+phase: 2
+priority: 65
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

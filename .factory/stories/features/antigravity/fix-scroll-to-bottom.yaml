@@ -1,0 +1,52 @@
+name: Fix chat auto-scroll and add scroll-to-bottom button
+description: >
+  Two scroll issues in the chat view must be fixed:
+  1. Auto-scroll during streaming is jittery and forces scroll even when user has scrolled up
+  2. No scroll-to-bottom button appears when user is reading history
+
+  The messages container div needs a scroll event listener. Track whether the user
+  has manually scrolled up. Only auto-scroll (during token streaming) if the user
+  is within 100px of the bottom. When the user is more than 200px from the bottom,
+  show a floating ChevronDown button that scrolls to the latest message.
+
+  IMPLEMENTATION:
+  Add containerRef to the scrollable messages div (not the sentinel).
+  Add userScrolledUp ref (boolean). On scroll event: compute nearBottom = 
+  scrollHeight - scrollTop - clientHeight < 100. Set userScrolledUp = !nearBottom.
+  Show scroll button when not nearBottom.
+  In the messages useEffect: only scroll if not userScrolledUp.
+  When user sends a message: always scroll to bottom and reset userScrolledUp.
+
+  FILES TO CHANGE:
+  - src/app/chat/page.tsx: Add scroll tracking to the messages container div
+  - src/components/chat/ChatView.tsx: Same scroll tracking pattern
+
+  SCROLL TO BOTTOM BUTTON STYLE:
+  Fixed position inside the messages area, bottom-right.
+  Class: absolute bottom-4 right-4 z-10 flex h-8 w-8 items-center justify-center
+         rounded-full bg-violet-600 text-white shadow-lg hover:bg-violet-500
+         transition-all opacity-100 (hidden when not needed via conditional render)
+
+status: ready
+feature:
+  name: Chat UX
+  slug: chat-ux
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - During streaming, auto-scroll only when user is within 100px of bottom
+  - When user scrolls up, new tokens do NOT force-scroll back down
+  - Scroll-to-bottom button appears when user is more than 200px from bottom
+  - Clicking button scrolls to latest message and re-enables auto-scroll
+  - Sending a message always scrolls to bottom
+  - npx tsc --noEmit passes
+phase: 2
+priority: 82
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

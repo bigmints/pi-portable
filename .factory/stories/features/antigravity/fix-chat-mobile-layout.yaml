@@ -1,0 +1,58 @@
+name: Fix chat mobile layout - composer overlapped by bottom nav
+description: >
+  On mobile (<1024px, i.e. lg breakpoint), the BottomNav is fixed at the
+  bottom (height ~56px + safe-area inset). The chat composer is inside the
+  main content area which has h-[calc(100dvh-3.5rem)]. This means the
+  composer at the bottom of the chat is hidden UNDER the BottomNav on mobile.
+
+  WHAT TO OBSERVE (reproduce on mobile or 375px viewport):
+  - Open /chat on mobile
+  - The text input / composer is hidden behind the bottom nav bar
+  - The last message is also cut off
+
+  ROOT CAUSE:
+  The main element has h-[calc(100dvh-3.5rem)] (viewport minus topbar).
+  On mobile, BottomNav is 56px tall at the bottom but the main area does not
+  account for it. The chat flex layout (flex-col, flex-1 messages, shrink-0 composer)
+  means the composer sits at the bottom of the main area, which overlaps with BottomNav.
+
+  WHAT TO FIX:
+  File: src/components/layout/AppShell.tsx
+  - On mobile (lg:hidden), add bottom padding to main equal to BottomNav height:
+    Change: h-[calc(100dvh-3.5rem)]
+    To:     h-[calc(100dvh-3.5rem)] pb-14 lg:pb-0
+    (pb-14 = 56px = BottomNav height; removed on lg+ where BottomNav is hidden)
+  - BUT: the chat page uses a nested flex layout with overflow-y-auto on the messages div.
+    The composer must stay visible, not scroll with messages.
+  - Also add: style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)' }} on lg:hidden
+
+  File: src/app/chat/page.tsx (the inline chat page)
+  - The outer div className=flex flex-col h-full — h-full inherits from parent
+  - This should work IF AppShell correctly accounts for BottomNav
+
+  EXACT CHANGES NEEDED:
+  1. In AppShell.tsx, change the main className to include pb-14 lg:pb-0 after h-[calc(100dvh-3.5rem)]
+  2. In BottomNav.tsx, ensure the nav has min-h-[56px] explicitly set on the element (not just padding)
+  3. Test by inspecting computed height of .main on mobile viewport
+
+status: ready
+feature:
+  name: Mobile Layout
+  slug: mobile-layout
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - On 375px viewport width, the chat composer textarea is visible above the bottom nav
+  - No content is hidden behind the bottom nav bar on any chat page
+  - On desktop (1280px+) the layout is unchanged — no extra padding at bottom
+  - The messages area scrolls independently; the composer stays sticky at bottom
+  - npx tsc --noEmit passes
+phase: 1
+priority: 95
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

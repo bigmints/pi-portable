@@ -1,0 +1,43 @@
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background: transparent;
+  color: var(--color-text-tertiary, #94a3b8);
+  cursor: pointer;
+  transition: all var(--transition-fast, 200ms);
+  flex-shrink: 0;
+}
+
+.button:hover:not(:disabled):not(.recording) {
+  background: var(--color-surface-2, #f1f5f9);
+  color: var(--color-text, #0f172a);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button.recording {
+  animation: pulse 1.5s infinite;
+  background-color: rgb(239, 68, 68);
+  color: white;
+  cursor: default;
+}

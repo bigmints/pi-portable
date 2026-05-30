@@ -1,0 +1,49 @@
+/* BottomNav module styles */
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--bottomnav-height);
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--space-2);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: var(--z-overlay);
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  flex: 1;
+}
+
+.navItem:hover {
+  color: var(--color-text-secondary);
+}
+
+.navItem.active {
+  color: var(--color-accent);
+}
+
+.label {
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-medium);
+}
+
+@media (min-width: 768px) {
+  .bottomNav {
+    display: none;
+  }
+}

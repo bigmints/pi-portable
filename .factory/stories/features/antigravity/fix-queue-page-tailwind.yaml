@@ -1,0 +1,56 @@
+name: Fix Queue page dark mode and layout compatibility
+description: >
+  The Queue page (src/app/queue/page.tsx) and its components in
+  src/components/queue/ were built with CSS modules that may not integrate
+  properly with the current Tailwind-based dark theme.
+
+  KNOWN ISSUES TO CHECK:
+  1. Queue page components use styles.* CSS module classes - check if they are
+     themed correctly (dark background, visible text, correct borders)
+  2. The QueueTabs component - does it show active tab with violet accent?
+  3. The TaskQueueList - are task cards visible in dark mode?
+  4. The LiveOutputPanel - is the output text readable?
+  5. The QueueControls - are the buttons styled correctly?
+
+  WHAT TO DO:
+  1. Read src/app/queue/page.tsx and all referenced components:
+     - src/components/queue/TaskQueueList.tsx
+     - src/components/queue/QueueTabs.tsx
+     - src/components/queue/QueueControls.tsx
+     - src/components/queue/LiveOutputPanel.tsx
+     - src/components/queue/EmptyState.tsx
+  2. For each component, identify any hardcoded light-mode colors:
+     - white/black backgrounds → replace with var(--background) or var(--card)
+     - #374151 text → replace with var(--foreground) or var(--muted-foreground)
+     - border-gray-200 → replace with var(--border)
+  3. The active tab indicator should use violet (#7c3aed) to match the rest of the app
+  4. Fix the queue.module.css file if it contains hardcoded colors:
+     File: src/app/queue/queue.module.css
+  5. Make sure the empty state (no tasks in queue) renders the EmptyState component
+     correctly with visible text
+
+  NOTE: Do NOT rewrite these components from scratch. Only fix theme/color issues.
+  The layout and functionality should remain intact.
+
+status: ready
+feature:
+  name: Queue
+  slug: queue
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Queue page is fully readable in dark mode
+  - Tab buttons have violet active state matching the rest of the app
+  - Task cards are visible with correct contrast
+  - LiveOutputPanel shows text with correct foreground color
+  - No hardcoded #ffffff or #000000 color values in queue components CSS modules
+  - npx tsc --noEmit passes
+phase: 2
+priority: 63
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

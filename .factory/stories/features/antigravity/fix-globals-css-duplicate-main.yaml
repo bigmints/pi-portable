@@ -1,0 +1,51 @@
+name: Fix globals.css duplicate main rules and layout conflicts
+description: >
+  PROBLEM: src/styles/globals.css has TWO separate "main {" blocks which conflict:
+  - Line 20: main { min-height: ... } (original, sets height constraints)
+  - Line 141: main { min-height: unset; padding: 0; } (added later as override)
+  
+  Having two conflicting main blocks is messy and unreliable (order-dependent).
+  Merge them into one block. Also fix any other layout-level CSS conflicts.
+
+  ALSO CHECK:
+  1. Is there a [data-theme="dark"] block? (should be around line 93-130)
+     If there are TWO [data-theme="dark"] blocks, merge them into one.
+  2. Is the body rule setting a height/min-height? It should NOT — let AppShell control this.
+  3. The * { box-sizing: border-box } must be present.
+
+  WHAT TO DO:
+  1. Read /home/bigmints/Projects/pi-app/src/styles/globals.css in full
+  2. Find all duplicate rules (main {}, body {}, [data-theme="dark"] {})
+  3. Merge duplicates into single blocks, keeping the MOST RECENT value for each property
+  4. Final desired main {} rule:
+       main {
+         min-height: unset;
+         padding: 0;
+       }
+     (AppShell controls main dimensions via Tailwind classes, not CSS)
+  5. Ensure [data-theme="dark"] block contains ALL the dark mode variables
+     including: --background, --foreground, --card, --card-foreground, --border,
+     --input, --ring, --primary, --muted, --muted-foreground, --accent, --destructive
+  6. Run npx tsc --noEmit (CSS changes do not affect TS but verify the app still compiles)
+
+status: ready
+feature:
+  name: CSS Foundation
+  slug: css-foundation
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - globals.css has exactly ONE main {} block with min-height:unset and padding:0
+  - globals.css has exactly ONE [data-theme="dark"] block with all dark mode variables
+  - No other duplicate top-level rules
+  - The dark theme renders correctly in browser (dark background, light text)
+  - npx tsc --noEmit passes
+phase: 1
+priority: 97
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

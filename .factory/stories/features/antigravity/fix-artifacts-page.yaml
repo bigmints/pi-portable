@@ -1,0 +1,48 @@
+name: Implement Artifacts page with file list
+description: >
+  The current /artifacts page is a placeholder. It must display files that pi
+  has created or modified during conversations. Artifacts are stored in
+  the Zustand artifacts store (if it exists) or can be extracted from messages.
+
+  CONTEXT:
+  - Check if src/store/artifacts.ts exists. If yes, use it.
+  - If not, create a minimal Zustand store at src/store/artifacts.ts:
+      interface Artifact { id: string; filename: string; path: string; language: string; content: string; conversationId: string; createdAt: number; }
+      interface ArtifactsState { artifacts: Artifact[]; addArtifact: (a: Artifact) => void; clearArtifacts: () => void; }
+  - ArtifactCard component exists at src/components/chat/ArtifactCard.tsx — read it first
+  - ArtifactDiffView component exists at src/components/chat/ArtifactDiffView.tsx — read it first
+  - The viewer components are at src/components/viewer/ — check what's there
+
+  WHAT TO DO:
+  1. Read existing components: ArtifactCard.tsx, ArtifactDiffView.tsx, src/components/viewer/*
+  2. Check if src/store/artifacts.ts exists; if not, create minimal version above
+  3. Rewrite src/app/artifacts/page.tsx as 'use client':
+     - Header: Artifacts title + count badge
+     - If no artifacts: empty state with file icon + Artifacts will appear here as pi creates files
+     - If artifacts exist: a grid of ArtifactCard components (or simple file cards with: filename, language badge, line count, path, relative timestamp)
+     - Each card: clicking it opens a modal/sheet with the full file content in a <pre> or code viewer
+     - Filter bar: filter by language (all, typescript, python, json, markdown, etc.)
+  4. Run npx tsc --noEmit to verify
+
+status: ready
+feature:
+  name: Artifacts
+  slug: artifacts
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - /artifacts shows all artifacts from store, sorted newest-first
+  - Each card shows filename, language badge, path, creation time
+  - Clicking a card shows full content
+  - Empty state is informative and not a blank placeholder
+  - Language filter works client-side
+  - No TypeScript errors
+phase: 1
+priority: 80
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

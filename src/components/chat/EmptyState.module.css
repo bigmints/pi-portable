@@ -1,0 +1,157 @@
+/* EmptyState.module.css — Empty state screen with suggestions */
+
+.container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+/* Logo */
+.logo {
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Headline */
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+}
+
+.tagline {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xl);
+  max-width: 320px;
+}
+
+/* Suggestion chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-bottom: var(--space-xl);
+  width: 100%;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+  transform: translateY(-1px);
+}
+
+.chip:active {
+  transform: translateY(0);
+  background: var(--color-brand);
+  color: white;
+}
+
+.chipIcon {
+  color: var(--color-brand);
+  flex-shrink: 0;
+}
+
+.chip:hover .chipIcon {
+  color: var(--color-brand);
+}
+
+.chip:active .chipIcon {
+  color: white;
+}
+
+.chipLabel {
+  line-height: 1.4;
+}
+
+.chipArrow {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.chip:hover .chipArrow {
+  color: var(--color-brand);
+  transform: translateX(2px);
+}
+
+.chip:active .chipArrow {
+  color: white;
+}
+
+/* Skeleton loading state */
+.chipSkeleton {
+  width: 120px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Composer wrapper */
+.composerWrapper {
+  width: 100%;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .chips {
+    gap: var(--space-md);
+  }
+}

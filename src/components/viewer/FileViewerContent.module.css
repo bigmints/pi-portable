@@ -1,0 +1,59 @@
+/* FileViewerContent.module.css */
+
+.content {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  background: var(--color-code-bg);
+}
+
+/* Line numbers gutter */
+.gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--space-md) var(--space-xs) var(--space-md) var(--space-sm);
+  background: var(--color-code-bg);
+  border-right: 1px solid var(--color-border);
+  user-select: none;
+  flex-shrink: 0;
+  min-width: 48px;
+}
+
+.lineNum {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  color: var(--color-text-tertiary);
+  padding-right: var(--space-sm);
+  text-align: right;
+  min-width: 24px;
+}
+
+/* Code area */
+.code {
+  flex: 1;
+  overflow: auto;
+  min-width: 0;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.footer span:not(:last-child)::after {
+  content: '·';
+  margin-left: var(--space-md);
+  color: var(--color-border);
+}

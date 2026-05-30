@@ -1,0 +1,11 @@
+/* HistoryList.module.css */
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-sm) var(--space-md);
+}
+
+.sentinel {
+  height: 1px;
+}

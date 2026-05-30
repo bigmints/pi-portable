@@ -1,0 +1,65 @@
+name: Add syntax highlighting to code blocks in assistant messages
+description: >
+  Code blocks in assistant messages currently render as plain unstyled pre elements
+  with no syntax highlighting, no language badge, and no copy button. For a coding
+  assistant, this is a critical UX gap. Fix it using react-syntax-highlighter.
+
+  STEP 1 - Check if already installed:
+  Run: grep -E "syntax-highlighter|shiki|prism|highlight" /home/bigmints/Projects/pi-app/package.json
+  If react-syntax-highlighter is NOT listed, install it:
+  cd /home/bigmints/Projects/pi-app && npm install react-syntax-highlighter @types/react-syntax-highlighter
+
+  STEP 2 - Create shared CodeBlock component:
+  File: src/components/common/CodeBlock.tsx
+
+  Content to write:
+  use client directive at top.
+  Import Prism as SyntaxHighlighter from react-syntax-highlighter.
+  Import oneDark from react-syntax-highlighter/dist/cjs/styles/prism.
+  Import useState from react.
+  Import Copy and Check from lucide-react.
+  Props: language (string, default text), children (string).
+  State: copied (boolean).
+  copy function: navigator.clipboard.writeText(children), setCopied(true), setTimeout reset after 2000ms.
+  Return a div with className relative rounded-xl overflow-hidden border border-border my-2.
+  Inside: a header row div with bg-zinc-900 showing language name on left and Copy button on right.
+  Copy button shows Check icon when copied, Copy icon otherwise. Text says Copied or Copy.
+  Below header: SyntaxHighlighter component with language prop, oneDark style,
+  customStyle of margin 0 borderRadius 0 background #18181b fontSize 0.8rem, PreTag div.
+  Children is the code string.
+
+  STEP 3 - Wire CodeBlock into MessageBubble.tsx:
+  File: src/components/chat/MessageBubble.tsx
+  Import CodeBlock from @/components/common/CodeBlock.
+  In the ReactMarkdown components prop, add a code renderer:
+  The code renderer receives className and children props plus inline boolean.
+  Extract language from className using regex /language-(\w+)/.
+  If not inline and language matches: return CodeBlock with language and children as string.
+  If inline: return code element with className bg-muted px-1 py-0.5 rounded text-sm font-mono.
+
+  STEP 4 - Wire CodeBlock into src/app/chat/page.tsx MessageBubble function:
+  Same pattern as step 3 - add components prop to the ReactMarkdown call there too.
+
+  STEP 5 - Run npx tsc --noEmit and fix any errors before finishing.
+
+status: ready
+feature:
+  name: Markdown Rendering
+  slug: markdown-rendering
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Code blocks in assistant messages show syntax-highlighted code in dark theme
+  - A language badge appears top-left of each code block (e.g. typescript, python)
+  - A Copy button top-right copies content to clipboard, shows Copied for 2 seconds
+  - Inline code backticks are styled with muted background
+  - npx tsc --noEmit passes with 0 errors
+phase: 2
+priority: 88
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

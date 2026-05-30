@@ -1,0 +1,65 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: hsl(var(--background));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.header h1 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.header .task-count {
+  font-size: var(--font-size-sm);
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.footer {
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid hsl(var(--border));
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.addButton:hover {
+  opacity: 0.9;
+}
+
+.addButton:active {
+  transform: scale(0.98);
+}
+
+.addButton svg {
+  flex-shrink: 0;
+}

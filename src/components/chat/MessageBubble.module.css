@@ -1,0 +1,227 @@
+/* MessageBubble.module.css */
+
+.bubble {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.user {
+  align-items: flex-end;
+}
+
+.assistant {
+  align-items: flex-start;
+}
+
+.content {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.user .content {
+  background: var(--color-user-bubble);
+  color: var(--color-user-bubble-text);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.assistant .content {
+  background: var(--color-assistant-bubble);
+  color: var(--color-assistant-bubble-text);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.markdownContent {
+  /* Headings */
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4,
+.markdownContent h5,
+.markdownContent h6 {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+}
+
+.markdownContent p {
+  margin-bottom: var(--space-sm);
+}
+
+.markdownContent p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent code {
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.markdownContent pre {
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: var(--space-sm) 0;
+}
+
+.markdownContent pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  padding-left: var(--space-lg);
+  margin: var(--space-sm) 0;
+}
+
+.markdownContent li {
+  margin-bottom: var(--space-xs);
+}
+
+.markdownContent blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding-left: var(--space-md);
+  margin: var(--space-sm) 0;
+  color: var(--color-text-secondary);
+}
+
+.markdownContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-sm) 0;
+}
+
+.markdownContent th,
+.markdownContent td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+
+.markdownContent th {
+  background: var(--color-bg-tertiary);
+  font-weight: 600;
+}
+
+.markdownContent a {
+  color: var(--color-brand);
+  text-decoration: underline;
+}
+
+.metadata {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-xs);
+}
+
+.role {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+.time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.errorBadge {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.interruptedBadge {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary, #94a3b8);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-tertiary, #f8fafc);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+}
+
+/* Tool Call Styles */
+.toolCall {
+  align-items: stretch;
+}
+
+.toolCall .content {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.toolCallItem {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.toolCallItem:last-child {
+  border-bottom: none;
+}
+
+.toolCallHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.toolName {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.toolStatus {
+  font-size: var(--font-size-xs);
+}
+
+.toolStatus.success {
+  color: var(--color-success);
+}
+
+.toolStatus.error {
+  color: var(--color-error);
+}
+
+.toolStatus.running {
+  color: var(--color-warning);
+}
+
+.toolOutput {
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  margin: 0;
+}
+
+.toolError {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+}

@@ -1,0 +1,51 @@
+name: Map pi RPC tool-call events to ToolCallAnnotation component
+description: >
+  The ToolCallAnnotation component (src/components/chat/ToolCallAnnotation.tsx)
+  was built expecting data from the legacy 'job_event' WS frame. Pi actually
+  sends tool call data via message_update frames with assistantMessageEvent types
+  tool_use_start and tool_result. These must be wired into the existing
+  ToolCallAnnotation component and shown in chat messages.
+
+  PI RPC TOOL CALL EVENTS:
+  When pi runs a tool, it sends:
+  1. { type: 'message_update', assistantMessageEvent: { type: 'tool_use_start', toolName: string, toolUseId: string, toolInput: object|string } }
+  2. (tool runs)
+  3. { type: 'message_update', assistantMessageEvent: { type: 'tool_result', toolUseId: string, content: string } }
+
+  WHAT TO DO:
+  1. Read src/components/chat/ToolCallAnnotation.tsx to understand its props interface (ToolCallData[])
+  2. Read src/types/chat.ts to understand ToolCallData and ToolCall types
+  3. In the chat page (src/app/chat/page.tsx), the handler already partially handles tool_use_start.
+     Verify the data is correctly being stored in message.toolCalls
+  4. In ChatView.tsx (src/components/chat/ChatView.tsx), add handling for tool_use_start and tool_result:
+     - On tool_use_start: create a ToolCallMessage with status 'running' and add to messages store,
+       OR append a toolCall entry to the current streaming ChatMessage
+     - On tool_result: update that tool call with output and status 'success'
+  5. In MessageBubble.tsx: ensure ToolCallAnnotation renders correctly for tool calls received from pi RPC
+  6. The ToolCallData interface should match: { toolName, input (JSON string or object), output, error, durationMs, status }
+
+  IMPORTANT: The existing ToolCallAnnotation component must NOT be rewritten.
+  Only the data pipeline (ChatView.tsx handler → messages store → MessageBubble) needs fixing.
+
+status: ready
+feature:
+  name: Tool Call Display
+  slug: tool-call-display
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - When pi runs a tool (e.g. reads a file), a tool call card appears in the chat message
+  - The card shows the tool name (e.g. 'read_file'), running spinner while active
+  - When the tool completes, the card shows the result (collapsed by default, expandable)
+  - Error tool calls show red border with error message
+  - npx tsc --noEmit passes
+phase: 2
+priority: 85
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

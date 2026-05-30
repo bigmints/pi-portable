@@ -1,0 +1,22 @@
+name: "Fix: fix-conversation-list"
+description: |-
+  Automated fix task created by Factory TPM.
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-conversation-list.yaml
+  Issue: CLI agent 'gemini' is not installed or not in PATH (spawn ENOENT). Both delegation attempts failed with identical spawn error. This requires human intervention to install/configure the gemini CLI agent before any story can be delivered.
+status: ready
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI agent 'gemini' is not installed or not in PATH (spawn
+  ENOENT). Both delegation attempts failed with identical spawn error. This
+  requires human intervention to install/configure the gemini CLI agent before
+  any story can be delivered.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-conversation-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-30T14:05:59.573Z

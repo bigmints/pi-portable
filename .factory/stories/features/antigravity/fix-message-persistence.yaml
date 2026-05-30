@@ -1,0 +1,64 @@
+name: Persist chat messages and conversations across navigation using localStorage
+description: >
+  All messages are currently stored only in Zustand memory. Navigating away from
+  /chat and returning, or refreshing the page, clears everything. Messages must
+  survive navigation and refresh using the Zustand persist middleware.
+
+  STEP 1 - Check current store implementations:
+  Read src/store/messages.ts in full.
+  Read src/store/conversations.ts in full.
+  Note whether either already uses persist middleware from zustand/middleware.
+  If conversations store already uses persist, skip that one.
+
+  STEP 2 - Add persist to messages store (src/store/messages.ts):
+  Import persist from zustand/middleware.
+  Wrap the create call: create(persist(fn, options)).
+  Options:
+    name: pi-app-messages
+    version: 1
+    partialize: only persist messages where status === complete (filter out streaming).
+    Limit to the 200 most recently completed messages to avoid localStorage quota.
+  The store must also have a clearAll action that calls set to reset messages to empty
+  object and calls localStorage.removeItem(pi-app-messages).
+
+  STEP 3 - Add persist to conversations store (src/store/conversations.ts) if not present:
+  Same pattern.
+  Options: name pi-app-conversations, version 1.
+  clearAll action resets conversations array to empty and removes localStorage key.
+
+  STEP 4 - Add Clear History button to History page:
+  File: src/app/history/page.tsx
+  Import useMessagesStore and useConversationsStore.
+  Add a button in the page header: Clear History (with Trash2 icon from lucide-react).
+  On click: call useMessagesStore.getState().clearAll() and useConversationsStore.getState().clearAll().
+  Show a confirmation dialog (window.confirm) before clearing.
+
+  STEP 5 - IMPORTANT: Do NOT persist messages with status streaming or sending.
+  The partialize function must filter these out or they will be stuck as streaming forever.
+  Example: partialize: (state) => ({ messages: Object.fromEntries(Object.entries(state.messages).filter(([,m]) => m.status === complete)) })
+
+  STEP 6 - Run npx tsc --noEmit and fix errors.
+
+status: ready
+feature:
+  name: Data Persistence
+  slug: data-persistence
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - After page refresh, completed conversations are still visible in /history
+  - After navigating /chat to /history and back to /chat, previous messages still appear
+  - Streaming messages are never persisted to localStorage
+  - Clear History button in /history page wipes all stored data after confirmation
+  - npx tsc --noEmit passes
+phase: 2
+priority: 70
+dependsOn:
+  - fix-history-page
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

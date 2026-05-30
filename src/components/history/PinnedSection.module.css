@@ -1,0 +1,30 @@
+/* PinnedSection.module.css */
+
+.section {
+  margin-bottom: var(--space-lg);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-sm) var(--space-xs);
+}
+
+.sectionIcon {
+  font-size: var(--font-size-sm);
+}
+
+.sectionLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.sectionList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

@@ -1,0 +1,52 @@
+name: Fix chat page to use correct pi RPC protocol
+description: >
+  The current chat/page.tsx (root index) uses the correct pi RPC protocol
+  (type: prompt). However, ChatView.tsx — used on /chat/[id] — still sends
+  { type: 'chat' } which pi does not understand. The two implementations must
+  be unified. The /chat/page.tsx implementation is the correct one and should
+  become the single canonical chat view for ALL chat routes.
+
+  CRITICAL CONTEXT:
+  - pi expects: { type: 'prompt', message: string, id?: string }
+  - pi emits:   { type: 'message_start', message: { role, model } }
+                { type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: string } }
+                { type: 'message_update', assistantMessageEvent: { type: 'tool_use_start', toolName, toolInput } }
+                { type: 'message_end' }
+                { type: 'agent_end' }
+  - The ws-client.ts already has sendRaw(), prompt(), and abort() methods
+  - ChatView.tsx incorrectly calls wsClient.send({ type: 'chat', ... }) — must be fixed
+  - There must only be ONE implementation of the chat UI; do NOT have two competing systems
+
+  WHAT TO DO:
+  1. Read /home/bigmints/Projects/pi-app/src/app/chat/page.tsx — this is the CORRECT implementation
+  2. Read /home/bigmints/Projects/pi-app/src/components/chat/ChatView.tsx — this is the OLD/BROKEN one
+  3. Update ChatView.tsx so that handleSendMessage calls wsClient.sendRaw({ type: 'prompt', message: content, id: msgId }) instead of wsClient.send({ type: 'chat', ... })
+  4. Update ChatView.tsx WebSocket handler to listen for pi RPC frames: message_start, message_update (text_delta), agent_end — instead of the legacy 'token' and 'message_complete' frame types
+  5. Update /home/bigmints/Projects/pi-app/src/app/chat/page.tsx to redirect to /chat with conversation list (keep it as an index page that shows ConversationList, not a duplicate chat UI)
+  6. Run: cd /home/bigmints/Projects/pi-app && npx tsc --noEmit 2>&1 | head -30 — must pass with 0 errors
+
+status: ready
+feature:
+  name: Chat Core
+  slug: chat-core
+target:
+  app: pi-app
+  server: gx10 (192.168.1.150)
+  ssh_key: /Users/pretheesh/Library/Application Support/NVIDIA/Sync/config/nvsync.key
+  user: bigmints
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - Sending a message from any chat view calls wsClient.sendRaw({ type: 'prompt', message, id }) — NOT type:chat
+  - Streaming tokens arrive via message_update.assistantMessageEvent.type === text_delta and are appended to the message
+  - The assistant message bubble shows the streamed text in real time
+  - agent_end marks the stream as complete and re-enables the composer
+  - ChatView.tsx and chat/page.tsx do not both implement the full chat — only ChatView.tsx does; chat/page.tsx is an index
+  - npx tsc --noEmit passes
+phase: 1
+priority: 100
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

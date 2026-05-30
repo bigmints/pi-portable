@@ -1,0 +1,54 @@
+name: Make ConnectionStatus show pi subprocess state, not just WS state
+description: >
+  The current ConnectionStatus component shows WS connection state (connected/
+  reconnecting/offline). But there's a MORE IMPORTANT state: the pi subprocess
+  status. When pi fails to start (e.g. wrong binary path, license error), the WS
+  connection is 'connected' to the server.js bridge, but pi itself is offline.
+  The user sees Connected but cannot actually use pi.
+
+  pi communicates its state via server_event frames:
+  - { type: 'server_event', event: 'pi_starting' }     — pi subprocess is being spawned
+  - { type: 'server_event', event: 'pi_ready', pid: N } — pi is ready (NOT CURRENTLY SENT — but we can infer from message_start)
+  - { type: 'server_event', event: 'pi_error', message: string } — pi failed to start
+  - { type: 'server_event', event: 'pi_exit' }          — pi process exited
+
+  WHAT TO DO:
+  1. Add a 'piStatus' field to the connection store (src/store/connection.ts):
+     piStatus: 'starting' | 'ready' | 'error' | 'offline'
+     piError: string | null
+     setPiStatus: (status, error?) => void
+  2. In ws-client.ts handleServerEvent(), update piStatus:
+     - 'pi_starting' → setPiStatus('starting')
+     - 'pi_error' → setPiStatus('error', message)
+     - 'pi_exit' → setPiStatus('offline')
+  3. Infer 'ready' from the first successful message_start or message_update frame — call setPiStatus('ready')
+  4. Update ConnectionStatus.tsx to show a TWO-LINE status:
+     - Row 1: WS state (existing behaviour)
+     - Row 2 (only when piStatus !== 'ready'): pi state indicator
+       - pi_starting: amber dot + pi starting...
+       - pi_error: red dot + pi offline + error message in tooltip
+       - pi_offline: grey dot + pi stopped
+  5. When piStatus is 'error', show the error message (truncated) as a tooltip on hover
+
+status: ready
+feature:
+  name: Connection Status
+  slug: connection-status
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - When pi fails to start, the status bar shows 'pi offline' with error text, not just green 'Connected'
+  - When pi is starting, 'pi starting...' appears in amber
+  - When pi is ready, the pi status indicator disappears (WS connected state is sufficient)
+  - The piStatus state is stored in useConnectionStore, not local component state
+  - npx tsc --noEmit passes
+phase: 2
+priority: 75
+dependsOn:
+  - fix-chat-rpc-protocol
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

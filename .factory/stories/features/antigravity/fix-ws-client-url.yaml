@@ -1,0 +1,59 @@
+name: Fix ws-client.ts getWsUrl() — empty string bug
+description: >
+  CRITICAL BUG: The getWsUrl() function in src/lib/ws-client.ts has an empty
+  return statement that causes the WebSocket to never connect.
+
+  THE BUG:
+  function getWsUrl() {
+    if (typeof window === "undefined") return "";
+    if (process.env.NEXT_PUBLIC_PI_WS_URL) {
+      return process.env.NEXT_PUBLIC_PI_WS_URL;
+    }
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return ;   <--- THIS IS EMPTY. Should be a URL string.
+  }
+
+  THE FIX:
+  The return statement should construct the WebSocket URL from the current
+  window.location:
+    return proto + "//" + window.location.host + "/ws";
+
+  This connects to the same host:port as the browser, on the /ws path,
+  which is where server.js handles WebSocket upgrades.
+
+  WHAT TO DO:
+  1. Read src/lib/ws-client.ts lines 1-20 to find the getWsUrl function
+  2. Find the line with "return ;" (empty return)
+  3. Replace it with: return proto + "//" + window.location.host + "/ws";
+  4. Save the file
+  5. Run npx tsc --noEmit to verify
+
+  This is a one-line fix but it is the ROOT CAUSE of why chat does not work
+  when NEXT_PUBLIC_PI_WS_URL is not set in .env.local
+
+  Also check .env.local: cat /home/bigmints/Projects/pi-app/.env.local
+  If NEXT_PUBLIC_PI_WS_URL is NOT set or is wrong, the empty return causes
+  the ws-client to silently do nothing. Fix the return statement regardless
+  of whether the env var is set, as a fallback.
+
+status: ready
+feature:
+  name: WebSocket Client
+  slug: websocket-client
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - getWsUrl() returns a valid ws:// or wss:// URL when running in browser
+  - The URL is constructed as ws://[window.location.host]/ws
+  - If NEXT_PUBLIC_PI_WS_URL is set in env, that value is used instead (existing behavior)
+  - After this fix, WebSocket connects automatically on page load without env var
+  - npx tsc --noEmit passes
+phase: 1
+priority: 99
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

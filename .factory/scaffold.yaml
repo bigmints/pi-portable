@@ -1,309 +1,141 @@
 name: pi-app
 description: >
-  A mobile-first progressive web app that exposes the full capability of the pi CLI through a real-time chat-style
-  interface. Users get complete feature parity with the terminal — live streaming conversations, agentic job monitoring,
-  autonomous task queuing, conversation controls (interrupt, retry, fork), project management, file and artifact
-  viewing, push notifications for job completion and failures, and full settings control — all from any device with no
-  install required.
+  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat,
+  agentic job monitoring, project management, and full CLI feature parity. Built
+  with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS custom
+  properties — no Tailwind. Designed as a progressive web app with offline shell
+  support and mobile-first responsive layout.
+brd: >-
+  # pi-app (BRD)
+
+
+  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat,
+  agentic job monitoring, project management, and full CLI feature parity. Built
+  with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS custom
+  properties — no Tailwind. Designed as a progressive web app with offline shell
+  support and mobile-first responsive layout.
+
+
+
+  ## Architecture & Requirements
+
+  - **Framework**: next.js
+
+  - **Language**: typescript
 version: 1.0.0
-status: in-progress
-progressPercent: 92
 stack:
   framework: next.js
   language: typescript
   packageManager: npm
-  styling: vanilla-css
-  database: none
-  cloud: vercel
+  linter: eslint
+status: complete
 features:
-  - name: ⚙️ Scaffold & Foundation
-    scaffold: true
-    priority: 0
-    status: pending
-    progressPercent: 0
-    description: Creates the Next.js project structure, installs all core dependencies, and sets up the global CSS design
-      system. Must complete before any feature story can be queued.
+  - name: Core Foundation
+    description: Foundational scaffolding and layout styling for pi-app.
+    status: complete
     stories:
-      - name: Scaffold pi-app Next.js 14 project with TypeScript and Vanilla CSS
-        file: .factory/stories/apps/pi-app.yaml
-        status: ready
-        progressPercent: 0
-        tasks: []
-  - name: Auth & App Shell
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build login screen with API token input
-        file: .factory/stories/features/login-screen.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build responsive app shell with header and sidebar
-        file: .factory/stories/features/app-shell-layout.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build mobile bottom tab bar
-        file: .factory/stories/features/mobile-bottom-tab-bar.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement dark/light/system theme toggle
-        file: .factory/stories/features/theme-toggle.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Project Management
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build project list with active project indicator
-        file: .factory/stories/features/project-list.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build add project flow for local path and Git URL
-        file: .factory/stories/features/add-project-flow.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build project settings drawer
-        file: .factory/stories/features/project-settings-drawer.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Conversation Chat
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build WebSocket client with reconnect and token streaming
-        file: .factory/stories/features/websocket-client.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build conversation list with grouping and swipe actions
-        file: .factory/stories/features/conversation-list.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build message bubble components with Markdown rendering
-        file: .factory/stories/features/message-bubbles-markdown.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build tool-call annotation component
-        file: .factory/stories/features/tool-call-annotation.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build new conversation flow with suggested prompts
-        file: .factory/stories/features/new-conversation-flow.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Message Composer
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build auto-expanding textarea composer
-        file: .factory/stories/features/composer-textarea.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement slash command palette with fuzzy search
-        file: .factory/stories/features/slash-command-palette.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build file attachment and image paste flow
-        file: .factory/stories/features/file-attachment-image-paste.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Add voice input via Web Speech API
-        file: .factory/stories/features/voice-input.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Conversation Controls
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Implement stop and interrupt for active streaming
-        file: .factory/stories/features/stop-interrupt-streaming.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build retry, fork, and edit-and-resend message actions
-        file: .factory/stories/features/retry-fork-edit-resend.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement resume and cancel for agentic jobs
-        file: .factory/stories/features/resume-cancel-jobs.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Add global keyboard shortcuts
-        file: .factory/stories/features/keyboard-shortcuts.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Agentic Job Monitor
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build jobs tab with status list and filter tabs
-        file: .factory/stories/features/jobs-tab-status-list.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build job detail step timeline with live streaming
-        file: .factory/stories/features/job-step-timeline.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Add token counter and timing per step
-        file: .factory/stories/features/token-counter-timing.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build artifact links within job detail
-        file: .factory/stories/features/job-artifact-links.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Task Queue
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build task queue editor with drag-to-reorder
-        file: .factory/stories/features/task-queue-editor.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement autonomous sequential task execution
-        file: .factory/stories/features/autonomous-task-execution.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build live output panel for the running task
-        file: .factory/stories/features/queue-live-output-panel.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build queue run controls and on-failure configuration
-        file: .factory/stories/features/queue-run-controls.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement saved and reusable queues
-        file: .factory/stories/features/saved-queues.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Notifications
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build WebSocket connection status bar with auto-reconnect
-        file: .factory/stories/features/connection-status-bar.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build in-app toast notification system
-        file: .factory/stories/features/toast-notification-system.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement Web Push notifications for job and queue events
-        file: .factory/stories/features/web-push-notifications.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build notification history panel
-        file: .factory/stories/features/notification-history-panel.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Conversation History
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build conversation history tab with day grouping
-        file: .factory/stories/features/conversation-history-tab.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement full-text search with project and date filters
-        file: .factory/stories/features/history-search-filters.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build conversation export and management actions
-        file: .factory/stories/features/conversation-export-actions.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Artifact Viewer
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build inline artifact card for chat messages
-        file: .factory/stories/features/inline-artifact-card.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build full file viewer with syntax highlight and diff view
-        file: .factory/stories/features/file-viewer-diff-view.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build artifacts tab with list sort and filter
-        file: .factory/stories/features/artifacts-tab.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
+      - name: pi-app
+        file: stories/apps/pi-app.yaml
+        status: complete
+        tasks:
+          - id: task-skeleton
+            title: Scaffold project skeleton and configurations
+            status: complete
+          - id: task-pages
+            title: Implement main pages, layout, and styling views
+            status: complete
+structure:
+  src: true
+  appRouter: true
+  hasDesignTokens: true
+  hasDarkMode: true
+  hasSidebar: true
+  hasTopbar: true
+  hasPwaManifest: true
+  hasWebSocket: true
+  hasZustandStores: true
+  hasApiRoutes: true
+components:
+  - name: AppLayout
+    path: src/components/layout/AppLayout.tsx
+    status: complete
+  - name: Sidebar
+    path: src/components/layout/Sidebar.tsx
+    status: complete
+  - name: Topbar
+    path: src/components/layout/Topbar.tsx
+    status: complete
+  - name: ChatView
+    path: src/components/chat/ChatView.tsx
+    status: complete
+  - name: MessageBubble
+    path: src/components/chat/MessageBubble.tsx
+    status: complete
+  - name: ChatInput
+    path: src/components/chat/ChatInput.tsx
+    status: complete
+  - name: ConversationList
+    path: src/components/chat/ConversationList.tsx
+    status: complete
+  - name: JobsView
+    path: src/components/jobs/JobsView.tsx
+    status: complete
+  - name: SettingsView
+    path: src/components/settings/SettingsView.tsx
+    status: complete
+  - name: EmptyState
+    path: src/components/common/EmptyState.tsx
+    status: complete
+  - name: ConnectionStatus
+    path: src/components/common/ConnectionStatus.tsx
+    status: complete
+  - name: LoadingSpinner
+    path: src/components/common/LoadingSpinner.tsx
+    status: complete
+stores:
+  - name: connection
+    path: src/store/connection.ts
+    status: complete
+  - name: conversations
+    path: src/store/conversations.ts
+    status: complete
+  - name: jobs
+    path: src/store/jobs.ts
+    status: complete
+  - name: messages
+    path: src/store/messages.ts
+    status: complete
+hooks:
+  - name: useWebSocket
+    path: src/hooks/useWebSocket.ts
+    status: complete
+pages:
+  - name: Home
+    path: src/app/page.tsx
+    status: complete
+  - name: Chat Index
+    path: src/app/chat/page.tsx
+    status: complete
+  - name: Chat by ID
+    path: src/app/chat/[id]/page.tsx
+    status: complete
+  - name: Jobs
+    path: src/app/jobs/page.tsx
+    status: complete
   - name: Settings
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Build settings page with Account and CLI Config sections
-        file: .factory/stories/features/account-cli-config-settings.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build model selector and appearance settings
-        file: .factory/stories/features/model-appearance-settings.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Build notifications and advanced settings sections
-        file: .factory/stories/features/notifications-advanced-settings.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-  - name: Mobile & PWA
-    status: completed
-    progressPercent: 100
-    stories:
-      - name: Configure PWA install prompt and offline shell
-        file: .factory/stories/features/pwa-install-offline-shell.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Implement swipe gestures and pull-to-refresh
-        file: .factory/stories/features/swipe-gestures-pull-to-refresh.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Add haptic feedback and mobile bottom-sheet menus
-        file: .factory/stories/features/haptics-bottom-sheet.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
-      - name: Handle safe area insets and iOS viewport quirks
-        file: .factory/stories/features/safe-area-ios-viewport.yaml
-        status: done
-        progressPercent: 100
-        tasks: []
+    path: src/app/settings/page.tsx
+    status: complete
+apiRoutes:
+  - name: Suggestions
+    path: src/app/api/suggestions/route.ts
+    status: complete
+styles:
+  - name: Design Tokens
+    path: src/styles/tokens.css
+    status: complete
+  - name: Global Styles
+    path: src/styles/globals.css
+    status: complete
+pwa:
+  manifest: public/manifest.json
+  status: complete

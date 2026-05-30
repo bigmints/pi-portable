@@ -1,0 +1,202 @@
+/* JobCard.module.css */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--color-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.card.expanded {
+  border-color: var(--color-brand);
+  background: var(--color-surface-hover);
+}
+
+/* Header row */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.statusIndicator {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid;
+  position: relative;
+}
+
+.statusIndicator::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  opacity: 0;
+}
+
+.card:has(.statusIndicator) .statusIndicator {
+  animation: none;
+}
+
+.statusIndicator[style*="animation"] {
+  animation: spin 1s linear infinite;
+}
+
+.titleArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectBadge {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  padding: 1px var(--space-sm);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  width: fit-content;
+}
+
+.statusChip {
+  font-size: var(--font-size-xs);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  transition: transform var(--transition-fast);
+}
+
+.chevronExpanded {
+  transform: rotate(90deg);
+}
+
+/* Meta row */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+  padding-left: calc(28px + var(--space-sm));
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Expanded content */
+.expandedContent {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stepRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-tertiary);
+}
+
+.stepIcon {
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepStatus {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.errorBlock {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.errorTitle {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-error);
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.errorText {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .card {
+    padding: var(--space-sm);
+  }
+
+  .chevron {
+    display: none;
+  }
+}

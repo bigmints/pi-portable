@@ -1,0 +1,49 @@
+name: Implement History page with conversation list
+description: >
+  The current /history page is a placeholder that shows No conversations yet.
+  It must display the actual conversation history stored in the conversations
+  Zustand store (src/store/conversations.ts). Each conversation entry should
+  show the title, last message preview, timestamp, and a link to reopen it.
+
+  CONTEXT:
+  - The conversations Zustand store is at src/store/conversations.ts
+  - useConversationsStore() provides: conversations (array), selectedId, addConversation, updateConversation, selectConversation, clearSelection
+  - Each conversation has: id, title, projectId, lastMessagePreview, lastMessageAt, isPinned, messageCount
+  - The ConversationList component already exists at src/components/chat/ConversationList.tsx — check if it can be reused
+  - Clicking a conversation should navigate to /chat/[id]
+  - No conversations: show empty state with a Start chatting button linking to /chat
+
+  WHAT TO DO:
+  1. Read src/app/history/page.tsx
+  2. Read src/components/chat/ConversationList.tsx to understand what it renders
+  3. Rewrite src/app/history/page.tsx as a 'use client' component that:
+     - imports useConversationsStore
+     - renders ConversationList (or inline conversation list) showing all conversations sorted by lastMessageAt desc
+     - Each row: title (truncated to 1 line), lastMessagePreview (2 lines), relative timestamp (e.g. 2 hours ago), messageCount badge
+     - Clicking a row calls router.push('/chat/' + conversation.id)
+     - Empty state: centered Terminal icon + No conversations yet + Start chatting button → /chat
+  4. Add a search input at the top to filter conversations by title or preview text (client-side filter, no API needed)
+  5. Run npx tsc --noEmit to verify
+
+status: ready
+feature:
+  name: History
+  slug: history
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - /history shows all conversations from the Zustand store, sorted newest-first
+  - Each conversation row shows title, preview, relative timestamp, message count
+  - Clicking a row navigates to /chat/[id]
+  - A search input filters the list in real time by title or preview
+  - Empty state has a call-to-action button linking to /chat
+  - No TypeScript errors
+phase: 1
+priority: 90
+dependsOn: []
+createdBy: antigravity-tpm
+createdAt: 2026-05-30T13:30:00.000Z

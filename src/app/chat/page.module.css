@@ -1,0 +1,20 @@
+/* page.module.css */
+
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.composerContainer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* iOS keyboard: ensure the chat container scrolls correctly */
+.chatContainer {
+  position: relative;
+}

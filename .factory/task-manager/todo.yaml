@@ -1,58 +1,100 @@
 summary:
   completed: 10
-  next: 12
+  next: 17
   in_progress: 0
-  cancelled: 0
+  cancelled: 12
+
 next:
-  - id: task-001
-    title: Scaffold Next.js project and install core dependencies
+  # ── Phase 1: Critical / App-Breaking ──────────────────────────────────────
+  - id: ag-001
+    title: "FIX CRITICAL: ws-client getWsUrl() returns empty string — WebSocket never connects"
     priority: 1
-    story: .factory/stories/features/EP-01/ST-0101-scaffold.yaml
-  - id: task-002
-    title: Implement global CSS design system (tokens, utilities, animations)
+    story: .factory/stories/features/antigravity/fix-ws-client-url.yaml
+
+  - id: ag-002
+    title: "FIX CRITICAL: ChatView sends type:chat — pi only understands type:prompt"
     priority: 1
-    story: .factory/stories/features/EP-01/ST-0102-design-system.yaml
-  - id: task-003
-    title: Build responsive app layout with header and sidebar
+    story: .factory/stories/features/antigravity/fix-chat-rpc-protocol.yaml
+
+  - id: ag-003
+    title: "FIX: Resolve all TypeScript compile errors (npx tsc --noEmit must pass)"
     priority: 1
-    story: .factory/stories/features/EP-01/ST-0103-layout.yaml
-  - id: task-004
-    title: Build mobile bottom navigation bar
+    story: .factory/stories/features/antigravity/fix-typescript-errors.yaml
+
+  - id: ag-004
+    title: "FIX: Merge duplicate main{} blocks in globals.css"
     priority: 1
-    story: .factory/stories/features/EP-01/ST-0104-bottom-nav.yaml
-  - id: task-005
-    title: Implement dark/light theme toggle
+    story: .factory/stories/features/antigravity/fix-globals-css-duplicate-main.yaml
+
+  - id: ag-005
+    title: "FIX: Chat composer hidden behind bottom nav bar on mobile"
     priority: 1
-    story: .factory/stories/features/EP-01/ST-0105-theme.yaml
-  - id: task-006
-    title: Build login screen with API token input
+    story: .factory/stories/features/antigravity/fix-chat-mobile-layout.yaml
+
+  - id: ag-006
+    title: "FIX: History page is a placeholder — wire to conversations Zustand store"
+    priority: 1
+    story: .factory/stories/features/antigravity/fix-history-page.yaml
+
+  - id: ag-007
+    title: "FIX: Artifacts page is a placeholder — wire to artifact data"
+    priority: 1
+    story: .factory/stories/features/antigravity/fix-artifacts-page.yaml
+
+  # ── Phase 2: High Impact ───────────────────────────────────────────────────
+  - id: ag-008
+    title: "FIX: Add syntax highlighting + copy button to code blocks in chat"
     priority: 2
-    story: .factory/stories/features/login-screen.yaml
-  - id: task-007
-    title: Implement real-time token streaming via WebSocket
+    story: .factory/stories/features/antigravity/fix-code-block-syntax-highlight.yaml
+
+  - id: ag-009
+    title: "FIX: Map pi RPC tool_use_start/tool_result events to ToolCallAnnotation"
     priority: 2
-    story: .factory/stories/features/websocket-client.yaml
-  - id: task-008
-    title: Build conversation list sidebar and screen
+    story: .factory/stories/features/antigravity/fix-tool-call-rpc-mapping.yaml
+
+  - id: ag-010
+    title: "FIX: Jittery auto-scroll + add scroll-to-bottom button in chat"
     priority: 2
-    story: .factory/stories/features/conversation-list.yaml
-  - id: task-009
-    title: Build project list screen with active project indicator
+    story: .factory/stories/features/antigravity/fix-scroll-to-bottom.yaml
+
+  - id: ag-011
+    title: "FIX: No New Conversation button — users stuck in same pi session forever"
     priority: 2
-    story: .factory/stories/features/project-list.yaml
-  - id: task-010
-    title: Implement stop and interrupt for active streaming response
+    story: .factory/stories/features/antigravity/fix-new-session-button.yaml
+
+  - id: ag-012
+    title: "FIX: ConnectionStatus shows Connected even when pi subprocess has failed"
+    priority: 2
+    story: .factory/stories/features/antigravity/fix-connection-status-pi-aware.yaml
+
+  - id: ag-013
+    title: "FIX: Persist messages to localStorage so they survive navigation and refresh"
+    priority: 2
+    story: .factory/stories/features/antigravity/fix-message-persistence.yaml
+
+  - id: ag-014
+    title: "FIX: Settings page inline styles conflict with AppShell Tailwind layout"
+    priority: 2
+    story: .factory/stories/features/antigravity/fix-settings-page-tailwind.yaml
+
+  - id: ag-015
+    title: "FIX: Queue page CSS modules have hardcoded light-mode colors broken in dark theme"
+    priority: 2
+    story: .factory/stories/features/antigravity/fix-queue-page-tailwind.yaml
+
+  # ── Phase 3: Polish & Missing Features ────────────────────────────────────
+  - id: ag-016
+    title: "FEAT: Copy + retry action buttons on hover over chat messages"
     priority: 3
-    story: .factory/stories/features/stop-interrupt-streaming.yaml
-  - id: task-011
-    title: Build auto-expanding textarea composer
+    story: .factory/stories/features/antigravity/feat-message-copy-retry.yaml
+
+  - id: ag-017
+    title: "FEAT: Slash command palette — type / in composer to browse pi commands"
     priority: 3
-    story: .factory/stories/features/composer-textarea.yaml
-  - id: task-012
-    title: Build jobs tab with status list and filter tabs
-    priority: 3
-    story: .factory/stories/features/jobs-tab-status-list.yaml
+    story: .factory/stories/features/antigravity/feat-slash-command-palette.yaml
+
 in_progress: []
+
 completed:
   - pi-app: Completed build for pi-app
   - pi-app--settings: Completed build for pi-app--settings
@@ -64,4 +106,17 @@ completed:
   - pi-app--notifications: Completed build for pi-app--notifications
   - pi-app--conversation-history: Completed build for pi-app--conversation-history
   - pi-app--mobile-pwa: Completed build for pi-app--mobile-pwa
-cancelled: []
+
+cancelled:
+  - task-001: Stale — scaffold already done
+  - task-002: Stale — design system already done
+  - task-003: Stale — layout already done
+  - task-004: Stale — bottom nav already done
+  - task-005: Stale — theme already done
+  - task-006: Stale — login screen already done
+  - task-007: Stale — websocket already done (with bugs, see ag-001/ag-002)
+  - task-008: Stale — conversation list already done
+  - task-009: Stale — project list already done
+  - task-010: Stale — stop/interrupt already done
+  - task-011: Stale — composer already done
+  - task-012: Stale — jobs tab already done
