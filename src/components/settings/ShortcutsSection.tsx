@@ -1,6 +1,6 @@
 'use client';
 
-import { ShortcutsReference } from '@/components/settings';
+import { ShortcutsReference } from './ShortcutsReference';
 import styles from './ShortcutsSection.module.css';
 
 export default function ShortcutsSection() {

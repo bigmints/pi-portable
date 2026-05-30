@@ -14,13 +14,20 @@ import {
   Info,
   RotateCcw,
   Monitor as MonitorIcon,
+  Cpu,
 } from 'lucide-react';
 import { useSettingsStore, type ThemeMode, type CodeTheme } from '@/store/settings';
 import { usePushNotificationsStore } from '@/store/push-notifications';
 import { subscribeUser, unsubscribeUser } from '@/lib/push-manager';
 import AccountSettings from './AccountSettings';
 import styles from './SettingsView.module.css';
-import NotificationSettingsView from './NotificationSettingsView';
+import NotificationSettings from './NotificationSettings';
+import { useModelSettingsStore } from '@/store/model-settings';
+import ModelSelector from './ModelSelector';
+import ModelSliders from './ModelSliders';
+import SystemPromptEditor from './SystemPromptEditor';
+import ModelPreview from './ModelPreview';
+
 
 // ─── Code Theme Options ──────────────────────────────────────────────────────
 
@@ -190,6 +197,7 @@ export default function SettingsView() {
     resetSettings,
     clearAllData,
   } = useSettingsStore();
+  const { resetToDefaults } = useModelSettingsStore();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -253,6 +261,27 @@ export default function SettingsView() {
           }
         />
       </Section>
+
+      {/* Model Settings */}
+      <Section title="Model Settings" icon={<Cpu size={18} strokeWidth={1.5} />}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md, var(--spacing-md, 16px))' }}>
+          <ModelSelector />
+          <ModelSliders />
+          <SystemPromptEditor />
+          <ModelPreview />
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 'var(--space-xs, var(--spacing-xs, 4px))' }}>
+            <button
+              type="button"
+              className={styles.resetButton}
+              onClick={resetToDefaults}
+            >
+              <RotateCcw size={14} strokeWidth={1.5} />
+              Reset to Defaults
+            </button>
+          </div>
+        </div>
+      </Section>
+
 
       {/* Notifications */}
       <Section title="Notifications" icon={<Bell size={18} strokeWidth={1.5} />}>
@@ -496,7 +525,7 @@ export default function SettingsView() {
       </Section>
 
       {/* Advanced Notifications */}
-      <NotificationSettingsView />
+      <NotificationSettings />
 
       {/* Reset */}
       <div className={styles.resetSection}>

@@ -1,71 +1,53 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-export interface NotificationSettings {
-  enabled: boolean;
-  sound: boolean;
-  desktop: boolean;
-  email: boolean;
-  frequency: 'instant' | 'batched' | 'digest';
-  quietHours: {
-    enabled: boolean;
-    start: string;
-    end: string;
-  };
-  channels: {
-    jobComplete: boolean;
-    jobError: boolean;
-    taskComplete: boolean;
-    taskFailed: boolean;
-    queueComplete: boolean;
-    messageResponse: boolean;
-  };
+export interface NotificationPreferences {
+  soundEnabled: boolean;
+  desktopNotifications: boolean;
+  doNotDisturb: boolean;
+  dndStartHour: number;
+  dndEndHour: number;
+  batchNotifications: boolean;
+  showBadge: boolean;
+  jobNotifications: boolean;
+  queueNotifications: boolean;
+  messageNotifications: boolean;
 }
 
-export const DEFAULT_SETTINGS: NotificationSettings = {
-  enabled: true,
-  sound: true,
-  desktop: true,
-  email: false,
-  frequency: 'instant',
-  quietHours: { enabled: false, start: '22:00', end: '07:00' },
-  channels: {
-    jobComplete: true,
-    jobError: true,
-    taskComplete: true,
-    taskFailed: true,
-    queueComplete: true,
-    messageResponse: true,
-  },
+const DEFAULT_PREFERENCES: NotificationPreferences = {
+  soundEnabled: true,
+  desktopNotifications: true,
+  doNotDisturb: false,
+  dndStartHour: 22,
+  dndEndHour: 8,
+  batchNotifications: false,
+  showBadge: true,
+  jobNotifications: true,
+  queueNotifications: true,
+  messageNotifications: true,
 };
 
 interface NotificationSettingsState {
-  settings: NotificationSettings;
-  updateSettings: (settings: Partial<NotificationSettings>) => void;
-  resetSettings: () => void;
-  toggleChannel: (channel: keyof NotificationSettings['channels']) => void;
+  preferences: NotificationPreferences;
+  setPreference: <K extends keyof NotificationPreferences>(key: K, value: NotificationPreferences[K]) => void;
+  resetToDefaults: () => void;
 }
 
-export const useNotificationSettingsStore = create<NotificationSettingsState>()(
-  persist(
-    (set) => ({
-      settings: DEFAULT_SETTINGS,
-      updateSettings: (partial) =>
-        set((state) => ({
-          settings: { ...state.settings, ...partial },
-        })),
-      resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
-      toggleChannel: (channel) =>
-        set((state) => ({
-          settings: {
-            ...state.settings,
-            channels: {
-              ...state.settings.channels,
-              [channel]: !state.settings.channels[channel],
-            },
-          },
-        })),
-    }),
-    { name: 'pi-notification-settings' }
-  )
-);
+export const useNotificationSettingsStore = create<NotificationSettingsState>((set) => ({
+  preferences: (() => {
+    try {
+      const saved = localStorage.getItem('pi-notification-settings');
+      return saved ? { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) } : DEFAULT_PREFERENCES;
+    } catch {
+      return DEFAULT_PREFERENCES;
+    }
+  })(),
+  setPreference: (key, value) => set((state) => {
+    const newPrefs = { ...state.preferences, [key]: value };
+    localStorage.setItem('pi-notification-settings', JSON.stringify(newPrefs));
+    return { preferences: newPrefs };
+  }),
+  resetToDefaults: () => set(() => {
+    localStorage.setItem('pi-notification-settings', JSON.stringify(DEFAULT_PREFERENCES));
+    return { preferences: DEFAULT_PREFERENCES };
+  }),
+}));
