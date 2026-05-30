@@ -1,0 +1,31 @@
+name: "Fix: token-counter-timing"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/token-counter-timing.yaml
+
+  Issue: CLI engineer stalled twice (300s+ no output) on this story. First delegation stalled after listing directory
+  contents; intervention with explicit step-by-step instructions also stalled. The CLI appears unable to proceed with
+  file creation for this story. The story requires: extending JobStep type with token/duration fields, creating GET
+  /api/models pricing route, format utilities, StepStatsRow component, JobDetailFooter component, CostTooltip component,
+  and integrating into existing StepItem and job detail page. All work needs to be done from scratch since no files were
+  created. A human or fresh CLI session is needed to implement these components.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: "CLI engineer stalled twice (300s+ no output) on this story. First delegation stalled after listing
+  directory contents; intervention with explicit step-by-step instructions also stalled. The CLI appears unable to
+  proceed with file creation for this story. The story requires: extending JobStep type with token/duration fields,
+  creating GET /api/models pricing route, format utilities, StepStatsRow component, JobDetailFooter component,
+  CostTooltip component, and integrating into existing StepItem and job detail page. All work needs to be done from
+  scratch since no files were created. A human or fresh CLI session is needed to implement these components."
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/token-counter-timing.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T01:06:55.199Z

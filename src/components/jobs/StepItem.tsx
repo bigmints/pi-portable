@@ -13,6 +13,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import type { DetailedJobStep } from '@/store/jobs';
 import JsonPanel from './JsonPanel';
+import StepStatsRow from './StepStatsRow';
 import styles from './StepItem.module.css';
 
 interface StepItemProps {
@@ -118,6 +119,8 @@ export default function StepItem({ step, isLast }: StepItemProps) {
             )}
           </div>
         </button>
+
+        <StepStatsRow step={step} />
 
         {/* Expanded panels */}
         {expanded && (

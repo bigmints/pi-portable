@@ -1,0 +1,134 @@
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: rgba(30, 30, 46, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--color-border, #313244);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.progressContainer {
+  height: 3px;
+  background-color: var(--color-surface-2, rgba(49, 50, 68, 0.5));
+  width: 100%;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--color-accent, #cba6f7);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(100% - 3px);
+  padding: 0 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.statusGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activityIcon {
+  color: var(--color-text-secondary, #a6adc8);
+}
+
+.statusText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #a6adc8);
+}
+
+.statsGroup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  color: var(--color-text-secondary, #a6adc8);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.statLabelValue {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #a6adc8);
+  opacity: 0.7;
+}
+
+.value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #cdd6f4);
+  font-variant-numeric: tabular-nums;
+  font-family: monospace;
+}
+
+.costStat .icon {
+  color: var(--color-success, #a6e3a1);
+}
+
+.costStat .value {
+  color: var(--color-success, #a6e3a1);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    height: auto;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+  
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 16px;
+    gap: 8px;
+  }
+  
+  .statusGroup {
+    justify-content: center;
+  }
+  
+  .statsGroup {
+    justify-content: space-between;
+    gap: 12px;
+  }
+  
+  .stat {
+    gap: 6px;
+  }
+  
+  .value {
+    font-size: 11px;
+  }
+}

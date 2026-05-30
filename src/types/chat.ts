@@ -266,9 +266,9 @@ export type StepType = 'plan' | 'tool_call' | 'result';
 export type StepStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 /**
- * Detailed step for the job timeline
+ * Job step interface representing statistics and basic information
  */
-export interface DetailedJobStep {
+export interface JobStep {
   id: string;
   title: string;
   stepType: StepType;
@@ -278,16 +278,22 @@ export interface DetailedJobStep {
   duration_ms?: number | null;
   started_at?: number;
   completed_at?: number;
-  /** LLM reasoning text for plan steps */
   reasoning?: string;
-  /** Whether this step was created by a job_event WebSocket frame */
   fromEvent?: boolean;
-  /** Prompt tokens consumed by this step */
   prompt_tokens?: number;
-  /** Completion tokens consumed by this step */
   completion_tokens?: number;
-  /** Model used for this step (e.g. 'gpt-4o') */
+  tokens?: number;
+  durationMs?: number;
+  cost?: number;
   model?: string;
+}
+
+/**
+ * Detailed step for the job timeline
+ */
+export interface DetailedJobStep extends JobStep {
+  /** Plan step reasoning text (Markdown) */
+  summary?: string;
 }
 
 /**
