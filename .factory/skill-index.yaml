@@ -1,0 +1,24 @@
+# Factory skill index for pi-app
+# Available agentic tools in this project session
+
+skills:
+  - name: heartbeat
+    command: 'factory pulse "<msg>"'
+    description: Write a liveness timestamp to .factory/logs/heartbeat.yaml
+
+  - name: task-manager
+    command: factory task <list|start|complete>
+    description: Manage task lifecycle via .factory/task-manager/todo.yaml
+
+  - name: validate
+    command: factory validate
+    description: Run npx tsc --noEmit and npx eslint . --max-warnings=0
+
+  - name: worker
+    command: 'factory worker --queue <file>'
+    description: Run a YAML prompt queue through the configured CLI
+
+  - name: knowledge-write
+    description: >
+      Author an ADR or decision record for future agent context.
+      Write to .factory/knowledge/<slug>.md using the format in knowledge/README.md

@@ -1,0 +1,461 @@
+name: "Fix: fix-job-step-timeline"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-job-step-timeline.yaml
+
+  Issue: CLI is stuck in a loop listing directory contents (302 files) instead of writing code. Two attempts failed with
+  the same behavior — the CLI echoes instructions and lists files rather than executing cat/heredoc commands to create
+  the component files.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## CRITICAL: DO NOT LIST FILES. DO NOT SCAN. EXECUTE THIS SCRIPT.
+
+
+  The CLI has been stuck listing directory contents. Break the loop by running a single bash script that creates all
+  files.
+
+
+  Execute this exact command in /home/bigmints/Projects/pi-app:
+
+
+  ```bash
+
+  bash << 'SCRIPT'
+
+  #!/bin/bash
+
+  set -e
+
+  cd /home/bigmints/Projects/pi-app
+
+
+  # Create directory
+
+  mkdir -p src/components/jobs
+
+
+  # Write StepTimeline.tsx
+
+  cat > src/components/jobs/StepTimeline.tsx << 'EOF'
+
+  "use client";
+
+
+  import { useEffect, useRef } from "react";
+
+  import { useJobsStore } from "@/store/jobs";
+
+  import StepItem from "./StepItem";
+
+  import styles from "./StepTimeline.module.css";
+
+
+  export default function StepTimeline({ jobId }: { jobId: string }) {
+    const { getJob } = useJobsStore();
+    const job = getJob(jobId);
+    const steps = job?.steps || [];
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, [steps.length]);
+
+    return (
+      <div className={styles.timelineContainer} ref={scrollRef}>
+        <div className={styles.timelineLine}>
+          {steps.map((step, i) => (
+            <StepItem key={step.id || i} step={step} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  EOF
+
+
+  # Write StepTimeline.module.css
+
+  cat > src/components/jobs/StepTimeline.module.css << 'EOF'
+
+  .timelineContainer {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+
+  .timelineContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+
+
+  .timelineContainer::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+
+  .timelineLine {
+    position: relative;
+    padding-left: 24px;
+  }
+
+
+  .timelineLine::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border);
+  }
+
+  EOF
+
+
+  # Write StepItem.tsx
+
+  cat > src/components/jobs/StepItem.tsx << 'EOF'
+
+  "use client";
+
+
+  import { useState } from "react";
+
+  import { Lightbulb, Wrench, CheckCircle, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+
+  import { JobStep } from "@/types/chat";
+
+  import JsonPanel from "./JsonPanel";
+
+  import ReactMarkdown from "react-markdown";
+
+  import styles from "./StepItem.module.css";
+
+
+  const ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+    plan: Lightbulb,
+    tool_call: Wrench,
+    result: CheckCircle,
+  };
+
+
+  export default function StepItem({ step }: { step: JobStep }) {
+    const [expanded, setExpanded] = useState(false);
+    const Icon = ICONS[step.stepType] || Wrench;
+    const isRunning = step.status === "running";
+    const isCompleted = step.status === "completed";
+    const isError = step.status === "error";
+
+    const durationText = step.duration_ms ? `${step.duration_ms}ms` : "";
+
+    return (
+      <div className={styles.stepRow} onClick={() => setExpanded(!expanded)}>
+        <div className={styles.stepIcon}>
+          <Icon size={16} />
+        </div>
+        <div className={styles.stepContent}>
+          <div className={styles.stepHeader}>
+            <span className={styles.stepName}>{step.name}</span>
+            {isRunning && <div className={styles.shimmer} />}
+            {isCompleted && <span className={styles.duration}>{durationText}</span>}
+            {isError && <AlertCircle size={14} className={styles.errorIcon} />}
+            <span className={expanded ? styles.chevronOpen : styles.chevron}>
+              {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </span>
+          </div>
+          {expanded && (step.input || step.output) && (
+            <div className={styles.stepDetails}>
+              {step.input && <JsonPanel title="Input" data={step.input} />}
+              {step.output && step.stepType === "result" ? (
+                <div className={styles.markdownOutput}>
+                  <ReactMarkdown>{step.output}</ReactMarkdown>
+                </div>
+              ) : step.output ? (
+                <JsonPanel title="Output" data={step.output} />
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  EOF
+
+
+  # Write StepItem.module.css
+
+  cat > src/components/jobs/StepItem.module.css << 'EOF'
+
+  .stepRow {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    cursor: pointer;
+    position: relative;
+  }
+
+
+  .stepRow:hover {
+    background: var(--color-surface-hover);
+  }
+
+
+  .stepIcon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    flex-shrink: 0;
+    color: var(--color-foreground-muted);
+  }
+
+
+  .stepContent {
+    flex: 1;
+    min-width: 0;
+  }
+
+
+  .stepHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+
+  .stepName {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-foreground);
+  }
+
+
+  .duration {
+    font-size: 12px;
+    color: var(--color-foreground-muted);
+    margin-left: auto;
+  }
+
+
+  .shimmer {
+    width: 60px;
+    height: 16px;
+    background: linear-gradient(90deg, transparent 0%, var(--color-primary) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+
+  .errorIcon {
+    color: var(--color-error);
+    margin-left: auto;
+  }
+
+
+  .chevron, .chevronOpen {
+    color: var(--color-foreground-muted);
+    margin-left: 4px;
+  }
+
+
+  .stepDetails {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+  }
+
+
+  .markdownOutput {
+    padding: 12px;
+    background: var(--color-surface);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  EOF
+
+
+  # Write JsonPanel.tsx
+
+  cat > src/components/jobs/JsonPanel.tsx << 'EOF'
+
+  "use client";
+
+
+  import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+
+  import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
+  import styles from "./JsonPanel.module.css";
+
+
+  export default function JsonPanel({ title, data }: { title: string; data: any }) {
+    const jsonString = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    return (
+      <div className={styles.panel}>
+        <div className={styles.panelTitle}>{title}</div>
+        <SyntaxHighlighter language="json" style={oneDark} customStyle={styles.code}>
+          {jsonString}
+        </SyntaxHighlighter>
+      </div>
+    );
+  }
+
+  EOF
+
+
+  # Write JsonPanel.module.css
+
+  cat > src/components/jobs/JsonPanel.module.css << 'EOF'
+
+  .panel {
+    margin-top: 8px;
+  }
+
+
+  .panelTitle {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-foreground-muted);
+    margin-bottom: 4px;
+  }
+
+
+  .code {
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  EOF
+
+
+  echo "All 6 component files written."
+
+
+  # Update types - add JobStep if not present
+
+  if ! grep -q "interface JobStep" src/types/chat.ts; then
+    cat >> src/types/chat.ts << 'EOF'
+
+  export interface JobStep {
+    id: string;
+    name: string;
+    stepType: "plan" | "tool_call" | "result";
+    input: Record<string, any>;
+    output: string;
+    status: "pending" | "running" | "completed" | "error";
+    duration_ms: number | null;
+    started_at: string;
+    completed_at: string | null;
+  }
+
+  EOF
+    echo "JobStep interface added to types/chat.ts"
+  else
+    echo "JobStep interface already exists in types/chat.ts"
+  fi
+
+
+  # Update store - add step methods if not present
+
+  if ! grep -q "addStep" src/store/jobs.ts; then
+    cat >> src/store/jobs.ts << 'EOF'
+
+  // Step management actions
+
+  addStep: (jobId: string, step: JobStep) => {
+    const job = state.jobs.find(j => j.id === jobId);
+    if (job) {
+      job.steps = [...job.steps, step];
+    }
+  },
+
+  updateStep: (jobId: string, stepId: string, updates: Partial<JobStep>) => {
+    const job = state.jobs.find(j => j.id === jobId);
+    if (job) {
+      job.steps = job.steps.map(s => s.id === stepId ? { ...s, ...updates } : s);
+    }
+  },
+
+  setStepRunning: (jobId: string, stepId: string) => {
+    const job = state.jobs.find(j => j.id === jobId);
+    if (job) {
+      job.steps = job.steps.map(s => s.id === stepId ? { ...s, status: "running" as const, started_at: new Date().toISOString() } : s);
+    }
+  },
+
+  setStepCompleted: (jobId: string, stepId: string, output: string, duration_ms: number) => {
+    const job = state.jobs.find(j => j.id === jobId);
+    if (job) {
+      job.steps = job.steps.map(s => s.id === stepId ? { ...s, status: "completed" as const, output, duration_ms, completed_at: new Date().toISOString() } : s);
+    }
+  },
+
+  EOF
+    echo "Step methods added to store/jobs.ts"
+  else
+    echo "Step methods already exist in store/jobs.ts"
+  fi
+
+
+  # Update job detail page - add StepTimeline import and render
+
+  if ! grep -q "StepTimeline" src/app/jobs/\[id\]/page.tsx; then
+    sed -i '1i import StepTimeline from "@/components/jobs/StepTimeline";' src/app/jobs/\[id\]/page.tsx
+    sed -i 's|</main>|<StepTimeline jobId={id} />\n      </main>|' src/app/jobs/\[id\]/page.tsx
+    echo "StepTimeline added to job detail page"
+  else
+    echo "StepTimeline already in job detail page"
+  fi
+
+
+  echo "All files written and updated."
+
+  echo "Running build..."
+
+  npm run build
+
+  SCRIPT
+
+  ```
+
+
+  After the script runs, fix any TypeScript or lint errors. When build passes, print: DELIVERY COMPLETE
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-job-step-timeline.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T00:47:33.594Z

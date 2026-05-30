@@ -1,0 +1,49 @@
+name: "Fix: fix-keyboard-shortcuts"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-keyboard-shortcuts.yaml
+
+  Issue: CLI stalled twice, only listing directory contents without creating any files. The CLI is stuck in a "list
+  files" loop instead of coding. Both delegate attempts and intervention failed with the same behavior.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  Create a single bash script at /tmp/build-shortcuts.sh with all file contents as heredocs, then execute it. The script
+  must:
+
+
+  1. Create src/store/shortcuts.ts (zustand store for commandPaletteOpen/shortcutsPanelOpen)
+
+  2. Create src/hooks/useKeyboardShortcuts.ts (global keyboard shortcut handler)
+
+  3. Create src/components/common/CommandPalette.tsx (modal command palette component)
+
+  4. Create src/components/common/CommandPalette.module.css (styles)
+
+  5. Create src/components/settings/ShortcutsReference.tsx (shortcuts reference table)
+
+  6. Create src/components/settings/ShortcutsReference.module.css (styles)
+
+  7. Create src/components/layout/ShortcutsProvider.tsx (client wrapper)
+
+  8. Modify src/app/layout.tsx to import and render ShortcutsProvider
+
+  9. Modify src/components/settings/SettingsView.tsx to import and render ShortcutsReference
+
+  10. Run npx tsc --noEmit, npm run lint, npm run build and fix any errors
+
+
+  Use cat heredocs for each file. Do NOT list directory contents. Do NOT describe what you will do. Just execute the
+  script.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-keyboard-shortcuts.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T23:27:19.221Z

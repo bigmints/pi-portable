@@ -1,0 +1,26 @@
+name: Implement saved and reusable queues
+description: >
+  Users can save the current queue under a name for later reuse. Saved queues appear in a dropdown and can be loaded,
+  edited, and re-run. Useful for recurring workflows like deploy checklists or weekly reviews.
+status: done
+feature:
+  name: Task Queue
+  slug: task-queue
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A Save queue button in the run controls bar opens a popover with a name input and a Save button
+  - Saved queues are listed in a Saved queues dropdown next to the Save button
+  - Selecting a saved queue from the dropdown replaces the current queue editor content with the saved tasks
+  - Loading a saved queue asks for confirmation if the current queue has unsaved tasks
+  - Each entry in the Saved queues dropdown shows the queue name, task count, and a delete icon
+  - Saved queues are stored in localStorage and synced to POST /api/queues for cross-device access
+  - Re-running a saved queue does not overwrite the original; a fresh run instance is created each time
+phase: 6
+priority: 972
+dependsOn:
+  - queue-run-controls

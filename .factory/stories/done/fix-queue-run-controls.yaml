@@ -1,0 +1,370 @@
+name: "Fix: queue-run-controls"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/queue-run-controls.yaml
+
+  Issue: CLI stalled twice listing files instead of writing code. The CLI engineer is stuck in exploration mode and not
+  creating the queue control components.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  STOP listing files. STOP exploring. CREATE FILES NOW.
+
+
+  Create these exact files with the exact content provided. Do not read existing files first.
+
+
+  FILE 1: src/store/queue-control.ts
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+
+  export type QueueStatus = 'idle' | 'running' | 'paused' | 'completed' | 'cancelled';
+
+  export type OnFailureMode = 'pause' | 'skip' | 'abort';
+
+
+  export interface QueueSettings {
+    onFailure: OnFailureMode;
+    autoClearCompleted: boolean;
+  }
+
+
+  const DEFAULT_SETTINGS: QueueSettings = {
+    onFailure: 'pause',
+    autoClearCompleted: false,
+  };
+
+
+  interface QueueControlState {
+    status: QueueStatus;
+    pauseAfterCurrent: boolean;
+    settings: QueueSettings;
+    confirmCancel: boolean;
+    runQueue: () => void;
+    togglePauseAfterCurrent: () => void;
+    cancelAll: () => void;
+    dismissCancelConfirm: () => void;
+    setOnFailure: (mode: OnFailureMode) => void;
+    toggleAutoClear: () => void;
+    setStatus: (status: QueueStatus) => void;
+  }
+
+
+  export const useQueueControlStore = create<QueueControlState>((set) => ({
+    status: 'idle',
+    pauseAfterCurrent: false,
+    settings: DEFAULT_SETTINGS,
+    confirmCancel: false,
+    runQueue: () => set(() => ({ status: 'running' })),
+    togglePauseAfterCurrent: () => set((s) => ({ pauseAfterCurrent: !s.pauseAfterCurrent })),
+    cancelAll: () => set(() => ({ status: 'idle', confirmCancel: false })),
+    dismissCancelConfirm: () => set(() => ({ confirmCancel: false })),
+    setOnFailure: (mode) => set((s) => ({ settings: { ...s.settings, onFailure: mode } })),
+    toggleAutoClear: () => set((s) => ({ settings: { ...s.settings, autoClearCompleted: !s.settings.autoClearCompleted } })),
+    setStatus: (status) => set(() => ({ status })),
+  }));
+
+  ```
+
+
+  FILE 2: src/components/queue/QueueControls.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { Play, Square, Cog } from 'lucide-react';
+
+  import { useQueueControlStore } from '@/store/queue-control';
+
+  import { QueueSettingsPopover } from './QueueSettingsPopover';
+
+  import { CancelConfirmDialog } from './CancelConfirmDialog';
+
+  import styles from './QueueControls.module.css';
+
+
+  export function QueueControls({ isEmpty, taskCount, completed, failed }: { isEmpty: boolean; taskCount: number;
+  completed: number; failed: number }) {
+    const { status, pauseAfterCurrent, confirmCancel, runQueue, togglePauseAfterCurrent, cancelAll, dismissCancelConfirm } = useQueueControlStore();
+    const isRunning = status === 'running';
+    const isDisabled = isEmpty || isRunning;
+
+    return (
+      <div className={styles.controls}>
+        <button className={styles.btn} disabled={isEmpty} onClick={runQueue}>
+          <Play size={16} />
+          {isEmpty ? 'Empty' : 'Run Queue'}
+        </button>
+        <button className={`${styles.btn} ${styles.toggle}`} disabled={isDisabled} onClick={togglePauseAfterCurrent}>
+          {pauseAfterCurrent ? 'Resuming' : 'Pause after current'}
+        </button>
+        <button className={`${styles.btn} ${styles.danger}`} disabled={isEmpty} onClick={() => cancelAll()}>
+          <Square size={16} />
+          Cancel all
+        </button>
+        <div className={styles.gear}>
+          <QueueSettingsPopover disabled={isEmpty} />
+        </div>
+        {confirmCancel && <CancelConfirmDialog onConfirm={cancelAll} onDismiss={dismissCancelConfirm} />}
+        <div className={styles.summary}>
+          {completed} of {taskCount} tasks complete — {failed} failed
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  FILE 3: src/components/queue/QueueControls.module.css
+
+  ```css
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn.toggle {
+    background: var(--color-surface-hover);
+  }
+
+  .btn.danger {
+    color: var(--color-danger, #e74c3c);
+    border-color: var(--color-danger, #e74c3c);
+  }
+
+  .gear {
+    margin-left: auto;
+  }
+
+  .summary {
+    width: 100%;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted, #888);
+  }
+
+  ```
+
+
+  FILE 4: src/components/queue/QueueSettingsPopover.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useState, useRef, useEffect } from 'react';
+
+  import { Cog } from 'lucide-react';
+
+  import { useQueueControlStore } from '@/store/queue-control';
+
+  import styles from './QueueSettingsPopover.module.css';
+
+
+  export function QueueSettingsPopover({ disabled }: { disabled: boolean }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const { settings, setOnFailure, toggleAutoClear } = useQueueControlStore();
+
+    useEffect(() => {
+      const handler = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+      <div ref={ref} className={styles.popover}>
+        <button className={styles.gearBtn} disabled={disabled} onClick={() => setOpen(!open)}>
+          <Cog size={16} />
+        </button>
+        {open && (
+          <div className={styles.dropdown}>
+            <label className={styles.field}>
+              On failure
+              <select value={settings.onFailure} onChange={(e) => setOnFailure(e.target.value as any)} onClick={(e) => e.stopPropagation()}>
+                <option value="pause">Pause queue</option>
+                <option value="skip">Skip and continue</option>
+                <option value="abort">Abort all</option>
+              </select>
+            </label>
+            <label className={styles.field}>
+              Auto-clear completed
+              <input type="checkbox" checked={settings.autoClearCompleted} onChange={toggleAutoClear} onClick={(e) => e.stopPropagation()} />
+            </label>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  ```
+
+
+  FILE 5: src/components/queue/QueueSettingsPopover.module.css
+
+  ```css
+
+  .popover {
+    position: relative;
+    display: inline-block;
+  }
+
+  .gearBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .gearBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    min-width: 200px;
+  }
+
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  .field select {
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  ```
+
+
+  FILE 6: src/components/queue/CancelConfirmDialog.tsx
+
+  ```tsx
+
+  'use client';
+
+  import styles from './CancelConfirmDialog.module.css';
+
+
+  export function CancelConfirmDialog({ onConfirm, onDismiss }: { onConfirm: () => void; onDismiss: () => void }) {
+    return (
+      <div className={styles.dialog}>
+        <p>Cancel all pending tasks?</p>
+        <div className={styles.actions}>
+          <button className={styles.confirm} onClick={onConfirm}>Confirm</button>
+          <button className={styles.dismiss} onClick={onDismiss}>Dismiss</button>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  FILE 7: src/components/queue/CancelConfirmDialog.module.css
+
+  ```css
+
+  .dialog {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--color-warning-bg, #fff3cd);
+    border: 1px solid var(--color-warning-border, #ffc107);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .confirm, .dismiss {
+    padding: 4px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .confirm {
+    color: var(--color-danger, #e74c3c);
+    border-color: var(--color-danger, #e74c3c);
+  }
+
+  ```
+
+
+  After creating all 7 files, run `npm run build` and fix any TypeScript errors. Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/queue-run-controls.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T02:51:02.188Z

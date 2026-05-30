@@ -1,0 +1,28 @@
+name: Implement stop and interrupt for active streaming
+description: >
+  A Stop button replaces the Send button while a response is streaming. Tapping it sends an interrupt signal to pi CLI
+  over WebSocket. The partial response is preserved with an [interrupted] marker and the composer re-enables.
+status: done
+feature:
+  name: Conversation Controls
+  slug: conversation-controls
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The Stop button (square icon and Stop label) replaces the Send button as soon as a response starts streaming
+  - Tapping Stop sends a WebSocket frame of type interrupt with the current conversationId immediately
+  - The partial assistant message is preserved in the chat history and appended with an [interrupted] label in muted
+    colour
+  - The composer textarea becomes editable and focused within 200ms of sending the interrupt
+  - If the CLI does not acknowledge the interrupt within 3 seconds the client re-enables the composer and shows an error
+    toast
+  - Pressing Escape while the chat view is focused triggers the same interrupt behaviour as the Stop button
+  - The Stop button is not shown when a task queue is running; interrupt is handled via queue controls instead
+phase: 4
+priority: 984
+dependsOn:
+  - voice-input

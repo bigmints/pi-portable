@@ -1,0 +1,28 @@
+name: Build conversation export and management actions
+description: >
+  Per-conversation actions accessible via long-press or right-click: Rename (inline edit), Pin/Unpin, Export as
+  Markdown, Export as JSON, and Delete with a 30-day soft-delete recovery window.
+status: done
+feature:
+  name: Conversation History
+  slug: conversation-history
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Long-pressing a conversation entry on mobile or right-clicking on desktop shows a context menu with: Rename, Pin/Unpin, Export as Markdown, Export as JSON, Delete
+  - Rename opens an inline text input in place of the title; pressing Enter or clicking away saves the new name
+  - Export as Markdown triggers a browser file download of the conversation formatted as a .md file with message
+    timestamps as headers
+  - Export as JSON triggers a download of the raw conversation object as a .json file
+  - Delete moves the conversation to a soft-deleted state; a toast fires with an Undo button that restores it within 5
+    seconds
+  - Permanently deleted conversations (after 30 days) are not listed in the history and cannot be recovered
+  - Pinning a conversation moves it to the top Pinned group and shows a pin icon on its card
+phase: 8
+priority: 965
+dependsOn:
+  - history-search-filters

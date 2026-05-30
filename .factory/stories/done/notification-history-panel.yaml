@@ -1,0 +1,26 @@
+name: Build notification history panel
+description: >
+  A bell icon in the header with an unread count badge. Clicking it opens a slide-out panel listing all past in-app
+  notifications with read/unread state, relative timestamps, and deep-links to the related job or conversation.
+status: done
+feature:
+  name: Notifications
+  slug: notifications
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The notification bell icon in the header shows a red numeric badge when there are unread notifications
+  - Clicking the bell opens a slide-out panel from the right showing all notifications in reverse chronological order
+  - Each notification row shows: type icon, title, body preview, relative time, and a link button to the related resource
+  - Unread notifications have a blue dot indicator; clicking them or the Mark all read button clears the unread state
+  - The panel has a Clear all button that removes all notifications after a confirmation
+  - Notifications are persisted to localStorage and survive page refreshes
+  - The panel is dismissible by clicking the bell again, pressing Escape, or clicking the backdrop on mobile
+phase: 7
+priority: 968
+dependsOn:
+  - web-push-notifications

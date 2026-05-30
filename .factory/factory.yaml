@@ -1,0 +1,54 @@
+# Factory Bridge Config — pi-app
+version: 1
+
+project:
+  name: pi-app
+  bootstrapped: false   # false = new project; scaffold epic must build first.
+                        # The engine sets this to true automatically after the
+                        # '⚙️ Scaffold & Foundation' AppStory completes successfully.
+                        # Set to true manually for existing projects being connected.
+  description: >
+    Mobile-first PWA web client for the pi CLI. Real-time streaming chat,
+    agentic job monitoring, project management, and full CLI feature parity.
+    Built with Next.js 14 App Router + TypeScript + Vanilla CSS.
+
+stack:
+  framework: next.js
+  version: "14"
+  language: typescript
+  packageManager: npm
+  styling: vanilla-css
+  realtime: websocket
+  pwa: next-pwa
+
+# Conventions the LLM follows when generating code
+conventions:
+  - "Use TypeScript strict mode throughout; no 'any' types"
+  - "All components in src/components/<category>/<ComponentName>.tsx"
+  - "Per-component styles in co-located <ComponentName>.module.css files"
+  - "No Tailwind — use CSS custom properties from src/styles/tokens.css"
+  - "API routes in src/app/api/<resource>/route.ts (Next.js App Router)"
+  - "Shared types in src/types/<domain>.ts"
+  - "Zustand stores in src/store/<slice>.ts — one slice per domain"
+  - "React Query hooks in src/hooks/use<Resource>.ts"
+  - "WebSocket logic exclusively in src/lib/ws-client.ts (singleton)"
+  - "All icons from lucide-react with strokeWidth={1.5}"
+  - "Inter font for UI text; JetBrains Mono for code via next/font"
+  - "CSS breakpoints: mobile < 768px, tablet 768-1023px, desktop >= 1024px"
+  - "Dark mode via data-theme='dark' on <html>; never via class name"
+  - "All user-generated content rendered through react-markdown + DOMPurify"
+  - "z-index scale: base(0) overlay(10) dropdown(20) modal(30) toast(40)"
+
+# Knowledge files the engine injects as context into every LLM prompt
+knowledge:
+  - path: AGENTS.md
+  - path: .factory/knowledge/
+
+# Agentic paths
+agentic:
+  logs_dir: .factory/logs
+  stories_dir: .factory/stories/features
+  task_queue: .factory/task-manager/todo.yaml
+  skill_index: .factory/skill-index.yaml
+  workflows_dir: .factory/workflows
+  knowledge_dir: .factory/knowledge

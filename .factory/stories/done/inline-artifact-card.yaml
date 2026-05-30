@@ -1,0 +1,26 @@
+name: Build inline artifact card for chat messages
+description: >
+  A compact card rendered inside a chat message whenever pi CLI creates or modifies a file. Shows filename, language
+  badge, line count, and the first 20 lines with syntax highlighting. An Expand button opens the full viewer.
+status: done
+feature:
+  name: Artifact Viewer
+  slug: artifact-viewer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Artifact cards render inline in the message feed when a pi CLI file event is received
+  - The card header shows: a file type icon, the filename, a language badge, and the line count
+  - The card body shows the first 20 lines of file content with syntax highlighting matching the detected language
+  - An Expand button in the card header opens the full file viewer
+  - A Copy button copies the full file content to the clipboard
+  - Modified files show a diff badge (e.g. +12 -3) in the header; the card body shows the diff instead of raw content
+  - Image files render the image directly in the card with a tap-to-expand lightbox rather than showing text content
+phase: 9
+priority: 964
+dependsOn:
+  - conversation-export-actions

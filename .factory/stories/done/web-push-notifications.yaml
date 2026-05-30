@@ -1,0 +1,28 @@
+name: Implement Web Push notifications for job and queue events
+description: >
+  Push notifications via the Web Push API that fire when the browser is backgrounded. Covers job complete, job error,
+  task complete, task failed, and queue complete events. Permission is requested non-intrusively after the first job
+  starts.
+status: done
+feature:
+  name: Notifications
+  slug: notifications
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - After the first agentic job or queue run starts, a non-intrusive in-app banner requests push notification permission
+  - On permission grant the service worker registers a push subscription sent to POST /api/push/subscribe
+  - A push notification fires for job_complete events containing: job title, duration, and a deep-link action to the job detail
+  - A push notification fires for job_error events containing: job title, error summary, and a deep-link to the job
+  - For queued tasks, a push notification fires per task on task_complete and task_failed, and a summary push
+    notification fires when the entire queue finishes showing N of M tasks succeeded
+  - Tapping any push notification deep-links to the relevant job, task, or queue run in the app
+  - A Test notification button in Settings verifies the push pipeline is working end to end
+phase: 7
+priority: 969
+dependsOn:
+  - toast-notification-system

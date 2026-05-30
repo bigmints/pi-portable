@@ -1,0 +1,64 @@
+name: "Fix: web-push-notifications"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/web-push-notifications.yaml
+
+  Issue: CLI engineer got stuck in file-listing loops during Web Push notifications implementation. It created some
+  files (src/app/api/push/subscribe/route.ts exists) but never completed the implementation, never wrote the store,
+  components, service worker updates, or settings integration.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  Implement Web Push notifications for job and queue events. DO NOT list files. DO NOT plan. Write code directly.
+
+
+  1. Create src/store/push-notifications.ts — Zustand store with permissionState
+  ('default'|'granted'|'denied'|'prompted'), subscription, hasPrompted flag, localStorage persistence.
+
+
+  2. Create src/components/notifications/PushPermissionBanner.tsx + .module.css — Slim banner with bell icon, "Enable"
+  and "Dismiss" buttons. Enable calls Notification.requestPermission(). Dismiss marks as prompted.
+
+
+  3. Create src/lib/push-manager.ts — requestSubscription() using VAPID keys from env vars
+  (NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY with defaults), sendSubscription() POST to /api/push/subscribe.
+
+
+  4. Create src/lib/push-notifier.ts — triggerPushNotification(eventType, payload) that POSTs to /api/push/trigger.
+  Functions: notifyJobComplete, notifyJobError, notifyTaskComplete, notifyTaskFailed, notifyQueueComplete.
+
+
+  5. Create src/app/api/push/subscribe/route.ts — POST handler storing subscription in memory Map.
+
+
+  6. Create src/app/api/push/trigger/route.ts — POST handler that sends push via web-push package (install it: npm
+  install web-push).
+
+
+  7. Create src/app/api/push/test/route.ts — POST handler for test notification.
+
+
+  8. Update public/sw.js — Add push event handler (showNotification with title, body, icon, tag, data.url) and
+  notificationclick handler (openWindow with data.url).
+
+
+  9. Update src/components/settings/SettingsView.tsx — Add "Notifications" section with permission status display and
+  "Test Notification" button that POSTs to /api/push/test.
+
+
+  10. Update src/store/jobs.ts — On first job start, check push store hasPrompted, if false show banner.
+
+
+  11. Run npm install web-push, then npm run build. Fix all errors. Print DELIVERY COMPLETE.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/web-push-notifications.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T04:17:15.880Z

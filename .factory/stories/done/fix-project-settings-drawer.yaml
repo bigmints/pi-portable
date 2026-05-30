@@ -1,0 +1,195 @@
+name: "Fix: project-settings-drawer"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/project-settings-drawer.yaml
+
+  Issue: CLI stalled twice, repeatedly listing existing files instead of building the project settings drawer. The CLI
+  is stuck in a file-listing loop and not creating any new files.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## CRITICAL: DO NOT LIST FILES. BUILD THE CODE NOW.
+
+
+  The previous attempts failed because the CLI kept listing existing files instead of creating new ones. Stop that
+  behavior immediately.
+
+
+  ## Build the Project Settings Drawer
+
+
+  Create ALL of these files from scratch. Write the full code for each:
+
+
+  ### 1. src/store/project-settings.ts
+
+  ```typescript
+
+  "use client"
+
+  import { create } from 'zustand'
+
+
+  interface Project {
+    id: string
+    name: string
+    description?: string
+    envVars?: Record<string, string>
+    ignorePatterns?: string[]
+  }
+
+
+  interface EnvVar {
+    key: string
+    value: string
+  }
+
+
+  interface ProjectSettingsState {
+    project: Project | null
+    description: string
+    envVars: EnvVar[]
+    ignorePatterns: string[]
+    unsavedChanges: boolean
+    isDeleting: boolean
+    setProject: (project: Project) => void
+    updateDescription: (desc: string) => void
+    addEnvVar: () => void
+    removeEnvVar: (index: number) => void
+    updateEnvVar: (index: number, key: string, value: string) => void
+    addIgnorePattern: (pattern: string) => void
+    removeIgnorePattern: (index: number) => void
+    markUnsaved: () => void
+    clearUnsaved: () => void
+    reset: () => void
+  }
+
+
+  export const useProjectSettingsStore = create<ProjectSettingsState>((set) => ({
+    project: null,
+    description: '',
+    envVars: [],
+    ignorePatterns: [],
+    unsavedChanges: false,
+    isDeleting: false,
+    setProject: (project) => set({
+      project,
+      description: project.description || '',
+      envVars: project.envVars ? Object.entries(project.envVars).map(([k, v]) => ({ key: k, value: v })) : [],
+      ignorePatterns: project.ignorePatterns || [],
+      unsavedChanges: false
+    }),
+    updateDescription: (desc) => set({ description: desc, unsavedChanges: true }),
+    addEnvVar: () => set((state) => ({ envVars: [...state.envVars, { key: '', value: '' }], unsavedChanges: true })),
+    removeEnvVar: (index) => set((state) => ({ envVars: state.envVars.filter((_, i) => i !== index), unsavedChanges: true })),
+    updateEnvVar: (index, key, value) => set((state) => {
+      const newEnvVars = [...state.envVars]
+      newEnvVars[index] = { key, value }
+      return { envVars: newEnvVars, unsavedChanges: true }
+    }),
+    addIgnorePattern: (pattern) => set((state) => ({ ignorePatterns: [...state.ignorePatterns, pattern], unsavedChanges: true })),
+    removeIgnorePattern: (index) => set((state) => ({ ignorePatterns: state.ignorePatterns.filter((_, i) => i !== index), unsavedChanges: true })),
+    markUnsaved: () => set({ unsavedChanges: true }),
+    clearUnsaved: () => set({ unsavedChanges: false }),
+    reset: () => set({ project: null, description: '', envVars: [], ignorePatterns: [], unsavedChanges: false, isDeleting: false })
+  }))
+
+  ```
+
+
+  ### 2. src/components/common/Toast.tsx + Toast.module.css
+
+  Build a simple toast notification system. Export `showToast(message: string, type?: 'success' | 'error')` function.
+  Toasts auto-dismiss after 3s, stack vertically, have success (green) and error (red) variants.
+
+
+  ### 3. src/components/common/ConfirmDialog.tsx + ConfirmDialog.module.css
+
+  Modal overlay with backdrop. Props: `{ isOpen: boolean, title: string, message: string, confirmLabel: string,
+  onConfirm: () => void, requireTypedValue?: string, typedValue: string, onTypedValueChange: (v: string) => void }`.
+  When requireTypedValue is set, show input that must match exactly to enable confirm button.
+
+
+  ### 4. src/components/projects/DescriptionSection.tsx + DescriptionSection.module.css
+
+  Label "Description", textarea (6 rows), saves on blur via PATCH /api/projects/:id with `{ description }`, shows toast
+  on success, marks unsaved on input.
+
+
+  ### 5. src/components/projects/EnvVarsSection.tsx + EnvVarsSection.module.css
+
+  Label "Environment Variables", key-value rows with monospace inputs, Remove button per row, "Add Variable" button,
+  Save button PATCHes `{ envVars }`.
+
+
+  ### 6. src/components/projects/IgnorePatternsSection.tsx + IgnorePatternsSection.module.css
+
+  Label "Ignore Patterns", tag-style input (Enter adds tag), tags with X to remove, Save button PATCHes `{
+  ignorePatterns }`.
+
+
+  ### 7. src/components/projects/DangerZoneSection.tsx + DangerZoneSection.module.css
+
+  Label "Danger Zone" with red styling, "Delete Project" button opens ConfirmDialog requiring project name typed
+  exactly, calls DELETE /api/projects/:id.
+
+
+  ### 8. src/components/projects/ProjectSettingsDrawer.tsx + ProjectSettingsDrawer.module.css
+
+  Props: `{ projectId: string, projectName: string, isOpen: boolean, onClose: () => void }`. Desktop (≥768px):
+  right-side drawer 480px with overlay backdrop. Mobile: bottom sheet full width 90vh max. Header with close button.
+  Warning banner for unsaved changes. Contains all 4 sections.
+
+
+  ### 9. src/app/api/projects/[id]/route.ts
+
+  PATCH handler accepts `{ description?, envVars?, ignorePatterns? }`, DELETE handler. Mock: console.log and return 200
+  OK JSON.
+
+
+  ## Conventions
+
+  - "use client" on all components
+
+  - CSS modules (.module.css) only — NO Tailwind
+
+  - TypeScript strict mode — proper interfaces, no `any`
+
+  - lucide-react for icons
+
+  - Mobile-first responsive (bottom-sheet <768px, right drawer ≥768px)
+
+
+  ## Build Verification
+
+  After creating all files, run:
+
+  ```
+
+  npx tsc --noEmit
+
+  npm run lint
+
+  npm run build
+
+  ```
+
+  Fix any errors. When all pass, print DELIVERY COMPLETE and a summary.
+
+
+  ## SELF-SUFFICIENCY
+
+  Complete everything without asking questions. Do NOT list files. Do NOT describe what you will do. Just write the code
+  and build it.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/project-settings-drawer.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T19:50:14.766Z

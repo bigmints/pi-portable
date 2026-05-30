@@ -1,0 +1,30 @@
+name: Implement autonomous sequential task execution
+description: >
+  When the user starts the queue, each task is sent to pi CLI as a fresh conversation in sequence. pi runs each task
+  fully before the next begins. The user does not need to be present between tasks.
+status: done
+feature:
+  name: Task Queue
+  slug: task-queue
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Clicking Run Queue sends the first pending task to pi CLI as a new conversation via WebSocket and marks it as running
+  - When pi CLI signals task completion (message_complete frame), the task card status updates to completed and the next
+    pending task starts automatically
+  - If a task fails (error frame) the task status updates to failed and the queue behaviour follows the on-failure
+    setting (pause, skip, or abort)
+  - The active project at queue start is used for all tasks in the run; switching projects during a run has no effect on
+    the current run
+  - A progress summary above the queue editor shows: Task N of M — X completed, Y failed
+  - The queue run is tracked server-side so closing the browser tab does not cancel the current task; on return the UI
+    resumes live monitoring of the in-progress task
+  - Each task creates its own conversation entry in the conversation list linked to that task card
+phase: 6
+priority: 975
+dependsOn:
+  - task-queue-editor

@@ -1,0 +1,26 @@
+name: Build conversation history tab with day grouping
+description: >
+  A /history route listing all conversations across all projects grouped by day. Pinned conversations sit at the top.
+  Each entry links to a read-only view with a Resume button to continue the conversation.
+status: done
+feature:
+  name: Conversation History
+  slug: conversation-history
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - History tab at /history shows all conversations grouped under day headers: Today, Yesterday, This Week, Older
+  - Pinned conversations appear in a Pinned section above the day groups
+  - Each entry shows: title, project colour badge, model name, message count, and relative date
+  - Tapping an entry opens the conversation in a read-only view that renders all messages but disables the composer
+  - A Resume Conversation button in the read-only view navigates to the live chat for that conversation
+  - The list loads as skeletons while fetching and shows an empty state if no history exists
+  - Infinite scroll loads older conversations in batches of 50 as the user scrolls down
+phase: 8
+priority: 967
+dependsOn:
+  - notification-history-panel

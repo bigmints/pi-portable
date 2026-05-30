@@ -1,0 +1,108 @@
+name: "Fix: swipe-gestures-pull-to-refresh"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/swipe-gestures-pull-to-refresh.yaml
+
+  Issue: CLI stalled twice, only listing files without creating any implementation files for swipe gestures and
+  pull-to-refresh feature.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  DO NOT list files. DO NOT scan the directory. Write code files directly.
+
+
+  Create these 9 new files and modify 4 existing files:
+
+
+  **NEW FILES:**
+
+
+  1. `src/hooks/useSwipeGesture.ts` — Export a `useSwipeGesture` hook. Parameters: `ref` (MutableRefObject), `options`
+  (minSwipeDistance=60, minVelocity=0.4, maxAngle=30, onSwipeLeft, onSwipeRight, onSwipeProgress). Uses passive touch
+  listeners. Tracks touchStartX/Y, touchCurrentX/Y. Computes deltaX, deltaY, velocity. Calls onSwipeProgress(deltaX,
+  progress) during drag. Calls onSwipeLeft/onSwipeRight on release if thresholds met. Cleanup on unmount.
+
+
+  2. `src/hooks/usePullToRefresh.ts` — Export a `usePullToRefresh` hook. Parameters: `ref` (MutableRefObject), `options`
+  (threshold=64, maxPullDistance=80, onPullProgress, onRelease). Uses passive touch listeners. Returns `{ isPulling,
+  pullProgress (0-1), isRefreshing, triggerRefresh }`. onRelease fires when pull exceeds threshold and finger released.
+  Cleanup on unmount.
+
+
+  3. `src/components/gestures/SwipeBackOverlay.tsx` — "use client" component. Props: `progress` (0-1), `onDismiss`.
+  Renders semi-transparent backdrop with "←" chevron icon. CSS transform: translateX based on progress. Spring animation
+  via CSS cubic-bezier.
+
+
+  4. `src/components/gestures/SwipeBackOverlay.module.css` — `.overlay { position: fixed; inset: 0; background:
+  rgba(0,0,0,0.3); pointer-events: none; z-index: 100; }` `.back-hint { position: absolute; left: 16px; top: 50%;
+  transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center; }`
+
+
+  5. `src/components/gestures/PullToRefreshIndicator.tsx` — "use client" component. Props: `progress` (0-1),
+  `isRefreshing`. Renders circular spinner (div with border, border-top colored, border-radius 50%). Opacity and
+  rotation driven by progress. CSS @keyframes spin when isRefreshing.
+
+
+  6. `src/components/gestures/PullToRefreshIndicator.module.css` — `.indicator { width: 32px; height: 32px; border: 3px
+  solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear
+  infinite; }` `@keyframes spin { to { transform: rotate(360deg); } }`
+
+
+  7. `src/components/gestures/SwipeToDelete.tsx` — "use client" component. Props: `children`, `onDelete`,
+  `deleteLabel="Delete"`. Wraps children in a container. On left swipe, reveals red background with Trash-2 icon button.
+  Uses internal state for swipe offset. Calls onDelete when released over delete zone (>100px swipe).
+
+
+  8. `src/components/gestures/SwipeToDelete.module.css` — `.container { position: relative; overflow: hidden; }`
+  `.delete-bg { position: absolute; right: 0; top: 0; bottom: 0; width: 100px; background: var(--color-danger, #ef4444);
+  display: flex; align-items: center; justify-content: center; color: white; }` `.content { transition: transform 0.2s
+  ease; }`
+
+
+  9. `src/components/gestures/index.ts` — Barrel exports: `export { SwipeBackOverlay } from './SwipeBackOverlay'; export
+  { PullToRefreshIndicator } from './PullToRefreshIndicator'; export { SwipeToDelete } from './SwipeToDelete';`
+
+
+  **MODIFY EXISTING FILES:**
+
+
+  10. `src/components/chat/ChatView.tsx` — Import `useSwipeGesture` and `SwipeBackOverlay`. Add swipe gesture to the
+  chat viewport ref. On swipe right: `router.push('/chat')`. Render SwipeBackOverlay during swipe progress. Apply CSS
+  transform to chat content during drag.
+
+
+  11. `src/components/chat/ChatView.module.css` — Add `.chat-viewport { overscroll-behavior: contain; }` rule.
+
+
+  12. `src/components/chat/ConversationList.tsx` — Import `usePullToRefresh`, `PullToRefreshIndicator`, `SwipeToDelete`.
+  Wrap list with pull-to-refresh. Render indicator at top. On refresh: call conversations store refetch. Wrap each list
+  item with SwipeToDelete. On delete: call store deleteConversation.
+
+
+  13. `src/components/chat/ConversationList.module.css` — Add `.list-container { overscroll-behavior: contain; }` and
+  `.pull-indicator { display: flex; justify-content: center; padding: 8px 0; }` rules.
+
+
+  14. `src/store/conversations.ts` — Add `refetchConversations: () => void` action (can use `router.refresh()` or
+  fetch). Add `deleteConversation: (id: string) => void` action.
+
+
+  15. `src/app/globals.css` — Add `html, body { overscroll-behavior: contain; }` at the top.
+
+
+  After writing all files, run `npx tsc --noEmit`, `npm run lint`, `npm run build`. Fix any errors. Print DELIVERY
+  COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/swipe-gestures-pull-to-refresh.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T11:23:22.221Z

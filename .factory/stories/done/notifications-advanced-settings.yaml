@@ -1,0 +1,30 @@
+name: Build notifications and advanced settings sections
+description: >
+  The Notifications tab with toggles for each event type and a Test button. The Advanced tab with cache management, data
+  export, settings reset, and a debug mode toggle that reveals the live WebSocket message log.
+status: done
+feature:
+  name: Settings
+  slug: settings
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Notifications section has toggles for: Job complete, Job error, Task complete (per queue task), Task failed, Queue complete, and Sound effects
+  - A Test notification button sends a test push notification to verify the pipeline; shows a success or error message
+    inline
+  - Advanced section has: Clear local cache button (clears IndexedDB and localStorage with a confirmation), Reset all
+      settings button (restores defaults with a double-confirmation), Export all data button (downloads a ZIP of all
+      conversations as Markdown files)
+  - Debug mode toggle reveals a floating Debug panel showing a live log of incoming WebSocket messages with timestamps
+    and type badges
+  - The debug panel can be repositioned by dragging and dismissed with a close button
+  - All Advanced destructive actions require explicit confirmation and fire a toast on completion
+  - Notification toggle states are saved immediately to the server on change; no Save button needed
+phase: 10
+priority: 959
+dependsOn:
+  - model-appearance-settings

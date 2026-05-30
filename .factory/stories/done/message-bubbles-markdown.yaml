@@ -1,0 +1,30 @@
+name: Build message bubble components with Markdown rendering
+description: >
+  User and assistant message bubbles with full GFM Markdown rendering including tables, blockquotes, and
+  syntax-highlighted code blocks. Messages stream token-by-token and auto-scroll the viewport to the bottom during
+  generation.
+status: done
+feature:
+  name: Conversation Chat
+  slug: conversation-chat
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - User messages are right-aligned with a primary-colour bubble; assistant messages are left-aligned with a
+    surface-colour bubble
+  - Markdown renders headings, bold, italic, ordered and unordered lists, tables, and blockquotes correctly
+  - Code blocks display a language badge, line numbers, and a copy-to-clipboard button; syntax is highlighted via shiki
+  - Streaming tokens append in real time with no layout jank; a blinking cursor is shown at the end of the in-progress
+    message
+  - The chat viewport auto-scrolls to the bottom while streaming is active
+  - A Scroll to bottom floating button appears when the user has scrolled up more than 200px from the bottom
+  - Timestamps appear on hover (desktop) or long-press (mobile) in a tooltip below the bubble
+  - All user-generated content passes through DOMPurify before rendering to prevent XSS
+phase: 2
+priority: 991
+dependsOn:
+  - conversation-list

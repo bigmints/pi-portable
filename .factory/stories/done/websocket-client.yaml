@@ -1,0 +1,27 @@
+name: Build WebSocket client with reconnect and token streaming
+description: >
+  A singleton WebSocket client that connects to the pi CLI backend, handles JSON message framing, streams tokens into
+  Zustand stores, and reconnects with exponential backoff. The nervous system of the entire app.
+status: done
+feature:
+  name: Conversation Chat
+  slug: conversation-chat
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A singleton WS client in src/lib/ws-client.ts connects to NEXT_PUBLIC_PI_WS_URL on app load
+  - Incoming token frames (type: token) are appended to the correct in-progress message in the messages Zustand store
+  - message_complete frames mark the message as finished and re-enable the composer
+  - job_event frames are routed to the jobs Zustand store
+  - Disconnection triggers automatic reconnect with exponential backoff: 1s, 2s, 4s, 8s up to a 30s ceiling with a maximum of 10 attempts
+  - Connection state (connected / reconnecting / offline) is written to a Zustand connection store for the status bar to
+    read
+  - Sending a message calls ws.send with a JSON frame of type chat containing conversationId, content, and projectId
+phase: 2
+priority: 993
+dependsOn:
+  - project-settings-drawer

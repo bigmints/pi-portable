@@ -1,0 +1,29 @@
+name: "Fix: app-shell-layout"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/app-shell-layout.yaml
+
+  Issue: CLI engineer (pi) failed to execute implementation after 2 attempts. Both delegations resulted in STALL — the
+  CLI repeatedly listed directory contents instead of writing code. The agent appears stuck in a file-inventory loop and
+  cannot proceed to actual implementation. This requires human intervention to either reset the CLI agent state or
+  manually implement the app shell components (src/store/ui.ts, src/components/layout/Topbar.tsx,
+  src/components/layout/Sidebar.tsx, src/components/layout/AppShell.tsx, and updated src/app/layout.tsx).
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI engineer (pi) failed to execute implementation after 2 attempts. Both delegations resulted in
+  STALL — the CLI repeatedly listed directory contents instead of writing code. The agent appears stuck in a
+  file-inventory loop and cannot proceed to actual implementation. This requires human intervention to either reset the
+  CLI agent state or manually implement the app shell components (src/store/ui.ts, src/components/layout/Topbar.tsx,
+  src/components/layout/Sidebar.tsx, src/components/layout/AppShell.tsx, and updated src/app/layout.tsx).
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/app-shell-layout.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T14:36:28.004Z

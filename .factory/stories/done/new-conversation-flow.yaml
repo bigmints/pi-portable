@@ -1,0 +1,27 @@
+name: Build new conversation flow with suggested prompts
+description: >
+  The empty state screen shown when no conversation is selected or when the user starts a new chat. Features the pi-app
+  logo, a welcome headline, and a row of suggested prompt chips pulled from pi CLI config.
+status: done
+feature:
+  name: Conversation Chat
+  slug: conversation-chat
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Empty state is shown at /chat when no conversation is active
+  - Screen displays the pi-app logo, a welcome headline, and a brief tagline
+  - Three to six suggested prompt chips are rendered below the headline; content is fetched from GET /api/suggestions or
+    falls back to hardcoded defaults
+  - Tapping a chip inserts its text into the composer and focuses the composer
+  - A New Chat button in the conversation list header creates a fresh conversation and navigates to this empty state
+  - Navigating away mid-empty-state does not create a conversation entry in the list
+  - The composer is active and focusable from the empty state so the user can start typing immediately
+phase: 2
+priority: 989
+dependsOn:
+  - tool-call-annotation

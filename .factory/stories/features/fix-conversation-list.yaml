@@ -1,0 +1,26 @@
+name: "Fix: conversation-list"
+description: |-
+  Automated fix task created by Factory TPM.
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-list.yaml
+  Issue: CLI engineer stalls immediately after listing directory contents (133 files) and never proceeds to implementation. Two consecutive delegations both stalled at 300s with identical behavior - CLI outputs file list then produces no further output. This appears to be a fundamental CLI agent issue where it's not executing the build instructions, possibly due to the large file count or a session initialization problem. The CLI needs human intervention to diagnose why it's not proceeding past the initial file scan phase.
+status: ready
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI engineer stalls immediately after listing directory
+  contents (133 files) and never proceeds to implementation. Two consecutive
+  delegations both stalled at 300s with identical behavior - CLI outputs file
+  list then produces no further output. This appears to be a fundamental CLI
+  agent issue where it's not executing the build instructions, possibly due to
+  the large file count or a session initialization problem. The CLI needs human
+  intervention to diagnose why it's not proceeding past the initial file scan
+  phase.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T20:29:22.656Z

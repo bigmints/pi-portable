@@ -1,0 +1,28 @@
+name: Build retry, fork, and edit-and-resend message actions
+description: >
+  A message action bar on hover or long-press exposes Retry (regenerate the assistant response), Fork (branch the
+  conversation from that point), and Edit & Resend (modify a user message and replay from there).
+status: done
+feature:
+  name: Conversation Controls
+  slug: conversation-controls
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Hovering over any message on desktop reveals an action bar of icon buttons: Copy, Retry (on assistant messages), Edit (on user messages), and Fork
+  - Long-pressing a message on mobile shows the same actions in a bottom sheet
+  - Retry sends a regenerate WebSocket frame; the existing assistant message is replaced with the new streaming response
+  - Fork opens a confirmation bottom sheet noting the branch point; confirming creates a new conversation seeded with
+    all messages up to and including the selected one and navigates to it
+  - Edit opens the user message text in the composer; submitting rewinds the conversation to that message and sends the
+    edited version; all subsequent messages in the original thread are discarded
+  - All actions include tooltip labels on desktop
+  - Copy action copies the raw Markdown text of a message to the clipboard and shows a brief Copied confirmation
+phase: 4
+priority: 983
+dependsOn:
+  - stop-interrupt-streaming

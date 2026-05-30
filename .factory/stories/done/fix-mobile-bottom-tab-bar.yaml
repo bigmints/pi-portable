@@ -1,0 +1,224 @@
+name: "Fix: mobile-bottom-tab-bar"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/mobile-bottom-tab-bar.yaml
+
+  Issue: CLI stalled twice, repeatedly listing existing files instead of creating the BottomTabBar component. The CLI is
+  stuck in a file-listing loop and not writing any code.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## CRITICAL: STOP LISTING FILES. WRITE CODE.
+
+
+  You must CREATE these files with full content. Do not list existing files. Do not describe what you'll do. Write the
+  actual file contents.
+
+
+  ### FILE 1: `src/components/layout/BottomTabBar.tsx`
+
+  Write this exact content:
+
+
+  ```tsx
+
+  'use client';
+
+
+  import { useRouter } from 'next/navigation';
+
+  import { MessageSquare, ListTodo, Wrench, Clock, Settings } from 'lucide-react';
+
+  import { useJobsStore } from '@/store/jobs';
+
+  import styles from './BottomTabBar.module.css';
+
+
+  interface Tab {
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    route: string;
+  }
+
+
+  const tabs: Tab[] = [
+    { id: 'chat', label: 'Chat', icon: MessageSquare, route: '/chat' },
+    { id: 'queue', label: 'Queue', icon: ListTodo, route: '/queue' },
+    { id: 'jobs', label: 'Jobs', icon: Wrench, route: '/jobs' },
+    { id: 'history', label: 'History', icon: Clock, route: '/history' },
+    { id: 'settings', label: 'Settings', icon: Settings, route: '/settings' },
+  ];
+
+
+  export default function BottomTabBar() {
+    const router = useRouter();
+    const pathname = router.pathname;
+    const jobs = useJobsStore((state) => state.jobs);
+    const runningCount = jobs.filter((j) => j.status === 'running').length;
+
+    const handleTabPress = (route: string) => {
+      if (navigator.vibrate) {
+        navigator.vibrate(10);
+      }
+      router.push(route);
+    };
+
+    return (
+      <nav className={styles.bottomTabBar}>
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = pathname === tab.route || (tab.route !== '/' && pathname.startsWith(tab.route));
+          return (
+            <button
+              key={tab.id}
+              className={`${styles.tab} ${isActive ? styles.active : ''}`}
+              onClick={() => handleTabPress(tab.route)}
+              aria-label={tab.label}
+            >
+              <Icon className={styles.tabIcon} />
+              <span className={styles.tabLabel}>{tab.label}</span>
+              {tab.id === 'jobs' && runningCount > 0 && (
+                <span className={styles.badge}>{runningCount}</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+    );
+  }
+
+  ```
+
+
+  ### FILE 2: `src/components/layout/BottomTabBar.module.css`
+
+  Write this exact content:
+
+
+  ```css
+
+  .bottomTabBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-surface, #ffffff);
+    border-top: 1px solid var(--color-border, #e5e7eb);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    position: relative;
+    padding: 4px 0;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary, #6b7280);
+    transition: color 0.2s ease;
+  }
+
+
+  .tab.active {
+    color: var(--color-primary, #3b82f6);
+  }
+
+
+  .tabIcon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.5;
+    transition: stroke-width 0.2s ease;
+  }
+
+
+  .tab.active .tabIcon {
+    stroke-width: 2.5;
+  }
+
+
+  .tabLabel {
+    font-size: 11px;
+    font-weight: 400;
+    transition: font-weight 0.2s ease;
+  }
+
+
+  .tab.active .tabLabel {
+    font-weight: 600;
+  }
+
+
+  .badge {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+
+  @media (min-width: 768px) {
+    .bottomTabBar {
+      display: none !important;
+    }
+  }
+
+  ```
+
+
+  ### FILE 3: Update `src/app/layout.tsx`
+
+  Add BottomTabBar import and render it. Also add global CSS for content padding.
+
+
+  ### FILE 4: Update `src/app/globals.css` (or create if missing)
+
+  Add mobile content padding rule.
+
+
+  ### BUILD:
+
+  1. Write all 4 files
+
+  2. Run `npm run build`
+
+  3. Fix any errors
+
+  4. Print DELIVERY COMPLETE
+
+
+  WRITE THE FILES NOW. DO NOT LIST FILES.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/mobile-bottom-tab-bar.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T14:43:20.297Z

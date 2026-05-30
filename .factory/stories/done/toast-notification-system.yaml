@@ -1,0 +1,26 @@
+name: Build in-app toast notification system
+description: >
+  A global toast system that slides notifications in from the bottom-right on desktop and bottom-centre on mobile.
+  Supports info, success, warning, and error variants. Auto-dismisses after 4 seconds; stacks up to 3 at a time.
+status: done
+feature:
+  name: Notifications
+  slug: notifications
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Toasts slide in with a smooth animation from the bottom-right corner on desktop and bottom-centre on mobile
+  - Four visual variants: info (blue), success (green), warning (amber), error (red) — each with a matching icon
+  - Toasts auto-dismiss after 4 seconds; hovering over a toast pauses the auto-dismiss timer
+  - Each toast has an X button for manual dismissal
+  - A maximum of 3 toasts are visible simultaneously; additional toasts queue and appear as earlier ones dismiss
+  - A global useToast hook exposed from the Zustand store allows any component to fire a toast
+  - Toasts are announced to screen readers via an aria-live="polite" region
+phase: 7
+priority: 970
+dependsOn:
+  - connection-status-bar

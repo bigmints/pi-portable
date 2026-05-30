@@ -1,0 +1,28 @@
+name: "Fix: fix-model-appearance-settings"
+description: |-
+  Automated fix task created by Factory TPM.
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-model-appearance-settings.yaml
+  Issue: CLI engineer is fundamentally stuck in a file-enumeration loop. Despite two interventions with explicit 'STOP LISTING FILES' instructions and heredoc-based file creation commands, the CLI repeatedly outputs the same 471-file directory listing and stalls for 300+ seconds without writing any code. This appears to be a systemic issue with the CLI agent's execution mode — it enters a planning/enumeration state and cannot break out to execute file writes. The story requires creating 9 new files (API route, store, 3 component pairs, CSS modules) and updating 2 existing files. Human intervention needed to either fix the CLI agent's execution loop or manually create the files.
+status: ready
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI engineer is fundamentally stuck in a file-enumeration
+  loop. Despite two interventions with explicit 'STOP LISTING FILES'
+  instructions and heredoc-based file creation commands, the CLI repeatedly
+  outputs the same 471-file directory listing and stalls for 300+ seconds
+  without writing any code. This appears to be a systemic issue with the CLI
+  agent's execution mode — it enters a planning/enumeration state and cannot
+  break out to execute file writes. The story requires creating 9 new files (API
+  route, store, 3 component pairs, CSS modules) and updating 2 existing files.
+  Human intervention needed to either fix the CLI agent's execution loop or
+  manually create the files.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-model-appearance-settings.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T09:30:33.230Z

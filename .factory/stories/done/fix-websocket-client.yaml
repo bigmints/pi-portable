@@ -1,0 +1,27 @@
+name: "Fix: websocket-client"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/websocket-client.yaml
+
+  Issue: CLI engineer (pi) stalled twice in a row, producing only file listings without implementing any code. The agent
+  appears to be stuck in a file enumeration loop and is not executing implementation commands. Two interventions with
+  detailed step-by-step instructions failed to break the stall pattern. The CLI agent may need human intervention to
+  reset its execution state or there may be an environmental issue preventing code generation.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI engineer (pi) stalled twice in a row, producing only file listings without implementing any code.
+  The agent appears to be stuck in a file enumeration loop and is not executing implementation commands. Two
+  interventions with detailed step-by-step instructions failed to break the stall pattern. The CLI agent may need human
+  intervention to reset its execution state or there may be an environmental issue preventing code generation.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/websocket-client.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T20:16:38.635Z

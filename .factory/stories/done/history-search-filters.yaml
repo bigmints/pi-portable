@@ -1,0 +1,26 @@
+name: Implement full-text search with project and date filters
+description: >
+  A search bar in the History tab that queries a server-side index and returns conversations with matching message
+  content. A filter panel narrows results by project, date range, and model.
+status: done
+feature:
+  name: Conversation History
+  slug: conversation-history
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A search bar at the top of the history tab sends debounced queries to GET /api/conversations/search?q=
+  - Search results highlight the matched terms in yellow within the one-line message preview
+  - A filter button next to the search bar opens a filter panel with: project multi-select checkboxes, a date range calendar picker, and a model multi-select
+  - Active filter count is shown as a badge on the filter button
+  - Applying filters re-queries the server and updates the results list
+  - Clearing the search and all filters returns to the default grouped history view
+  - An empty search result state shows the query term and a suggestion to try fewer words
+phase: 8
+priority: 966
+dependsOn:
+  - conversation-history-tab

@@ -1,0 +1,427 @@
+name: "Fix: saved-queues"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/saved-queues.yaml
+
+  Issue: CLI stalled twice on "Implement saved and reusable queues" story. It lists files but never creates anything.
+  The brief was too open-ended and the CLI got stuck in a file-listing loop instead of executing file creation.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## FIX: Implement Saved and Reusable Queues — DIRECT FILE CREATION
+
+
+  The previous attempts stalled because the CLI listed files instead of creating them. This time, use explicit shell
+  commands to create each file.
+
+
+  ### Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ### Step 1: Append types to src/types/chat.ts
+
+  Run: `cat >> src/types/chat.ts << 'TYPES_EOF'
+
+
+  export interface QueueTask {
+    id: string;
+    prompt: string;
+    status: 'pending' | 'running' | 'complete' | 'error' | 'cancelled';
+    createdAt: string;
+  }
+
+
+  export interface SavedQueue {
+    id: string;
+    name: string;
+    tasks: QueueTask[];
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  TYPES_EOF`
+
+
+  ### Step 2: Create src/store/saved-queues.ts
+
+  Run: `cat > src/store/saved-queues.ts << 'EOF'
+
+  'use client';
+
+  import { create } from 'zustand';
+
+  import { SavedQueue, QueueTask } from '@/types/chat';
+
+
+  const STORAGE_KEY = 'pi-saved-queues';
+
+
+  interface SavedQueuesState {
+    savedQueues: SavedQueue[];
+    saveQueue: (name: string, tasks: QueueTask[]) => void;
+    loadQueue: (id: string) => QueueTask[] | null;
+    deleteQueue: (id: string) => void;
+    syncToServer: () => Promise<void>;
+    pullFromServer: () => Promise<void>;
+    init: () => void;
+  }
+
+
+  export const useSavedQueuesStore = create<SavedQueuesState>((set, get) => ({
+    savedQueues: [],
+    init: () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) set({ savedQueues: JSON.parse(stored) });
+      } catch { /* ignore */ }
+    },
+    saveQueue: (name, tasks) => {
+      const { savedQueues } = get();
+      const existing = savedQueues.find(q => q.name.toLowerCase() === name.toLowerCase());
+      const now = new Date().toISOString();
+      let updated: SavedQueue[];
+      if (existing) {
+        updated = savedQueues.map(q => q.id === existing.id ? { ...q, tasks, updatedAt: now } : q);
+      } else {
+        updated = [...savedQueues, { id: crypto.randomUUID(), name, tasks, createdAt: now, updatedAt: now }];
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      set({ savedQueues: updated });
+      get().syncToServer();
+    },
+    loadQueue: (id) => get().savedQueues.find(q => q.id === id)?.tasks ?? null,
+    deleteQueue: (id) => {
+      const updated = get().savedQueues.filter(q => q.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      set({ savedQueues: updated });
+    },
+    syncToServer: async () => {
+      try { await fetch('/api/queues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ queues: get().savedQueues }) }); } catch { /* silent */ }
+    },
+    pullFromServer: async () => {
+      try {
+        const res = await fetch('/api/queues');
+        if (res.ok) { const data = await res.json(); if (data.queues) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data.queues)); set({ savedQueues: data.queues }); } }
+      } catch { /* silent */ }
+    },
+  }));
+
+  EOF`
+
+
+  ### Step 3: Create src/app/api/queues/route.ts
+
+  Run: `cat > src/app/api/queues/route.ts << 'EOF'
+
+  import { NextResponse } from 'next/server';
+
+
+  const queuesStore = new Map<string, any>();
+
+
+  export async function GET() {
+    return NextResponse.json({ queues: Array.from(queuesStore.values()) });
+  }
+
+
+  export async function POST(request: Request) {
+    const body = await request.json();
+    if (body.queues && Array.isArray(body.queues)) {
+      queuesStore.clear();
+      for (const q of body.queues) queuesStore.set(q.id, q);
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  EOF`
+
+
+  ### Step 4: Create src/app/api/queues/[id]/route.ts
+
+  Run: `mkdir -p src/app/api/queues/[id] && cat > src/app/api/queues/[id]/route.ts << 'EOF'
+
+  import { NextResponse } from 'next/server';
+
+
+  export async function DELETE() {
+    return NextResponse.json({ ok: true });
+  }
+
+  EOF`
+
+
+  ### Step 5: Create src/components/queue/SaveQueuePopover.tsx
+
+  Run: `cat > src/components/queue/SaveQueuePopover.tsx << 'EOF'
+
+  'use client';
+
+  import { useState, useRef, useEffect } from 'react';
+
+  import { Save, X } from 'lucide-react';
+
+  import styles from './SaveQueuePopover.module.css';
+
+  import { useSavedQueuesStore } from '@/store/saved-queues';
+
+  import { QueueTask } from '@/types/chat';
+
+
+  export default function SaveQueuePopover({ open, onClose, currentTasks }: { open: boolean; onClose: () => void;
+  currentTasks: QueueTask[] }) {
+    const [name, setName] = useState('');
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => { if (open) setName(''); }, [open]);
+
+    useEffect(() => {
+      function handleClick(e: MouseEvent) {
+        if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      }
+      if (open) document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }, [open, onClose]);
+
+    if (!open) return null;
+
+    const saveQueue = useSavedQueuesStore(s => s.saveQueue);
+
+    const handleSave = () => { if (name.trim()) { saveQueue(name.trim(), currentTasks); onClose(); } };
+
+    return (
+      <div className={styles.popover} ref={ref}>
+        <div className={styles.header}><span>Save Queue</span><button className={styles.closeBtn} onClick={onClose}><X size={16} /></button></div>
+        <input className={styles.input} placeholder="Queue name..." value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} autoFocus />
+        <div className={styles.actions}>
+          <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+          <button className={styles.saveBtn} onClick={handleSave} disabled={!name.trim()}><Save size={14} /> Save</button>
+        </div>
+      </div>
+    );
+  }
+
+  EOF`
+
+
+  ### Step 6: Create src/components/queue/SaveQueuePopover.module.css
+
+  Run: `cat > src/components/queue/SaveQueuePopover.module.css << 'EOF'
+
+  .popover { position: absolute; top: 100%; right: 0; z-index: 100; background: var(--color-surface); border: 1px solid
+  var(--color-border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 16px; width: 280px;
+  margin-top: 8px; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600;
+  font-size: 14px; color: var(--color-text); }
+
+  .closeBtn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; display:
+  flex; }
+
+  .input { width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 14px;
+  background: var(--color-surface); color: var(--color-text); outline: none; margin-bottom: 12px; box-sizing:
+  border-box; }
+
+  .input:focus { border-color: var(--color-accent); }
+
+  .actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .cancelBtn, .saveBtn { padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex;
+  align-items: center; gap: 4px; border: 1px solid var(--color-border); background: var(--color-surface); color:
+  var(--color-text); }
+
+  .saveBtn { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+
+  .saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  EOF`
+
+
+  ### Step 7: Create src/components/queue/SavedQueuesDropdown.tsx
+
+  Run: `cat > src/components/queue/SavedQueuesDropdown.tsx << 'EOF'
+
+  'use client';
+
+  import { useState } from 'react';
+
+  import { Save, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+
+  import styles from './SavedQueuesDropdown.module.css';
+
+  import { useSavedQueuesStore } from '@/store/saved-queues';
+
+  import { QueueTask } from '@/types/chat';
+
+
+  export default function SavedQueuesDropdown({ onLoad, hasUnsavedTasks, onConfirmLoad }: { onLoad: (tasks: QueueTask[])
+  => void; hasUnsavedTasks: boolean; onConfirmLoad: (queueId: string) => void }) {
+    const [open, setOpen] = useState(false);
+    const savedQueues = useSavedQueuesStore(s => s.savedQueues);
+    const deleteQueue = useSavedQueuesStore(s => s.deleteQueue);
+    const loadQueue = useSavedQueuesStore(s => s.loadQueue);
+
+    const handleLoad = (id: string) => {
+      const tasks = loadQueue(id);
+      if (!tasks) return;
+      if (hasUnsavedTasks) { onConfirmLoad(id); } else { onLoad(tasks); }
+      setOpen(false);
+    };
+
+    return (
+      <div className={styles.container}>
+        <button className={styles.toggleBtn} onClick={() => setOpen(!open)} aria-label="Saved queues">
+          <Save size={14} /><span>Saved</span>{open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
+        {open && savedQueues.length > 0 && (
+          <div className={styles.dropdown}>
+            {savedQueues.map(q => (
+              <div key={q.id} className={styles.item}>
+                <button className={styles.loadBtn} onClick={() => handleLoad(q.id)}>
+                  <span className={styles.itemName}>{q.name}</span>
+                  <span className={styles.taskCount}>{q.tasks.length} task{q.tasks.length !== 1 ? 's' : ''}</span>
+                </button>
+                <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); deleteQueue(q.id); }} aria-label={`Delete ${q.name}`}><Trash2 size={12} /></button>
+              </div>
+            ))}
+          </div>
+        )}
+        {open && savedQueues.length === 0 && <div className={styles.empty}>No saved queues</div>}
+      </div>
+    );
+  }
+
+  EOF`
+
+
+  ### Step 8: Create src/components/queue/SavedQueuesDropdown.module.css
+
+  Run: `cat > src/components/queue/SavedQueuesDropdown.module.css << 'EOF'
+
+  .container { position: relative; display: inline-block; }
+
+  .toggleBtn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-size: 13px;
+  cursor: pointer; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
+  transition: background 0.15s; }
+
+  .toggleBtn:hover { background: var(--color-surface-hover); }
+
+  .dropdown { position: absolute; top: 100%; left: 0; z-index: 100; background: var(--color-surface); border: 1px solid
+  var(--color-border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-top: 4px; min-width: 240px;
+  max-height: 300px; overflow-y: auto; }
+
+  .empty { padding: 12px 16px; font-size: 13px; color: var(--color-text-muted); text-align: center; }
+
+  .item { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+
+  .item:hover { background: var(--color-surface-hover); }
+
+  .loadBtn { flex: 1; display: flex; flex-direction: column; align-items: flex-start; padding: 10px 12px; background:
+  none; border: none; cursor: pointer; color: var(--color-text); text-align: left; width: 100%; }
+
+  .itemName { font-size: 13px; font-weight: 500; }
+
+  .taskCount { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+
+  .deleteBtn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 8px; display:
+  flex; align-items: center; border-radius: 4px; }
+
+  .deleteBtn:hover { color: var(--color-danger); background: rgba(239,68,68,0.1); }
+
+  EOF`
+
+
+  ### Step 9: Create src/components/queue/LoadConfirmDialog.tsx
+
+  Run: `cat > src/components/queue/LoadConfirmDialog.tsx << 'EOF'
+
+  'use client';
+
+  import { X } from 'lucide-react';
+
+  import styles from './LoadConfirmDialog.module.css';
+
+
+  export default function LoadConfirmDialog({ open, queueName, onConfirm, onCancel }: { open: boolean; queueName:
+  string; onConfirm: () => void; onCancel: () => void }) {
+    if (!open) return null;
+    return (
+      <div className={styles.overlay} onClick={onCancel}>
+        <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+          <div className={styles.header}><h3>Replace Current Queue?</h3><button className={styles.closeBtn} onClick={onCancel}><X size={16} /></button></div>
+          <p className={styles.message}>Loading <strong>{queueName}</strong> will replace your current unsaved tasks.</p>
+          <div className={styles.actions}>
+            <button className={styles.cancelBtn} onClick={onCancel}>Cancel</button>
+            <button className={styles.confirmBtn} onClick={onConfirm}>Load Queue</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  EOF`
+
+
+  ### Step 10: Create src/components/queue/LoadConfirmDialog.module.css
+
+  Run: `cat > src/components/queue/LoadConfirmDialog.module.css << 'EOF'
+
+  .overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); display: flex; align-items: center;
+  justify-content: center; backdrop-filter: blur(4px); }
+
+  .dialog { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px;
+  max-width: 400px; width: 90%; box-shadow: 0 16px 48px rgba(0,0,0,0.2); }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+  .header h3 { margin: 0; font-size: 16px; color: var(--color-text); }
+
+  .closeBtn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; display:
+  flex; }
+
+  .message { font-size: 14px; color: var(--color-text); line-height: 1.5; margin-bottom: 20px; }
+
+  .actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .cancelBtn, .confirmBtn { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid
+  var(--color-border); background: var(--color-surface); color: var(--color-text); }
+
+  .confirmBtn { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+
+  EOF`
+
+
+  ### Step 11: Modify src/components/queue/QueueControls.tsx
+
+  Add imports and integrate SaveQueuePopover, SavedQueuesDropdown, LoadConfirmDialog into the existing controls bar. Add
+  state for savePopoverOpen, confirmDialogOpen, confirmQueueId. Wire up the buttons.
+
+
+  ### Step 12: Modify src/app/queue/page.tsx
+
+  Import useSavedQueuesStore, call init() on mount, wire up load confirmation, ensure re-running clones tasks (deep
+  copy).
+
+
+  ### Step 13: Verify
+
+  Run `npm run build` and fix any errors.
+
+
+  ### Self-Sufficiency Instruction
+
+  Execute each step above in order. Do NOT list files — just create them. Fix any TypeScript/lint errors. Verify build
+  passes. Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/saved-queues.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T03:14:27.597Z

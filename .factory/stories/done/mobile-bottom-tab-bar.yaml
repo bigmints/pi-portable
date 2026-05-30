@@ -1,0 +1,26 @@
+name: Build mobile bottom tab bar
+description: >
+  A fixed 56px bottom navigation bar visible only on mobile (<768px). Shows Chat, Queue, Jobs, History, and Settings
+  tabs with icon and label. Includes a running-jobs badge on the Jobs tab and respects iOS safe area insets.
+status: done
+feature:
+  name: Auth & App Shell
+  slug: auth-app-shell
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Bottom bar is visible only on viewports narrower than 768px and hidden on tablet and desktop
+  - Shows five tabs: Chat, Queue, Jobs, History, Settings — each with icon and label
+  - Active tab has a filled icon and bold label with an animated pill indicator
+  - Jobs tab shows a red numeric badge when agentic jobs are running
+  - Tapping a tab navigates to the correct route and triggers a haptic vibration
+  - Bar respects env(safe-area-inset-bottom) so it clears the iPhone home indicator
+  - Main content area has sufficient bottom padding to avoid being obscured by the bar
+phase: 0
+priority: 998
+dependsOn:
+  - app-shell-layout

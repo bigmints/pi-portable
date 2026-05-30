@@ -1,0 +1,26 @@
+name: Build project list with active project indicator
+description: >
+  A screen listing all known pi CLI projects as cards. The active project has a highlighted ring border and an Active
+  chip. Tapping a project switches it. Loading skeletons shown while fetching. Empty state with a CTA to add.
+status: done
+feature:
+  name: Project Management
+  slug: project-management
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Project list is accessible at /projects and via the active project badge in the header
+  - Each project card displays: icon, name, truncated path, last-active relative time, and a status dot
+  - The active project card has a blue ring border and an Active chip
+  - Cards load as skeletons while the API request is in flight
+  - Empty state shows an illustration and an Add your first project button
+  - Error state shows an error message with a Retry button
+  - Projects are fetched from GET /api/projects and cached with a 30-second stale time
+phase: 1
+priority: 996
+dependsOn:
+  - theme-toggle

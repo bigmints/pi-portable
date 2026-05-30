@@ -1,0 +1,26 @@
+name: Build WebSocket connection status bar with auto-reconnect
+description: >
+  An inline status indicator in the app header showing the WebSocket connection state: Connected, Reconnecting with
+  attempt count, or Offline with a manual retry button. Invisible when fully connected to avoid visual noise.
+status: done
+feature:
+  name: Notifications
+  slug: notifications
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The status indicator is invisible when the WebSocket is connected
+  - When disconnected it appears in the header showing an amber spinner and Reconnecting (attempt N of 10)
+  - After all reconnect attempts are exhausted it shows a red dot and Offline with a Try again button
+  - Clicking Try again resets the attempt counter and starts a fresh reconnect sequence
+  - When reconnected a brief green Connected toast fires and the indicator disappears
+  - The reconnect sequence uses exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s ceiling
+  - The Zustand connection store is the single source of truth for connection state; all UI reads from it
+phase: 7
+priority: 971
+dependsOn:
+  - saved-queues

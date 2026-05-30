@@ -1,0 +1,810 @@
+name: "Fix: fix-jobs-tab-status-list"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-jobs-tab-status-list.yaml
+
+  Issue: CLI agent is stuck in an exploration loop, listing files instead of writing code. Two delegations and one
+  intervention all failed with the same STALL behavior. The agent ignores all instructions to write files and instead
+  enumerates the directory.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # CRITICAL: Use a single bash script to write all files. Do NOT use cat heredocs individually. Do NOT list files.
+
+
+  Execute this single script that creates all files at once:
+
+
+  ```bash
+
+  cd /home/bigmints/Projects/pi-app
+
+
+  # Create directories
+
+  mkdir -p src/components/jobs src/app/jobs/\[id\]
+
+
+  # Write all files using a single Python script to avoid shell issues
+
+  python3 << 'PYEOF'
+
+  import os
+
+
+  files = {
+      "src/components/jobs/FilterTabs.tsx": '''"use client";
+
+  import { useState, useCallback } from 'react';
+
+  import styles from './FilterTabs.module.css';
+
+
+  type Filter = 'all' | 'running' | 'completed' | 'failed';
+
+
+  interface FilterTabsProps {
+    activeFilter: Filter;
+    onFilterChange: (filter: Filter) => void;
+    counts: { all: number; running: number; completed: number; failed: number };
+  }
+
+
+  export default function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsProps) {
+    const tabs: { key: Filter; label: string; count: number }[] = [
+      { key: 'all', label: 'All', count: counts.all },
+      { key: 'running', label: 'Running', count: counts.running },
+      { key: 'completed', label: 'Completed', count: counts.completed },
+      { key: 'failed', label: 'Failed', count: counts.failed },
+    ];
+
+    return (
+      <div className={styles.tabs}>
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            className={`${styles.tab} ${activeFilter === tab.key ? styles.active : ''}`}
+            onClick={() => onFilterChange(tab.key)}
+          >
+            {tab.label}
+            {tab.count > 0 && <span className={styles.badge}>{tab.count}</span>}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  ''',
+      "src/components/jobs/FilterTabs.module.css": '''.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    position: relative;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  .tab:hover { color: var(--color-text); }
+
+  .tab.active {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  ''',
+      "src/components/jobs/EmptyState.tsx": '''"use client";
+
+  import { Briefcase, CheckCircle, Clock, Shield } from 'lucide-react';
+
+  import styles from './EmptyState.module.css';
+
+
+  type Filter = 'all' | 'running' | 'completed' | 'failed';
+
+
+  interface EmptyStateProps {
+    filter: Filter;
+  }
+
+
+  const emptyConfig: Record<Filter, { icon: typeof Briefcase; title: string; subtitle: string }> = {
+    all: { icon: Briefcase, title: 'No jobs yet', subtitle: 'When you start an agentic job, it will appear here.' },
+    running: { icon: CheckCircle, title: 'No running jobs', subtitle: 'All jobs are idle.' },
+    completed: { icon: Clock, title: 'No completed jobs', subtitle: 'Finished jobs will show up here.' },
+    failed: { icon: Shield, title: 'No failed jobs', subtitle: 'Jobs that encounter errors appear here.' },
+  };
+
+
+  export default function EmptyState({ filter }: EmptyStateProps) {
+    const { icon: Icon, title, subtitle } = emptyConfig[filter];
+    return (
+      <div className={styles.container}>
+        <div className={styles.iconWrap}>
+          <Icon size={48} strokeWidth={1.5} />
+        </div>
+        <h3 className={styles.title}>{title}</h3>
+        <p className={styles.subtitle}>{subtitle}</p>
+      </div>
+    );
+  }
+
+  ''',
+      "src/components/jobs/EmptyState.module.css": '''.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    text-align: center;
+  }
+
+  .iconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--color-surface-2);
+    margin-bottom: 16px;
+    color: var(--color-text-secondary);
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    max-width: 280px;
+  }
+
+  ''',
+      "src/components/jobs/JobCard.tsx": '''"use client";
+
+  import { useState, useCallback } from 'react';
+
+  import { ChevronDown, ChevronUp, Play, Square } from 'lucide-react';
+
+  import type { AgenticJob, JobStatus } from '@/store/jobs';
+
+  import styles from './JobCard.module.css';
+
+
+  const STATUS_COLORS: Record<JobStatus, string> = {
+    running: '#22c55e',
+    completed: '#3b82f6',
+    failed: '#ef4444',
+    cancelled: '#6b7280',
+    paused: '#f59e0b',
+  };
+
+
+  function formatDuration(ms: number): string {
+    const totalSeconds = Math.floor(ms / 1000);
+    if (totalSeconds < 60) return `${totalSeconds}s`;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m ${seconds}s`;
+  }
+
+
+  function formatTokens(count: number): string {
+    return new Intl.NumberFormat('en-US').format(count) + ' tokens';
+  }
+
+
+  function getProjectColor(slug: string): string {
+    let hash = 0;
+    for (let i = 0; i < slug.length; i++) {
+      hash = ((hash << 5) - hash) + slug.charCodeAt(i);
+      hash |= 0;
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 60%, 50%)`;
+  }
+
+
+  interface JobCardProps {
+    job: AgenticJob;
+    isExpanded: boolean;
+    onToggle: () => void;
+    onResume?: () => void;
+    onCancel?: () => void;
+  }
+
+
+  export default function JobCard({ job, isExpanded, onToggle, onResume, onCancel }: JobCardProps) {
+    const [expanded, setExpanded] = useState(isExpanded);
+    const statusColor = STATUS_COLORS[job.status] || '#6b7280';
+    const projectColor = getProjectColor(job.project || 'default');
+    const duration = job.startedAt ? (job.completedAt ? new Date(job.completedAt).getTime() - new Date(job.startedAt).getTime() : Date.now() - new Date(job.startedAt).getTime()) : 0;
+    const title = (job.firstMessage || job.id).substring(0, 60) + (job.firstMessage && job.firstMessage.length > 60 ? '...' : '');
+
+    const handleToggle = useCallback(() => {
+      if (window.innerWidth < 768) {
+        window.location.href = `/jobs/${job.id}`;
+      } else {
+        setExpanded(prev => !prev);
+        onToggle();
+      }
+    }, [job.id, onToggle]);
+
+    const canResume = job.status === 'paused';
+    const canCancel = job.status === 'running' || job.status === 'paused';
+
+    return (
+      <div className={`${styles.card} ${expanded ? styles.expanded : ''}`}>
+        <div className={styles.header} onClick={handleToggle}>
+          <div className={styles.left}>
+            <div className={styles.badge} style={{ background: projectColor }}>{job.project || 'default'}</div>
+            <span className={styles.title}>{title}</span>
+          </div>
+          <div className={styles.right}>
+            <div className={styles.statusChip} style={{ borderColor: statusColor }}>
+              {job.status === 'running' && <div className={styles.progressRing} />}
+              <span className={styles.statusText} style={{ color: statusColor }}>{job.status}</span>
+            </div>
+            <span className={styles.meta}>{formatDuration(duration)}</span>
+            <span className={styles.meta}>{formatTokens(job.totalTokens || 0)}</span>
+          </div>
+          <button className={styles.expandBtn} onClick={(e) => { e.stopPropagation(); handleToggle(); }}>
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+        {expanded && (
+          <div className={styles.detail}>
+            <div className={styles.detailGrid}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Job ID</span>
+                <span className={styles.detailValue}>{job.id}</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Status</span>
+                <span className={styles.detailValue}>{job.status}</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Started</span>
+                <span className={styles.detailValue}>{job.startedAt ? new Date(job.startedAt).toLocaleString() : 'N/A'}</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Tokens</span>
+                <span className={styles.detailValue}>{formatTokens(job.totalTokens || 0)}</span>
+              </div>
+            </div>
+            {job.steps && job.steps.length > 0 && (
+              <div className={styles.steps}>
+                <h4>Steps</h4>
+                {job.steps.map((step, i) => (
+                  <div key={i} className={styles.step}>
+                    <span className={styles.stepStatus}>{step.status}</span>
+                    <span>{step.title || `Step ${i + 1}`}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className={styles.actions}>
+              {canResume && onResume && (
+                <button className={styles.actionBtn} onClick={onResume}>
+                  <Play size={14} /> Resume
+                </button>
+              )}
+              {canCancel && onCancel && (
+                <button className={`${styles.actionBtn} ${styles.cancel}`} onClick={onCancel}>
+                  <Square size={14} /> Cancel
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  ''',
+      "src/components/jobs/JobCard.module.css": '''.card {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--color-primary); }
+
+  .card.expanded { border-color: var(--color-primary); }
+
+  .header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    gap: 12px;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .statusChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid;
+    position: relative;
+  }
+
+  .progressRing {
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .statusText {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  .expandBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .expandBtn:hover { background: var(--color-surface-2); }
+
+  .detail {
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 12px;
+  }
+
+  .detailGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .detailItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .detailLabel {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .detailValue {
+    font-size: 13px;
+    color: var(--color-text);
+    word-break: break-all;
+  }
+
+  .steps {
+    margin-bottom: 16px;
+  }
+
+  .steps h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text);
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  .stepStatus {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--color-primary);
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .actionBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface-1);
+    color: var(--color-text);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .actionBtn:hover { background: var(--color-surface-2); }
+
+  .actionBtn.cancel { border-color: #ef4444; color: #ef4444; }
+
+  .actionBtn.cancel:hover { background: #ef4444; color: white; }
+
+  @media (max-width: 767px) {
+    .header { flex-wrap: wrap; }
+    .right { flex-wrap: wrap; gap: 8px; }
+    .detailGrid { grid-template-columns: 1fr 1fr; }
+  }
+
+  ''',
+      "src/components/jobs/JobsView.tsx": '''"use client";
+
+  import { useState, useMemo, useCallback } from 'react';
+
+  import { useJobsStore, type AgenticJob } from '@/store/jobs';
+
+  import FilterTabs from './FilterTabs';
+
+  import JobCard from './JobCard';
+
+  import EmptyState from './EmptyState';
+
+  import styles from './JobsView.module.css';
+
+
+  type Filter = 'all' | 'running' | 'completed' | 'failed';
+
+
+  export default function JobsView() {
+    const jobs = useJobsStore(state => state.jobs);
+    const [activeFilter, setActiveFilter] = useState<Filter>('all');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+
+    const counts = useMemo(() => ({
+      all: jobs.length,
+      running: jobs.filter(j => j.status === 'running').length,
+      completed: jobs.filter(j => j.status === 'completed').length,
+      failed: jobs.filter(j => j.status === 'failed').length,
+    }), [jobs]);
+
+    const filteredJobs = useMemo(() => {
+      const sorted = [...jobs].sort((a, b) => {
+        const aTime = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+        const bTime = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+      switch (activeFilter) {
+        case 'running': return sorted.filter(j => j.status === 'running');
+        case 'completed': return sorted.filter(j => j.status === 'completed');
+        case 'failed': return sorted.filter(j => j.status === 'failed');
+        default: return sorted;
+      }
+    }, [jobs, activeFilter]);
+
+    const handleToggle = useCallback((id: string) => {
+      setExpandedId(prev => prev === id ? null : id);
+    }, []);
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1>Jobs</h1>
+        </div>
+        <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} counts={counts} />
+        <div className={styles.list}>
+          {filteredJobs.length === 0 ? (
+            <EmptyState filter={activeFilter} />
+          ) : (
+            filteredJobs.map(job => (
+              <JobCard
+                key={job.id}
+                job={job}
+                isExpanded={expandedId === job.id}
+                onToggle={() => handleToggle(job.id)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  ''',
+      "src/components/jobs/JobsView.module.css": '''.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .header {
+    padding: 16px;
+    padding-bottom: 0;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  @media (max-width: 767px) {
+    .header { padding: 12px 12px 0; }
+    .list { padding: 12px; }
+  }
+
+  ''',
+      "src/app/jobs/page.tsx": '''import JobsView from '@/components/jobs/JobsView';
+
+  export const metadata = {
+    title: 'Jobs',
+  };
+
+
+  export default function JobsPage() {
+    return <JobsView />;
+  }
+
+  ''',
+      "src/app/jobs/[id]/page.tsx": '''"use client";
+
+  import { useJobsStore } from '@/store/jobs';
+
+  import { ArrowLeft } from 'lucide-react';
+
+  import { useRouter } from 'next/navigation';
+
+  import styles from './job-detail.module.css';
+
+
+  export default function JobDetailPage({ params }: { params: { id: string } }) {
+    const router = useRouter();
+    const job = useJobsStore(state => state.jobs.find(j => j.id === params.id));
+
+    if (!job) {
+      return (
+        <div className={styles.container}>
+          <button className={styles.back} onClick={() => router.back()}>
+            <ArrowLeft size={16} /> Back
+          </button>
+          <p>Job not found.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.container}>
+        <button className={styles.back} onClick={() => router.back()}>
+          <ArrowLeft size={16} /> Back
+        </button>
+        <h1>{job.firstMessage || job.id}</h1>
+        <div className={styles.info}>
+          <span className={styles.status} style={{ color: job.status === 'running' ? '#22c55e' : job.status === 'completed' ? '#3b82f6' : job.status === 'failed' ? '#ef4444' : '#6b7280' }}>
+            {job.status}
+          </span>
+          <span>{job.totalTokens || 0} tokens</span>
+        </div>
+      </div>
+    );
+  }
+
+  ''',
+      "src/app/jobs/[id]/job-detail.module.css": '''.container {
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: none;
+    color: var(--color-text);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+
+  .back:hover { background: var(--color-surface-2); }
+
+  .info {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  .status {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  ''',
+
+  }
+
+
+  for path, content in files.items():
+      full = os.path.join('/home/bigmints/Projects/pi-app', path)
+      os.makedirs(os.path.dirname(full), exist_ok=True)
+      with open(full, 'w') as f:
+          f.write(content)
+      print(f"WRITTEN: {path}")
+
+  print("ALL FILES WRITTEN")
+
+  PYEOF
+
+
+  # Now update BottomTabBar to add running badge
+
+  # Check if useJobsStore import exists, add if not
+
+  grep -q "useJobsStore" src/components/layout/BottomTabBar.tsx || sed -i "1i import { useJobsStore } from
+  '@/store/jobs';" src/components/layout/BottomTabBar.tsx
+
+
+  # Add runningCount variable if not present
+
+  grep -q "runningCount" src/components/layout/BottomTabBar.tsx || sed -i "/export default function/i const runningCount
+  = useJobsStore(state => state.jobs.filter(j => j.status === 'running').length);"
+  src/components/layout/BottomTabBar.tsx
+
+
+  # Add badge to Jobs tab if not present
+
+  grep -q "runningCount > 0" src/components/layout/BottomTabBar.tsx || sed -i "/Jobs.*href.*\/jobs/a
+  \        {runningCount > 0 && <span className={styles.badge}>{runningCount}</span>}"
+  src/components/layout/BottomTabBar.tsx
+
+
+  echo "BottomTabBar updated"
+
+
+  # Build
+
+  cd /home/bigmints/Projects/pi-app
+
+  npm run build 2>&1 | tail -50
+
+
+  echo "DELIVERY COMPLETE"
+
+  ```
+
+
+  Execute this entire script. Do NOT list files. Do NOT explore. Run the Python script to write all files, then build.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-jobs-tab-status-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T00:15:26.785Z

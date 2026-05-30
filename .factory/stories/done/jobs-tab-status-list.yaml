@@ -1,0 +1,27 @@
+name: Build jobs tab with status list and filter tabs
+description: >
+  The /jobs route showing all agentic jobs sorted by most recent. Each job card shows title, project badge, status chip,
+  duration, and token count. Filter tabs let users view All, Running, Completed, or Failed jobs.
+status: done
+feature:
+  name: Agentic Job Monitor
+  slug: agentic-job-monitor
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Jobs tab at /jobs shows all jobs sorted by startedAt descending
+  - Each job card displays: first message preview as title, project colour badge, status chip (running / completed / failed
+      / cancelled / paused), total duration, and total token count
+  - Running jobs show an animated progress ring on their status chip
+  - Filter tabs at the top — All, Running, Completed, Failed — filter the list client-side with instant results
+  - Tapping a job card expands it inline on desktop or navigates to a full-screen detail on mobile
+  - An empty state is shown for each filter when no matching jobs exist
+  - The running jobs count badge on the Jobs tab nav item updates in real time as jobs start and complete
+phase: 5
+priority: 980
+dependsOn:
+  - keyboard-shortcuts

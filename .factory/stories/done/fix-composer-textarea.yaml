@@ -1,0 +1,288 @@
+name: "Fix: composer-textarea"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/composer-textarea.yaml
+
+  Issue: CLI stalled twice, only listing files instead of building. The CLI is stuck in enumeration mode and not
+  executing file creation or build commands.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## FIX TASK: Build auto-expanding textarea composer
+
+
+  The previous attempts stalled because the CLI only listed files instead of building. This time, DO NOT list files. DO
+  NOT enumerate. START WRITING CODE IMMEDIATELY.
+
+
+  ## Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## Files to Create/Modify (exact paths)
+
+
+  ### 1. CREATE `src/components/chat/Composer.module.css`
+
+  Write this exact CSS:
+
+  ```css
+
+  .composer {
+    position: relative;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--color-bg-surface, #ffffff);
+    transition: border-color 200ms ease;
+  }
+
+  .composer:focus-within {
+    border-color: var(--color-primary, #3b82f6);
+  }
+
+  .textarea {
+    width: 100%;
+    min-height: 40px;
+    max-height: 240px;
+    padding: 0;
+    border: none;
+    outline: none;
+    resize: none;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-y: auto;
+  }
+
+  .textarea:disabled {
+    opacity: 0.6;
+  }
+
+  .badge {
+    font-size: 11px;
+    color: var(--color-text-muted, #64748b);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .sendButton {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: var(--color-primary, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sendButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  ```
+
+
+  ### 2. CREATE `src/components/chat/Composer.tsx`
+
+  Write this exact component:
+
+  ```tsx
+
+  'use client';
+
+
+  import { useState, useEffect, useRef, useCallback } from 'react';
+
+  import { Send } from 'lucide-react';
+
+  import styles from './Composer.module.css';
+
+
+  interface ComposerProps {
+    conversationId?: string;
+    isStreaming?: boolean;
+    onSubmit: (text: string) => void;
+    placeholder?: string;
+    autoFocus?: boolean;
+  }
+
+
+  export default function Composer({
+    conversationId,
+    isStreaming = false,
+    onSubmit,
+    placeholder = 'Type a message...',
+    autoFocus = true,
+  }: ComposerProps) {
+    const [text, setText] = useState('');
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+    useEffect(() => {
+      if (conversationId) {
+        const draft = localStorage.getItem(`pi-draft-${conversationId}`);
+        if (draft) {
+          setText(draft);
+        }
+      }
+      if (autoFocus && textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, [conversationId, autoFocus]);
+
+    useEffect(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const adjust = () => {
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
+      };
+      adjust();
+      window.addEventListener('resize', adjust);
+      return () => window.removeEventListener('resize', adjust);
+    }, [text]);
+
+    const saveDraft = useCallback((value: string) => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        if (conversationId && value.trim()) {
+          localStorage.setItem(`pi-draft-${conversationId}`, value);
+        }
+      }, 300);
+    }, [conversationId]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (isStreaming) return;
+      const value = e.target.value;
+      setText(value);
+      saveDraft(value);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (isStreaming) return;
+      if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+        e.preventDefault();
+        if (text.trim()) {
+          handleSubmit();
+        }
+      }
+    };
+
+    const handleSubmit = () => {
+      if (!text.trim() || isStreaming) return;
+      onSubmit(text);
+      setText('');
+      if (conversationId) {
+        localStorage.removeItem(`pi-draft-${conversationId}`);
+      }
+    };
+
+    const charCount = text.length;
+    const showBadge = charCount > 500;
+    const estimatedTokens = Math.ceil(charCount / 4);
+
+    return (
+      <div className={styles.composer}>
+        <textarea
+          ref={textareaRef}
+          className={styles.textarea}
+          value={text}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          disabled={isStreaming}
+          placeholder={isStreaming ? 'Generating…' : placeholder}
+          rows={1}
+        />
+        {showBadge && (
+          <div className={styles.badge}>
+            {charCount} chars · ~{estimatedTokens} tokens
+          </div>
+        )}
+        <button
+          className={styles.sendButton}
+          disabled={isStreaming || !text.trim()}
+          onClick={handleSubmit}
+          aria-label="Send message"
+        >
+          <Send size={16} />
+        </button>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 3. UPDATE `src/components/chat/ChatInput.tsx`
+
+  Replace the file content to use the new Composer:
+
+  ```tsx
+
+  'use client';
+
+
+  import Composer from './Composer';
+
+
+  interface ChatInputProps {
+    conversationId?: string;
+    isStreaming?: boolean;
+    onSubmit: (text: string) => void;
+  }
+
+
+  export default function ChatInput({ conversationId, isStreaming, onSubmit }: ChatInputProps) {
+    return (
+      <Composer
+        conversationId={conversationId}
+        isStreaming={isStreaming}
+        onSubmit={onSubmit}
+      />
+    );
+  }
+
+  ```
+
+
+  ### 4. VERIFY BUILD
+
+  Run these commands in order:
+
+  ```bash
+
+  cd /home/bigmints/Projects/pi-app/pi-app
+
+  npx tsc --noEmit
+
+  npm run lint
+
+  npm run build
+
+  ```
+
+  Fix any errors that arise. Do NOT ask questions.
+
+
+  ## CRITICAL: Do NOT list files. Do NOT enumerate. Write the files above, then run the build. Print DELIVERY COMPLETE
+  when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/composer-textarea.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T21:18:25.076Z

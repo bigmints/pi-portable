@@ -1,0 +1,131 @@
+name: "Fix: keyboard-shortcuts"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/keyboard-shortcuts.yaml
+
+  Issue: CLI stalled twice, only listing directory contents without creating any files. The CLI is stuck in a "list
+  files" loop instead of coding.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  STOP listing files. START CODING. Create each file by writing its full content. Do not describe what you'll do — just
+  do it.
+
+
+  STEP 1: Write src/store/shortcuts.ts
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+
+  export interface ShortcutsState {
+    commandPaletteOpen: boolean;
+    shortcutsPanelOpen: boolean;
+    openCommandPalette: () => void;
+    closeCommandPalette: () => void;
+    toggleCommandPalette: () => void;
+    openShortcutsPanel: () => void;
+    closeShortcutsPanel: () => void;
+    toggleShortcutsPanel: () => void;
+  }
+
+
+  export const isMac = typeof window !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+
+
+  export const useShortcutsStore = create<ShortcutsState>((set) => ({
+    commandPaletteOpen: false,
+    shortcutsPanelOpen: false,
+    openCommandPalette: () => set({ commandPaletteOpen: true }),
+    closeCommandPalette: () => set({ commandPaletteOpen: false }),
+    toggleCommandPalette: () => set((s) => ({ commandPaletteOpen: !s.commandPaletteOpen })),
+    openShortcutsPanel: () => set({ shortcutsPanelOpen: true }),
+    closeShortcutsPanel: () => set({ shortcutsPanelOpen: false }),
+    toggleShortcutsPanel: () => set((s) => ({ shortcutsPanelOpen: !s.shortcutsPanelOpen })),
+  }));
+
+  ```
+
+
+  STEP 2: Write src/hooks/useKeyboardShortcuts.ts
+
+  ```typescript
+
+  import { useEffect } from 'react';
+
+  import { useRouter } from 'next/navigation';
+
+  import { useShortcutsStore, isMac } from '@/store/shortcuts';
+
+  import { useMessagesStore } from '@/store/messages';
+
+
+  export function useKeyboardShortcuts() {
+    const router = useRouter();
+    const { openCommandPalette, closeCommandPalette, openShortcutsPanel, closeShortcutsPanel, commandPaletteOpen, shortcutsPanelOpen } = useShortcutsStore();
+    const { isStreaming, setInterrupting } = useMessagesStore();
+
+    useEffect(() => {
+      const handler = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+        const mod = isMac ? e.metaKey : e.ctrlKey;
+
+        if (e.key === 'Escape') {
+          if (commandPaletteOpen) { closeCommandPalette(); return; }
+          if (shortcutsPanelOpen) { closeShortcutsPanel(); return; }
+          if (isStreaming) { setInterrupting(true); }
+          return;
+        }
+
+        if (mod && e.key === 'k') { e.preventDefault(); openCommandPalette(); return; }
+        if (mod && e.key === 'n') { e.preventDefault(); router.push('/chat'); return; }
+        if (mod && e.key === '?') { e.preventDefault(); openShortcutsPanel(); return; }
+
+        if (mod && e.key >= '1' && e.key <= '5') {
+          e.preventDefault();
+          const tabs = ['chat', 'queue', 'jobs', 'history', 'settings'];
+          const idx = parseInt(e.key) - 1;
+          router.push('/' + tabs[idx]);
+          return;
+        }
+      };
+
+      window.addEventListener('keydown', handler);
+      return () => window.removeEventListener('keydown', handler);
+    }, [isStreaming, commandPaletteOpen, shortcutsPanelOpen, router, openCommandPalette, closeCommandPalette, openShortcutsPanel, closeShortcutsPanel, setInterrupting]);
+  }
+
+  ```
+
+
+  STEP 3: Write src/components/common/CommandPalette.tsx and src/components/common/CommandPalette.module.css
+
+
+  STEP 4: Write src/components/settings/ShortcutsReference.tsx and src/components/settings/ShortcutsReference.module.css
+
+
+  STEP 5: Modify src/app/layout.tsx to add useKeyboardShortcuts import and call
+
+
+  STEP 6: Modify src/components/settings/SettingsView.tsx to render ShortcutsReference
+
+
+  STEP 7: Run npx tsc --noEmit, npm run lint, npm run build. Fix all errors.
+
+
+  Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/keyboard-shortcuts.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T23:10:05.051Z

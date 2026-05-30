@@ -1,0 +1,29 @@
+name: Build model selector and appearance settings
+description: >
+  The Model and Appearance tabs in Settings. Model selector lists available LLM models from pi CLI with metadata.
+  Appearance controls theme, font size, message density, and code font — all applying instantly.
+status: done
+feature:
+  name: Settings
+  slug: settings
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A Model section in CLI Config settings shows a dropdown of available models fetched from GET /api/models, each
+    showing name, provider, and context window size
+  - Selecting a model updates the default for new conversations via PATCH /api/cli-config and shows a success toast
+  - Appearance section has: Theme toggle (Dark / Light / System), Font size slider with three stops (Small / Medium /
+      Large), Message density toggle (Compact / Comfortable), Code font selector (JetBrains Mono / Fira Code / Cascadia
+      Code)
+  - All appearance changes apply to the UI immediately without a page reload
+  - Appearance preferences are stored in localStorage and synced to the server for cross-device consistency
+  - A preview card in the Appearance section shows sample text and a code block reflecting the current settings
+  - Font size changes scale the entire app via a CSS custom property on the html element
+phase: 10
+priority: 960
+dependsOn:
+  - account-cli-config-settings

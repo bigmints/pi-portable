@@ -1,0 +1,63 @@
+name: "Fix: file-viewer-diff-view"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/file-viewer-diff-view.yaml
+
+  Issue: CLI engineer stalls immediately after listing directory files. It never proceeds to create any files. Two
+  interventions failed with the same STALL behavior - CLI just enumerates files and stops.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: |-
+  ## CRITICAL: Do NOT list files. Do NOT enumerate directory contents. Start creating files immediately.
+
+  ## Task: Create File Viewer Component
+
+  ### Step 1: Create `src/store/file-viewer.ts`
+  Write the Zustand store with isOpen, file, viewMode state and openFile/closeFile/setViewMode/reset actions.
+
+  ### Step 2: Create `src/lib/compute-diff.ts`
+  Write a simple line-by-line diff function that returns DiffLine[] with type/originalLine/modifiedLine/text.
+
+  ### Step 3: Create `src/components/viewer/` directory and all component files:
+  - FileViewer.tsx + FileViewer.module.css (modal/fullscreen wrapper)
+  - FileViewerHeader.tsx + FileViewerHeader.module.css (header with toolbar)
+  - FileViewerContent.tsx + FileViewerContent.module.css (scrollable content with line numbers)
+  - DiffView.tsx + DiffView.module.css (diff renderer with red/green)
+  - index.ts (barrel exports)
+
+  ### Step 4: Update `src/components/layout/AppShell.tsx`
+  Add import and render `<FileViewer />` component.
+
+  ### Step 5: Verify build
+  Run: npx tsc --noEmit && npm run lint && npm run build
+  Fix any errors. Print DELIVERY COMPLETE when all pass.
+
+  ## Conventions
+  - Vanilla CSS modules only. NO Tailwind.
+  - Use CSS custom properties for theming.
+  - lucide-react for icons. react-syntax-highlighter for syntax highlighting.
+  - Zustand for state management.
+  - Mobile-first: modal on ≥768px, full-screen on mobile.
+
+  ## Acceptance Criteria
+  1. Modal on ≥768px, full-screen on mobile
+  2. Syntax highlighting with line numbers gutter
+  3. Copy All button + Download button
+  4. Diff toggle with red/green unified diff
+  5. Dual line numbers in diff view
+  6. Language badge + file path in header
+  7. VS Code deep-link button (falls back to clipboard copy)
+
+  Do NOT ask questions. Do NOT list files. Create the files now.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/file-viewer-diff-view.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T07:14:39.147Z

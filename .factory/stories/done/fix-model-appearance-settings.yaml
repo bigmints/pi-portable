@@ -1,0 +1,362 @@
+name: "Fix: model-appearance-settings"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/model-appearance-settings.yaml
+
+  Issue: CLI stalled twice, listing files but not writing any code. It's stuck in a planning loop instead of executing
+  file creation.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## FIX TASK: Build Model Selector and Appearance Settings
+
+
+  The CLI is stuck listing files instead of writing code. Execute these steps IMMEDIATELY — write each file in full
+  before moving to the next.
+
+
+  ### STEP 1: Write src/app/api/models/route.ts
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+
+  export async function GET() {
+    const models = [
+      { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', contextWindow: 128000 },
+      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', contextWindow: 200000 },
+      { id: 'gemini-2.0-pro', name: 'Gemini 2.0 Pro', provider: 'Google', contextWindow: 1048576 },
+      { id: 'llama-3.1-405b', name: 'Llama 3.1 405B', provider: 'Meta', contextWindow: 128000 },
+    ];
+    return NextResponse.json({ models });
+  }
+
+  ```
+
+
+  ### STEP 2: Update src/app/api/cli-config/route.ts
+
+  Add PATCH handler:
+
+  ```typescript
+
+  import { NextRequest, NextResponse } from 'next/server';
+
+
+  const configStore = new Map();
+
+
+  export async function PATCH(req: NextRequest) {
+    const body = await req.json();
+    configStore.set('config', body);
+    return NextResponse.json({ success: true });
+  }
+
+  ```
+
+
+  ### STEP 3: Write src/store/appearance.ts
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+  import { persist } from 'zustand/middleware';
+
+
+  export type ThemeMode = 'dark' | 'light' | 'system';
+
+  export type FontSize = 'small' | 'medium' | 'large';
+
+  export type Density = 'compact' | 'comfortable';
+
+  export type CodeFont = 'jetbrains-mono' | 'fira-code' | 'cascadia-code';
+
+
+  export interface AppearanceSettings {
+    theme: ThemeMode;
+    fontSize: FontSize;
+    density: Density;
+    codeFont: CodeFont;
+  }
+
+
+  interface AppearanceStore {
+    settings: AppearanceSettings;
+    setTheme: (theme: ThemeMode) => void;
+    setFontSize: (fontSize: FontSize) => void;
+    setDensity: (density: Density) => void;
+    setCodeFont: (codeFont: CodeFont) => void;
+    syncToServer: () => Promise<void>;
+  }
+
+
+  const FONT_SIZE_MAP: Record<FontSize, string> = { small: '14px', medium: '16px', large: '18px' };
+
+  const CODE_FONT_MAP: Record<CodeFont, string> = {
+    'jetbrains-mono': '"JetBrains Mono", monospace',
+    'fira-code': '"Fira Code", monospace',
+    'cascadia-code': '"Cascadia Code", monospace',
+  };
+
+
+  function applyToDOM(settings: AppearanceSettings) {
+    const root = document.documentElement;
+    root.style.setProperty('--font-size-base', FONT_SIZE_MAP[settings.fontSize]);
+    root.style.setProperty('--code-font-family', CODE_FONT_MAP[settings.codeFont]);
+    root.style.setProperty('--message-density', settings.density);
+  }
+
+
+  export const useAppearanceStore = create<AppearanceStore>()(
+    persist(
+      (set, get) => ({
+        settings: { theme: 'system', fontSize: 'medium', density: 'comfortable', codeFont: 'jetbrains-mono' },
+        setTheme: (theme) => {
+          set({ settings: { ...get().settings, theme } });
+          applyToDOM(get().settings);
+        },
+        setFontSize: (fontSize) => {
+          set({ settings: { ...get().settings, fontSize } });
+          applyToDOM(get().settings);
+        },
+        setDensity: (density) => {
+          set({ settings: { ...get().settings, density } });
+          applyToDOM(get().settings);
+        },
+        setCodeFont: (codeFont) => {
+          set({ settings: { ...get().settings, codeFont } });
+          applyToDOM(get().settings);
+        },
+        syncToServer: async () => {
+          await fetch('/api/cli-config', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appearance: get().settings }) });
+        },
+      }),
+      { name: 'pi-appearance' }
+    )
+  );
+
+  ```
+
+
+  ### STEP 4: Write src/components/settings/ModelSelector.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useEffect, useState } from 'react';
+
+  import { useToastStore } from '@/store/toast';
+
+  import styles from './ModelSelector.module.css';
+
+
+  interface Model { id: string; name: string; provider: string; contextWindow: number; }
+
+
+  export function ModelSelector() {
+    const [models, setModels] = useState<Model[]>([]);
+    const [selected, setSelected] = useState<string>('');
+    const [loading, setLoading] = useState(true);
+    const addToast = useToastStore(s => s.addToast);
+
+    useEffect(() => {
+      fetch('/api/models').then(r => r.json()).then(d => { setModels(d.models); if (d.models.length) setSelected(d.models[0].id); }).finally(() => setLoading(false));
+    }, []);
+
+    const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const modelId = e.target.value;
+      setSelected(modelId);
+      await fetch('/api/cli-config', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelId }) });
+      addToast({ type: 'success', message: `Model changed to ${models.find(m => m.id === modelId)?.name}` });
+    };
+
+    if (loading) return <div className={styles.loading}>Loading models...</div>;
+    return (
+      <div className={styles.container}>
+        <label className={styles.label}>Default Model</label>
+        <select className={styles.select} value={selected} onChange={handleChange}>
+          {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.provider}) — {(m.contextWindow / 1000).toFixed(0)}K context</option>)}
+        </select>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### STEP 5: Write src/components/settings/ModelSelector.module.css
+
+  ```css
+
+  .container { margin-bottom: 1.5rem; }
+
+  .label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+
+  .select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background:
+  var(--bg-secondary); color: var(--text-primary); font-size: 1rem; }
+
+  .loading { padding: 1rem; color: var(--text-secondary); }
+
+  ```
+
+
+  ### STEP 6: Write src/components/settings/AppearanceSettings.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useAppearanceStore } from '@/store/appearance';
+
+  import styles from './AppearanceSettings.module.css';
+
+
+  export function AppearanceSettings() {
+    const { settings, setTheme, setFontSize, setDensity, setCodeFont } = useAppearanceStore();
+
+    return (
+      <div className={styles.container}>
+        <h3 className={styles.sectionTitle}>Appearance</h3>
+
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Theme</label>
+          <div className={styles.segmented}>
+            {(['dark', 'light', 'system'] as const).map(t => (
+              <button key={t} className={`${styles.segBtn} ${settings.theme === t ? styles.active : ''}`} onClick={() => setTheme(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Font Size</label>
+          <div className={styles.sliderRow}>
+            {(['small', 'medium', 'large'] as const).map(s => (
+              <button key={s} className={`${styles.sizeBtn} ${settings.fontSize === s ? styles.active : ''}`} onClick={() => setFontSize(s)}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Message Density</label>
+          <div className={styles.toggleRow}>
+            {(['compact', 'comfortable'] as const).map(d => (
+              <button key={d} className={`${styles.densityBtn} ${settings.density === d ? styles.active : ''}`} onClick={() => setDensity(d)}>{d.charAt(0).toUpperCase() + d.slice(1)}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Code Font</label>
+          <select className={styles.select} value={settings.codeFont} onChange={e => setCodeFont(e.target.value as any)}>
+            <option value="jetbrains-mono">JetBrains Mono</option>
+            <option value="fira-code">Fira Code</option>
+            <option value="cascadia-code">Cascadia Code</option>
+          </select>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### STEP 7: Write src/components/settings/AppearanceSettings.module.css
+
+  ```css
+
+  .container { margin-bottom: 2rem; }
+
+  .sectionTitle { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary); }
+
+  .controlGroup { margin-bottom: 1.25rem; }
+
+  .label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+
+  .segmented, .sliderRow, .toggleRow { display: flex; gap: 0.5rem; }
+
+  .segBtn, .sizeBtn, .densityBtn { padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-size: 0.875rem; transition: all
+  0.2s; }
+
+  .segBtn.active, .sizeBtn.active, .densityBtn.active { background: var(--accent-color); color: white; border-color:
+  var(--accent-color); }
+
+  .select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background:
+  var(--bg-secondary); color: var(--text-primary); font-size: 1rem; }
+
+  ```
+
+
+  ### STEP 8: Write src/components/settings/AppearancePreview.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useAppearanceStore } from '@/store/appearance';
+
+  import styles from './AppearancePreview.module.css';
+
+
+  export function AppearancePreview() {
+    const { settings } = useAppearanceStore();
+    return (
+      <div className={styles.previewCard}>
+        <h4 className={styles.previewTitle}>Preview</h4>
+        <p className={styles.previewText}>This is sample text that reflects your current font size, theme, and density settings.</p>
+        <pre className={styles.codeBlock}><code>const greeting = "Hello, world!";
+  console.log(greeting);</code></pre>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### STEP 9: Write src/components/settings/AppearancePreview.module.css
+
+  ```css
+
+  .previewCard { padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background:
+  var(--bg-secondary); }
+
+  .previewTitle { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); }
+
+  .previewText { font-size: var(--font-size-base, 16px); color: var(--text-primary); line-height: 1.6; margin-bottom:
+  1rem; }
+
+  .codeBlock { padding: 1rem; border-radius: 8px; background: var(--bg-tertiary); overflow-x: auto; font-family:
+  var(--code-font-family, 'JetBrains Mono', monospace); font-size: calc(var(--font-size-base, 16px) * 0.9); }
+
+  .codeBlock code { color: var(--text-primary); }
+
+  ```
+
+
+  ### STEP 10: Update src/components/settings/SettingsView.tsx
+
+  Import and render ModelSelector, AppearanceSettings, and AppearancePreview in the settings view. Add them as new
+  sections.
+
+
+  ### STEP 11: Build & Verify
+
+  Run `npm run build`. Fix any errors. Print DELIVERY COMPLETE.
+
+
+  DO NOT list files. DO NOT plan. WRITE THE FILES NOW.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/model-appearance-settings.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T09:14:59.332Z

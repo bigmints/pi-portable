@@ -1,0 +1,28 @@
+name: Build responsive app shell with header and sidebar
+description: >
+  The root layout wrapping all pages. Includes a 56px header bar with logo, active project badge, status dot,
+  notification bell, and avatar. Left sidebar (240px on desktop, 64px icon-only on tablet, hidden on mobile) with nav
+  items for Chat, Queue, Jobs, History, Artifacts, and Settings.
+status: done
+feature:
+  name: Auth & App Shell
+  slug: auth-app-shell
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Root layout at src/app/layout.tsx wraps all routes in the AppShell component
+  - Header is 56px tall with logo on the left, active project badge centred, and icon buttons on the right
+  - Sidebar is 240px wide on screens ≥1024px and collapses to 64px icon-only between 768px and 1023px
+  - Sidebar is hidden entirely on screens <768px
+  - Active route is highlighted in the sidebar with a left accent bar and filled icon
+  - Sidebar collapse state persists in localStorage via Zustand
+  - All icons use Lucide React with strokeWidth 1.5
+  - Tab order flows logically: header → sidebar → main content
+phase: 0
+priority: 999
+dependsOn:
+  - login-screen

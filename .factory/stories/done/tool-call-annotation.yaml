@@ -1,0 +1,27 @@
+name: Build tool-call annotation component
+description: >
+  A collapsible message component that renders tool-call events from the pi CLI. Shows the tool name as a badge, the
+  input arguments, and the output result. Collapsed by default; expands to show JSON with syntax highlighting.
+status: done
+feature:
+  name: Conversation Chat
+  slug: conversation-chat
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Tool-call messages are visually distinct from user and assistant messages with a wrench icon and tool name chip
+  - The component is collapsed by default showing only the tool name and a one-line summary of the result
+  - Clicking the header expands the component to show the full input JSON and output JSON in side-by-side or stacked
+    panels
+  - JSON panels have syntax highlighting and a copy button for each
+  - A duration badge shows how long the tool call took in milliseconds
+  - Error tool calls render with a red border and the error message in the output panel
+  - Multiple consecutive tool calls from the same agentic step are grouped under a single collapsible header
+phase: 2
+priority: 990
+dependsOn:
+  - message-bubbles-markdown

@@ -1,0 +1,27 @@
+name: Build job detail step timeline with live streaming
+description: >
+  An expandable vertical timeline inside a job card showing each step of the agentic workflow: plan, tool calls, and
+  final result. The current step streams live. Steps expand to show full input and output with syntax highlighting.
+status: done
+feature:
+  name: Agentic Job Monitor
+  slug: agentic-job-monitor
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Each step in the timeline has: an icon based on step type, a name, a status indicator, and a duration badge
+  - The currently executing step shows an animated shimmer effect instead of a duration
+  - New steps appear in the timeline in real time as job_event WebSocket frames arrive
+  - Clicking a completed step expands it to show the full input arguments and output in a collapsible JSON panel with
+    syntax highlighting
+  - A plan step at the top of the timeline shows the LLM's reasoning text (if provided by pi CLI)
+  - A final result step at the bottom shows the job's summary output rendered as Markdown
+  - The timeline scrolls independently if it overflows the panel height
+phase: 5
+priority: 979
+dependsOn:
+  - jobs-tab-status-list

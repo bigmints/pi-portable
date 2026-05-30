@@ -1,0 +1,30 @@
+name: Implement swipe gestures and pull-to-refresh
+description: >
+  Native-feeling swipe navigation: swipe right on the chat view goes back to the conversation list; swipe left on a list
+  item reveals a delete action. Pull-to-refresh on the conversation list reloads from the server.
+status: done
+feature:
+  name: Mobile & PWA
+  slug: mobile-pwa
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Swiping right from the left edge of the chat view navigates back to the conversation list with a spring slide
+    animation
+  - Swiping left on a conversation list item reveals a red Delete button; releasing over the button triggers the delete
+    flow
+  - Pull-to-refresh on the conversation list activates when the user pulls down more than 64px with a custom circular
+    spinner indicator
+  - Releasing after pull-to-refresh triggers a server refetch and updates the list; the spinner disappears when the
+    fetch completes
+  - Gestures use CSS overscroll-behavior: contain to prevent conflicting with browser navigation
+  - Touch start and move events are handled with passive listeners to avoid blocking the main thread
+  - All gestures have a minimum velocity threshold so accidental small swipes do not trigger navigation
+phase: 11
+priority: 957
+dependsOn:
+  - pwa-install-offline-shell

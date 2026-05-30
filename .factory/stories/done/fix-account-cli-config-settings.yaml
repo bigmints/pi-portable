@@ -1,0 +1,765 @@
+name: "Fix: account-cli-config-settings"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/account-cli-config-settings.yaml
+
+  Issue: CLI stalled twice — listed files but never started writing code. The brief was too high-level and the CLI got
+  stuck in a file-listing loop instead of implementing.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Build Settings Page — Step-by-Step Implementation
+
+
+  ## Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## CRITICAL: Do NOT list files. Do NOT scan the directory. Start writing code immediately.
+
+
+  ## Step 1: Create API Routes
+
+
+  ### File: `src/app/api/cli-config/route.ts`
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+
+  const MOCK_FIELDS = [
+    { key: 'model', value: 'gpt-4', type: 'text' as const, description: 'Default AI model for chat completions' },
+    { key: 'temperature', value: 0.7, type: 'number' as const, description: 'Creativity level (0.0-1.0)' },
+    { key: 'max_tokens', value: 4096, type: 'number' as const, description: 'Maximum tokens per response' },
+    { key: 'stream', value: true, type: 'toggle' as const, description: 'Stream responses token-by-token' },
+    { key: 'api_key', value: 'sk-****', type: 'text' as const, description: 'OpenAI API key (masked)' },
+    { key: 'base_url', value: 'https://api.openai.com', type: 'text' as const, description: 'API base URL' },
+    { key: 'timeout', value: 30, type: 'number' as const, description: 'Request timeout in seconds' },
+    { key: 'auto_save', value: true, type: 'toggle' as const, description: 'Auto-save conversations to history' },
+  ];
+
+
+  export async function GET() {
+    return NextResponse.json({ fields: MOCK_FIELDS });
+  }
+
+
+  export async function PATCH(req: Request) {
+    const body = await req.json();
+    return NextResponse.json({ success: true, message: 'Config updated' });
+  }
+
+  ```
+
+
+  ### File: `src/app/api/session/route.ts` — ADD DELETE handler to existing file
+
+  Append this to the existing `src/app/api/auth/session/route.ts` or create `src/app/api/session/route.ts`:
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+
+  export async function DELETE() {
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('pi_session', '', { maxAge: 0 });
+    return response;
+  }
+
+  ```
+
+
+  ## Step 2: Create Store
+
+
+  ### File: `src/store/cli-config.ts`
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+
+  export interface ConfigField {
+    key: string;
+    value: string | number | boolean;
+    type: 'text' | 'number' | 'toggle';
+    description: string;
+  }
+
+
+  interface CliConfigState {
+    fields: ConfigField[];
+    editedValues: Record<string, string | number | boolean>;
+    loading: boolean;
+    error: string | null;
+    hasChanges: boolean;
+    fetchConfig: () => Promise<void>;
+    updateField: (key: string, value: string | number | boolean) => void;
+    saveConfig: () => Promise<boolean>;
+    resetChanges: () => void;
+  }
+
+
+  export const useCliConfigStore = create<CliConfigState>((set, get) => ({
+    fields: [],
+    editedValues: {},
+    loading: false,
+    error: null,
+    hasChanges: false,
+    fetchConfig: async () => {
+      set({ loading: true, error: null });
+      try {
+        const res = await fetch('/api/cli-config');
+        const data = await res.json();
+        set({ fields: data.fields, loading: false });
+      } catch (err) {
+        set({ error: 'Failed to fetch config', loading: false });
+      }
+    },
+    updateField: (key, value) => {
+      const { fields, editedValues } = get();
+      const field = fields.find(f => f.key === key);
+      const typedValue = field?.type === 'number' ? Number(value) : value;
+      set({
+        editedValues: { ...editedValues, [key]: typedValue },
+        hasChanges: true,
+      });
+    },
+    saveConfig: async () => {
+      const { editedValues } = get();
+      try {
+        const res = await fetch('/api/cli-config', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: editedValues }),
+        });
+        if (!res.ok) throw new Error('Save failed');
+        set({ editedValues: {}, hasChanges: false });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    resetChanges: () => set({ editedValues: {}, hasChanges: false }),
+  }));
+
+  ```
+
+
+  ## Step 3: Create Components
+
+
+  ### File: `src/components/settings/SettingsTabs.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useState } from 'react';
+
+  import styles from './SettingsTabs.module.css';
+
+
+  const TABS = ['Account', 'CLI Config', 'Appearance', 'Shortcuts', 'Notifications', 'Advanced'];
+
+
+  export default function SettingsTabs({ children }: { children: React.ReactNode[] }) {
+    const [active, setActive] = useState('Account');
+    return (
+      <div className={styles.container}>
+        <div className={styles.tabBar} role="tablist">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              role="tab"
+              className={`${styles.tab} ${active === tab ? styles.active : ''}`}
+              onClick={() => setActive(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className={styles.content}>
+          {children.map((child, i) => (
+            <div key={TABS[i]} role="tabpanel" className={active === TABS[i] ? '' : styles.hidden}>
+              {child}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/SettingsTabs.module.css`
+
+  ```css
+
+  .container { display: flex; flex-direction: column; height: 100%; }
+
+  .tabBar {
+    display: flex; border-bottom: 1px solid var(--color-border); overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+
+  .tabBar::-webkit-scrollbar { display: none; }
+
+  .tab {
+    padding: 12px 20px; border: none; background: none; color: var(--color-text-secondary);
+    font-size: 14px; cursor: pointer; white-space: nowrap; position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab:hover { color: var(--color-text); }
+
+  .tab.active { color: var(--color-accent); font-weight: 600; }
+
+  .tab.active::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--color-accent); border-radius: 2px 2px 0 0;
+  }
+
+  .content { flex: 1; overflow: hidden; }
+
+  .hidden { display: none; }
+
+  ```
+
+
+  ### File: `src/components/settings/AccountSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { User, Clock, LogOut, ArrowRight } from 'lucide-react';
+
+  import styles from './AccountSection.module.css';
+
+  import { useToastStore } from '@/store/toast';
+
+
+  export default function AccountSection() {
+    const addToast = useToastStore(s => s.addToast);
+    const handleLogout = async () => {
+      await fetch('/api/session', { method: 'DELETE' });
+      window.location.href = '/login?redirect=/settings';
+    };
+    const handleExtend = async () => {
+      addToast({ variant: 'success', title: 'Session Extended', message: 'Session extended by 30 days' });
+    };
+    return (
+      <div className={styles.section}>
+        <div className={styles.card}>
+          <div className={styles.avatar}><User size={32} /></div>
+          <div className={styles.info}>
+            <div className={styles.label}>Connected as</div>
+            <div className={styles.value}>user@pi-cli</div>
+          </div>
+          <div className={styles.row}>
+            <Clock size={16} />
+            <span>Session expires in 29 days, 23 hours</span>
+          </div>
+          <div className={styles.actions}>
+            <button className={styles.btn} onClick={handleExtend}>
+              Extend Session <ArrowRight size={14} />
+            </button>
+            <button className={`${styles.btn} ${styles.danger}`} onClick={handleLogout}>
+              Log Out <LogOut size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/AccountSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  .card { max-width: 480px; }
+
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--color-accent);
+    display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 16px;
+  }
+
+  .info { margin-bottom: 16px; }
+
+  .label { font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+  .row { display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 14px;
+  margin-bottom: 20px; }
+
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px;
+    border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface);
+    color: var(--color-text); font-size: 14px; cursor: pointer; transition: all 0.2s;
+  }
+
+  .btn:hover { background: var(--color-surface-hover); }
+
+  .btn.danger { border-color: var(--color-error); color: var(--color-error); }
+
+  .btn.danger:hover { background: var(--color-error); color: white; }
+
+  ```
+
+
+  ### File: `src/components/settings/CliConfigSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useEffect, useState } from 'react';
+
+  import { Info } from 'lucide-react';
+
+  import styles from './CliConfigSection.module.css';
+
+  import { useCliConfigStore } from '@/store/cli-config';
+
+  import { useToastStore } from '@/store/toast';
+
+
+  export default function CliConfigSection() {
+    const { fields, editedValues, loading, error, hasChanges, fetchConfig, updateField, saveConfig, resetChanges } = useCliConfigStore();
+    const addToast = useToastStore(s => s.addToast);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => { fetchConfig(); }, [fetchConfig]);
+
+    const validate = () => {
+      const errs: Record<string, string> = {};
+      fields.forEach(f => {
+        const val = editedValues[f.key] ?? f.value;
+        if (f.type === 'number') {
+          if (typeof val !== 'number' || isNaN(val)) errs[f.key] = 'Must be a number';
+        }
+        if (f.type === 'text' && typeof val === 'string' && f.key !== 'api_key' && !val) {
+          errs[f.key] = 'This field is required';
+        }
+      });
+      setErrors(errs);
+      return Object.keys(errs).length === 0;
+    };
+
+    const handleSave = async () => {
+      if (!validate()) return;
+      const ok = await saveConfig();
+      addToast({
+        variant: ok ? 'success' : 'error',
+        title: ok ? 'Config Saved' : 'Save Failed',
+        message: ok ? 'Settings updated successfully' : 'Could not save config',
+      });
+    };
+
+    const getValue = (f: (typeof fields)[0]) => editedValues[f.key] ?? f.value;
+
+    if (loading) return <div className={styles.section}>Loading...</div>;
+    if (error) return <div className={styles.section}>{error}</div>;
+
+    return (
+      <div className={styles.section}>
+        {fields.map(f => (
+          <div key={f.key} className={styles.field}>
+            <div className={styles.fieldHeader}>
+              <label className={styles.key}>{f.key}</label>
+              <span className={styles.tooltip} title={f.description}><Info size={14} /></span>
+            </div>
+            {f.type === 'toggle' && (
+              <label className={styles.toggle}>
+                <input
+                  type="checkbox"
+                  checked={getValue(f) as boolean}
+                  onChange={e => updateField(f.key, e.target.checked)}
+                />
+                <span className={styles.toggleSlider} />
+              </label>
+            )}
+            {f.type === 'number' && (
+              <input
+                type="number"
+                className={`${styles.input} ${errors[f.key] ? styles.error : ''}`}
+                value={getValue(f) as number}
+                onChange={e => updateField(f.key, Number(e.target.value))}
+              />
+            )}
+            {f.type === 'text' && (
+              <input
+                type="text"
+                className={`${styles.input} ${errors[f.key] ? styles.error : ''}`}
+                value={getValue(f) as string}
+                onChange={e => updateField(f.key, e.target.value)}
+              />
+            )}
+            {errors[f.key] && <span className={styles.errorText}>{errors[f.key]}</span>}
+          </div>
+        ))}
+        {hasChanges && (
+          <div className={styles.footer}>
+            <button className={styles.saveBtn} onClick={handleSave}>Save Changes</button>
+            <button className={styles.resetBtn} onClick={resetChanges}>Reset</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/CliConfigSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  .field { margin-bottom: 20px; }
+
+  .fieldHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+
+  .key { font-weight: 600; font-size: 14px; }
+
+  .tooltip { color: var(--color-text-secondary); cursor: help; }
+
+  .input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px;
+    background: var(--color-surface); color: var(--color-text); font-size: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .input:focus { outline: none; border-color: var(--color-accent); }
+
+  .input.error { border-color: var(--color-error); }
+
+  .toggle { position: relative; width: 48px; height: 26px; cursor: pointer; }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggleSlider {
+    position: absolute; inset: 0; background: var(--color-border); border-radius: 13px;
+    transition: 0.2s;
+  }
+
+  .toggleSlider::before {
+    content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: 0.2s;
+  }
+
+  .toggle input:checked + .toggleSlider { background: var(--color-accent); }
+
+  .toggle input:checked + .toggleSlider::before { transform: translateX(22px); }
+
+  .errorText { color: var(--color-error); font-size: 12px; margin-top: 4px; }
+
+  .footer { display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+
+  .saveBtn {
+    padding: 10px 20px; background: var(--color-accent); color: white; border: none;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+
+  .resetBtn {
+    padding: 10px 20px; background: var(--color-surface); color: var(--color-text);
+    border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; cursor: pointer;
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/AppearanceSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useThemeStore } from '@/store/theme';
+
+  import styles from './AppearanceSection.module.css';
+
+
+  export default function AppearanceSection() {
+    const { mode, setMode } = useThemeStore();
+    return (
+      <div className={styles.section}>
+        <h3 className={styles.heading}>Theme</h3>
+        <div className={styles.options}>
+          {['light', 'dark', 'system'].map(m => (
+            <button key={m} className={`${styles.option} ${mode === m ? styles.selected : ''}`}
+              onClick={() => setMode(m as any)}>{m.charAt(0).toUpperCase() + m.slice(1)}</button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/AppearanceSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  .heading { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+  .options { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .option {
+    padding: 10px 20px; border: 1px solid var(--color-border); border-radius: 8px;
+    background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .option:hover { border-color: var(--color-accent); }
+
+  .option.selected { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+
+  ```
+
+
+  ### File: `src/components/settings/ShortcutsSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import ShortcutsReference from './ShortcutsReference';
+
+  import styles from './ShortcutsSection.module.css';
+
+
+  export default function ShortcutsSection() {
+    return (
+      <div className={styles.section}>
+        <ShortcutsReference />
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/ShortcutsSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  ```
+
+
+  ### File: `src/components/settings/NotificationsSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useState } from 'react';
+
+  import styles from './NotificationsSection.module.css';
+
+
+  export default function NotificationsSection() {
+    const [pushEnabled, setPushEnabled] = useState(true);
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    return (
+      <div className={styles.section}>
+        <div className={styles.row}>
+          <span>Push Notifications</span>
+          <label className={styles.toggle}>
+            <input type="checkbox" checked={pushEnabled} onChange={e => setPushEnabled(e.target.checked)} />
+            <span className={styles.slider} />
+          </label>
+        </div>
+        <div className={styles.row}>
+          <span>Sound</span>
+          <label className={styles.toggle}>
+            <input type="checkbox" checked={soundEnabled} onChange={e => setSoundEnabled(e.target.checked)} />
+            <span className={styles.slider} />
+          </label>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/NotificationsSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid
+  var(--color-border); }
+
+  .toggle { position: relative; width: 48px; height: 26px; cursor: pointer; }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute; inset: 0; background: var(--color-border); border-radius: 13px; transition: 0.2s;
+  }
+
+  .slider::before {
+    content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: 0.2s;
+  }
+
+  .toggle input:checked + .slider { background: var(--color-accent); }
+
+  .toggle input:checked + .slider::before { transform: translateX(22px); }
+
+  ```
+
+
+  ### File: `src/components/settings/AdvancedSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { Trash2, RotateCcw, Bug, Download } from 'lucide-react';
+
+  import styles from './AdvancedSection.module.css';
+
+
+  export default function AdvancedSection() {
+    return (
+      <div className={styles.section}>
+        {[
+          { icon: Trash2, label: 'Clear Cache', desc: 'Clear browser cache and stored data' },
+          { icon: RotateCcw, label: 'Reset Settings', desc: 'Reset all settings to defaults' },
+          { icon: Bug, label: 'Debug Mode', desc: 'Enable debug logging' },
+          { icon: Download, label: 'Export Data', desc: 'Download your data as JSON' },
+        ].map(item => (
+          <div key={item.label} className={styles.card}>
+            <item.icon size={20} />
+            <div className={styles.text}>
+              <div className={styles.label}>{item.label}</div>
+              <div className={styles.desc}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File: `src/components/settings/AdvancedSection.module.css`
+
+  ```css
+
+  .section { padding: 20px; overflow-y: auto; max-height: 60vh; }
+
+  .card {
+    display: flex; align-items: center; gap: 12px; padding: 16px;
+    border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 12px;
+    background: var(--color-surface); cursor: pointer; transition: all 0.2s;
+  }
+
+  .card:hover { border-color: var(--color-accent); }
+
+  .text { flex: 1; }
+
+  .label { font-weight: 600; font-size: 14px; }
+
+  .desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  ```
+
+
+  ### File: `src/components/settings/index.ts`
+
+  ```typescript
+
+  export { default as SettingsTabs } from './SettingsTabs';
+
+  export { default as AccountSection } from './AccountSection';
+
+  export { default as CliConfigSection } from './CliConfigSection';
+
+  export { default as AppearanceSection } from './AppearanceSection';
+
+  export { default as ShortcutsSection } from './ShortcutsSection';
+
+  export { default as NotificationsSection } from './NotificationsSection';
+
+  export { default as AdvancedSection } from './AdvancedSection';
+
+  ```
+
+
+  ## Step 4: Update Settings Page
+
+
+  ### File: `src/app/settings/page.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { SettingsTabs, AccountSection, CliConfigSection, AppearanceSection, ShortcutsSection, NotificationsSection,
+  AdvancedSection } from '@/components/settings';
+
+
+  export default function SettingsPage() {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <SettingsTabs>
+          <AccountSection />
+          <CliConfigSection />
+          <AppearanceSection />
+          <ShortcutsSection />
+          <NotificationsSection />
+          <AdvancedSection />
+        </SettingsTabs>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ## Step 5: Verify Build
+
+  Run `npm run build`. Fix any TypeScript or lint errors. The build must pass with zero errors.
+
+
+  ## Self-Sufficiency
+
+  Write all files above. Do NOT list files. Do NOT scan directories. Write the code. Run `npm run build`. Fix errors.
+  Print DELIVERY COMPLETE.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/account-cli-config-settings.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T08:11:44.459Z

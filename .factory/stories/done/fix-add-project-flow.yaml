@@ -1,0 +1,27 @@
+name: "Fix: add-project-flow"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/add-project-flow.yaml
+
+  Issue: CLI engineer (pi) is fundamentally stuck: after 2 delegations, it only lists directory files and stalls with no
+  output for 300s each time. No code is being generated despite clear, detailed instructions. The agent appears to be
+  trapped in a file-enumeration loop rather than executing the implementation. This requires human intervention to reset
+  the CLI agent or diagnose why it's not processing implementation instructions.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: "CLI engineer (pi) is fundamentally stuck: after 2 delegations, it only lists directory files and
+  stalls with no output for 300s each time. No code is being generated despite clear, detailed instructions. The agent
+  appears to be trapped in a file-enumeration loop rather than executing the implementation. This requires human
+  intervention to reset the CLI agent or diagnose why it's not processing implementation instructions."
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/add-project-flow.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T19:36:52.146Z

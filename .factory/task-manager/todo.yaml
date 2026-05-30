@@ -1,0 +1,67 @@
+summary:
+  completed: 10
+  next: 12
+  in_progress: 0
+  cancelled: 0
+next:
+  - id: task-001
+    title: Scaffold Next.js project and install core dependencies
+    priority: 1
+    story: .factory/stories/features/EP-01/ST-0101-scaffold.yaml
+  - id: task-002
+    title: Implement global CSS design system (tokens, utilities, animations)
+    priority: 1
+    story: .factory/stories/features/EP-01/ST-0102-design-system.yaml
+  - id: task-003
+    title: Build responsive app layout with header and sidebar
+    priority: 1
+    story: .factory/stories/features/EP-01/ST-0103-layout.yaml
+  - id: task-004
+    title: Build mobile bottom navigation bar
+    priority: 1
+    story: .factory/stories/features/EP-01/ST-0104-bottom-nav.yaml
+  - id: task-005
+    title: Implement dark/light theme toggle
+    priority: 1
+    story: .factory/stories/features/EP-01/ST-0105-theme.yaml
+  - id: task-006
+    title: Build login screen with API token input
+    priority: 2
+    story: .factory/stories/features/login-screen.yaml
+  - id: task-007
+    title: Implement real-time token streaming via WebSocket
+    priority: 2
+    story: .factory/stories/features/websocket-client.yaml
+  - id: task-008
+    title: Build conversation list sidebar and screen
+    priority: 2
+    story: .factory/stories/features/conversation-list.yaml
+  - id: task-009
+    title: Build project list screen with active project indicator
+    priority: 2
+    story: .factory/stories/features/project-list.yaml
+  - id: task-010
+    title: Implement stop and interrupt for active streaming response
+    priority: 3
+    story: .factory/stories/features/stop-interrupt-streaming.yaml
+  - id: task-011
+    title: Build auto-expanding textarea composer
+    priority: 3
+    story: .factory/stories/features/composer-textarea.yaml
+  - id: task-012
+    title: Build jobs tab with status list and filter tabs
+    priority: 3
+    story: .factory/stories/features/jobs-tab-status-list.yaml
+in_progress: []
+completed:
+  - pi-app: Completed build for pi-app
+  - pi-app--settings: Completed build for pi-app--settings
+  - pi-app--project-management: Completed build for pi-app--project-management
+  - pi-app--auth-app-shell: Completed build for pi-app--auth-app-shell
+  - pi-app--artifact-viewer: Completed build for pi-app--artifact-viewer
+  - pi-app--task-queue: Completed build for pi-app--task-queue
+  - pi-app--message-composer: Completed build for pi-app--message-composer
+  - pi-app--notifications: Completed build for pi-app--notifications
+  - pi-app--conversation-history: Completed build for pi-app--conversation-history
+  - pi-app--mobile-pwa: Completed build for pi-app--mobile-pwa
+cancelled: []

@@ -1,0 +1,823 @@
+name: "Fix: conversation-history-tab"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-history-tab.yaml
+
+  Issue: CLI stalled twice on conversation-history-tab story - it lists directory files but never starts creating files.
+  The brief needs to be more explicit about file creation with inline code to prevent stalling.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Build Conversation History Tab
+
+
+  ## Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## CRITICAL INSTRUCTION
+
+  Do NOT list files. Do NOT scan the directory. IMMEDIATELY start creating files. Write each file in full.
+
+
+  ## Files to Create (write each one completely)
+
+
+  ### 1. `src/store/history.ts`
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+  import { persist } from 'zustand/middleware';
+
+  import type { Conversation } from '@/types/chat';
+
+
+  export interface HistoryGroup {
+    label: string;
+    key: 'today' | 'yesterday' | 'this-week' | 'older';
+    conversations: Conversation[];
+  }
+
+
+  interface HistoryState {
+    conversations: Conversation[];
+    pinnedIds: string[];
+    page: number;
+    hasMore: boolean;
+    isLoading: boolean;
+    isLoadingMore: boolean;
+    setConversations: (conversations: Conversation[]) => void;
+    loadMore: () => void;
+    pinConversation: (id: string) => void;
+    unpinConversation: (id: string) => void;
+    getPinnedConversations: () => Conversation[];
+    getGroupedConversations: () => HistoryGroup[];
+  }
+
+
+  export const useHistoryStore = create<HistoryState>()(
+    persist(
+      (set, get) => ({
+        conversations: [],
+        pinnedIds: [],
+        page: 0,
+        hasMore: true,
+        isLoading: false,
+        isLoadingMore: false,
+        setConversations: (conversations) => set({ conversations }),
+        loadMore: () => set((s) => ({ page: s.page + 1 })),
+        pinConversation: (id) =>
+          set((s) => ({ pinnedIds: s.pinnedIds.includes(id) ? s.pinnedIds : [...s.pinnedIds, id] })),
+        unpinConversation: (id) =>
+          set((s) => ({ pinnedIds: s.pinnedIds.filter((p) => p !== id) })),
+        getPinnedConversations: () => {
+          const { conversations, pinnedIds } = get();
+          return conversations.filter((c) => pinnedIds.includes(c.id));
+        },
+        getGroupedConversations: () => {
+          const { conversations, pinnedIds } = get();
+          const unpinned = conversations.filter((c) => !pinnedIds.includes(c.id));
+          const groups: Record<string, HistoryGroup> = {
+            today: { label: 'Today', key: 'today', conversations: [] },
+            yesterday: { label: 'Yesterday', key: 'yesterday', conversations: [] },
+            'this-week': { label: 'This Week', key: 'this-week', conversations: [] },
+            older: { label: 'Older', key: 'older', conversations: [] },
+          };
+          for (const c of unpinned) {
+            const d = new Date(c.last_message_at || c.updated_at || Date.now());
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            let key: HistoryGroup['key'];
+            if (d >= today) key = 'today';
+            else if (d >= yesterday) key = 'yesterday';
+            else if (d >= weekAgo) key = 'this-week';
+            else key = 'older';
+            groups[key].conversations.push(c);
+          }
+          return Object.values(groups).filter((g) => g.conversations.length > 0);
+        },
+      }),
+      { name: 'pi-history' }
+    )
+  );
+
+  ```
+
+
+  ### 2. `src/components/history/ConversationEntry.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import Link from 'next/link';
+
+  import { Pin, MessageSquare } from 'lucide-react';
+
+  import type { Conversation } from '@/types/chat';
+
+  import { useHistoryStore } from '@/store/history';
+
+  import styles from './ConversationEntry.module.css';
+
+
+  interface Props {
+    conversation: Conversation;
+  }
+
+
+  export function ConversationEntry({ conversation }: Props) {
+    const { pinConversation, unpinConversation, pinnedIds } = useHistoryStore();
+    const isPinned = pinnedIds.includes(conversation.id);
+    const date = conversation.last_message_at || conversation.updated_at;
+    const relativeDate = date ? new Date(date).toLocaleDateString() : '';
+
+    return (
+      <Link href={`/history/${conversation.id}`} className={styles.entry}>
+        <div className={styles.info}>
+          <div className={styles.header}>
+            <span className={styles.badge} style={{ backgroundColor: conversation.project_color || 'var(--color-accent)' }} />
+            <span className={styles.title}>{conversation.title || 'Untitled'}</span>
+          </div>
+          <div className={styles.meta}>
+            <span>{conversation.model || 'Unknown model'}</span>
+            <span className={styles.dot}>•</span>
+            <span className={styles.count}>
+              <MessageSquare size={12} /> {conversation.message_count || 0}
+            </span>
+            <span className={styles.dot}>•</span>
+            <span className={styles.date}>{relativeDate}</span>
+          </div>
+        </div>
+        <button
+          className={styles.pinBtn}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isPinned ? unpinConversation(conversation.id) : pinConversation(conversation.id);
+          }}
+          aria-label={isPinned ? 'Unpin' : 'Pin'}
+        >
+          <Pin size={16} fill={isPinned ? 'currentColor' : 'none'} />
+        </button>
+      </Link>
+    );
+  }
+
+  ```
+
+
+  ### 3. `src/components/history/ConversationEntry.module.css`
+
+  ```css
+
+  .entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    transition: background-color 0.2s;
+    cursor: pointer;
+  }
+
+  .entry:hover {
+    background-color: var(--color-bg-tertiary);
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .title {
+    font-weight: 500;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  .dot {
+    color: var(--color-text-tertiary);
+  }
+
+  .count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .date {
+    color: var(--color-text-tertiary);
+  }
+
+  .pinBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--color-text-tertiary);
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .pinBtn:hover {
+    color: var(--color-accent);
+  }
+
+  ```
+
+
+  ### 4. `src/components/history/PinnedSection.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { Pin } from 'lucide-react';
+
+  import type { Conversation } from '@/types/chat';
+
+  import { ConversationEntry } from './ConversationEntry';
+
+  import styles from './PinnedSection.module.css';
+
+
+  interface Props {
+    conversations: Conversation[];
+  }
+
+
+  export function PinnedSection({ conversations }: Props) {
+    if (conversations.length === 0) return null;
+    return (
+      <section className={styles.section}>
+        <h2 className={styles.header}>
+          <Pin size={16} />
+          Pinned
+        </h2>
+        <div className={styles.list}>
+          {conversations.map((c) => (
+            <ConversationEntry key={c.id} conversation={c} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  ```
+
+
+  ### 5. `src/components/history/PinnedSection.module.css`
+
+  ```css
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-tertiary);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  ```
+
+
+  ### 6. `src/components/history/DayGroup.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import type { HistoryGroup } from '@/store/history';
+
+  import { ConversationEntry } from './ConversationEntry';
+
+  import styles from './DayGroup.module.css';
+
+
+  interface Props {
+    group: HistoryGroup;
+  }
+
+
+  export function DayGroup({ group }: Props) {
+    return (
+      <section className={styles.section}>
+        <h2 className={styles.header}>{group.label}</h2>
+        <div className={styles.list}>
+          {group.conversations.map((c) => (
+            <ConversationEntry key={c.id} conversation={c} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  ```
+
+
+  ### 7. `src/components/history/DayGroup.module.css`
+
+  ```css
+
+  .section {
+    margin-bottom: 16px;
+  }
+
+  .header {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-tertiary);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  ```
+
+
+  ### 8. `src/components/history/HistorySkeleton.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import styles from './HistorySkeleton.module.css';
+
+
+  export function HistorySkeleton() {
+    return (
+      <div className={styles.skeleton}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className={styles.row}>
+            <div className={styles.line} style={{ width: '60%' }} />
+            <div className={styles.line} style={{ width: '40%' }} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 9. `src/components/history/HistorySkeleton.module.css`
+
+  ```css
+
+  .skeleton {
+    padding: 16px;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .line {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--color-skeleton-base, #e0e0e0) 25%, var(--color-skeleton-shimmer, #f0f0f0) 50%, var(--color-skeleton-base, #e0e0e0) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  ```
+
+
+  ### 10. `src/components/history/HistoryEmptyState.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import Link from 'next/link';
+
+  import { MessageSquare } from 'lucide-react';
+
+  import styles from './HistoryEmptyState.module.css';
+
+
+  export function HistoryEmptyState() {
+    return (
+      <div className={styles.container}>
+        <MessageSquare size={48} strokeWidth={1} />
+        <h3 className={styles.title}>No conversations yet</h3>
+        <p className={styles.description}>Start a new conversation to see it here.</p>
+        <Link href="/chat" className={styles.cta}>
+          Start chatting
+        </Link>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 11. `src/components/history/HistoryEmptyState.module.css`
+
+  ```css
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 32px;
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 16px;
+    color: var(--color-text-primary);
+  }
+
+  .description {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .cta {
+    margin-top: 24px;
+    padding: 10px 24px;
+    background: var(--color-accent);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+
+  .cta:hover {
+    background: var(--color-accent-hover);
+  }
+
+  ```
+
+
+  ### 12. `src/components/history/HistoryList.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useEffect, useRef } from 'react';
+
+  import { useHistoryStore, type HistoryGroup } from '@/store/history';
+
+  import { PinnedSection } from './PinnedSection';
+
+  import { DayGroup } from './DayGroup';
+
+  import { HistorySkeleton } from './HistorySkeleton';
+
+  import { HistoryEmptyState } from './HistoryEmptyState';
+
+  import styles from './HistoryList.module.css';
+
+
+  export function HistoryList() {
+    const { conversations, isLoading, isLoadingMore, hasMore, loadMore, getPinnedConversations, getGroupedConversations } = useHistoryStore();
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+            loadMore();
+          }
+        },
+        { rootMargin: '200px' }
+      );
+      if (sentinelRef.current) observer.observe(sentinelRef.current);
+      return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, loadMore]);
+
+    if (isLoading) return <HistorySkeleton />;
+    if (conversations.length === 0) return <HistoryEmptyState />;
+
+    const pinned = getPinnedConversations();
+    const groups: HistoryGroup[] = getGroupedConversations();
+
+    return (
+      <div className={styles.container}>
+        {pinned.length > 0 && <PinnedSection conversations={pinned} />}
+        {groups.map((g) => (
+          <DayGroup key={g.key} group={g} />
+        ))}
+        {hasMore && (
+          <div ref={sentinelRef} className={styles.sentinel}>
+            {isLoadingMore && <HistorySkeleton />}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 13. `src/components/history/HistoryList.module.css`
+
+  ```css
+
+  .container {
+    padding-bottom: 16px;
+  }
+
+  .sentinel {
+    height: 1px;
+  }
+
+  ```
+
+
+  ### 14. `src/components/history/index.ts`
+
+  ```typescript
+
+  export { HistoryList } from './HistoryList';
+
+  export { ConversationEntry } from './ConversationEntry';
+
+  export { PinnedSection } from './PinnedSection';
+
+  export { DayGroup } from './DayGroup';
+
+  export { HistorySkeleton } from './HistorySkeleton';
+
+  export { HistoryEmptyState } from './HistoryEmptyState';
+
+  ```
+
+
+  ### 15. `src/app/history/page.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { HistoryList } from '@/components/history';
+
+  import styles from './page.module.css';
+
+
+  export default function HistoryPage() {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.title}>History</h1>
+        <HistoryList />
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 16. `src/app/history/page.module.css`
+
+  ```css
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--color-text-primary);
+  }
+
+  ```
+
+
+  ### 17. `src/app/history/[id]/page.tsx`
+
+  ```tsx
+
+  'use client';
+
+  import { useParams, useRouter } from 'next/navigation';
+
+  import Link from 'next/link';
+
+  import { ArrowLeft, Play } from 'lucide-react';
+
+  import { useConversationsStore } from '@/store/conversations';
+
+  import { MessageBubble } from '@/components/chat/MessageBubble';
+
+  import styles from './page.module.css';
+
+
+  export default function HistoryDetailPage() {
+    const params = useParams();
+    const router = useRouter();
+    const id = params.id as string;
+    const conversations = useConversationsStore((s) => s.conversations);
+    const conversation = conversations.find((c) => c.id === id);
+
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <button className={styles.backBtn} onClick={() => router.back()}>
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className={styles.title}>{conversation?.title || 'Conversation'}</h1>
+        </div>
+        {!conversation ? (
+          <div className={styles.notFound}>Conversation not found.</div>
+        ) : (
+          <>
+            <div className={styles.messages}>
+              {/* Render messages - in production these come from messages store */}
+              <div className={styles.placeholder}>
+                Messages will appear here when loaded from the messages store.
+              </div>
+            </div>
+            <div className={styles.footer}>
+              <Link href={`/chat/${id}`} className={styles.resumeBtn}>
+                <Play size={16} />
+                Resume Conversation
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 18. `src/app/history/[id]/page.module.css`
+
+  ```css
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    padding-bottom: 80px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .backBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .notFound {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--color-text-secondary);
+  }
+
+  .messages {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .placeholder {
+    text-align: center;
+    padding: 32px;
+    color: var(--color-text-tertiary);
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+  }
+
+  .footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-bg-primary);
+    padding: 16px;
+    border-top: 1px solid var(--color-border);
+    margin: 0 -16px;
+  }
+
+  .resumeBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: var(--color-accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .resumeBtn:hover {
+    background: var(--color-accent-hover);
+  }
+
+  ```
+
+
+  ## After Creating All Files
+
+  1. Run `npm run build`
+
+  2. Fix any TypeScript or lint errors
+
+  3. Print DELIVERY COMPLETE with summary
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-history-tab.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T05:14:19.334Z

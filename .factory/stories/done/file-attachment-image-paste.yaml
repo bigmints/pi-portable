@@ -1,0 +1,27 @@
+name: Build file attachment and image paste flow
+description: >
+  Users can attach files to a message via a paperclip button (native file picker) or by pasting an image directly.
+  Attachments appear as a preview strip above the textarea and can be removed before sending.
+status: done
+feature:
+  name: Message Composer
+  slug: message-composer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A paperclip icon button in the composer opens the native file picker accepting images, text files, and common code
+    extensions
+  - Up to five files can be attached to a single message
+  - Each selected file appears as a pill in a scrollable strip above the textarea showing the filename and file size
+  - Each pill has an X button that removes the file from the pending attachments
+  - Pasting an image from the clipboard renders it as a thumbnail in the attachment strip
+  - Files are uploaded to POST /api/upload before sending and the returned file IDs are included in the message payload
+  - If a file exceeds 10 MB an inline error is shown and the file is not added to the strip
+phase: 3
+priority: 986
+dependsOn:
+  - slash-command-palette

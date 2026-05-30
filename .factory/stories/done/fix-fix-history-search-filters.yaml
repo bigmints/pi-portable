@@ -1,0 +1,465 @@
+name: "Fix: fix-history-search-filters"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-history-search-filters.yaml
+
+  Issue: CLI stalled twice while implementing history search filters. The CLI repeatedly listed directory contents but
+  never created any files. The API route file may exist partially but all other files (search store, highlight utility,
+  components, history page integration) are missing.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## DIRECT FILE CREATION TASK — NO LISTING, NO CHECKING
+
+
+  Create these files immediately. Do NOT list directory contents. Do NOT check if files exist. Write them now.
+
+
+  ### File 1: src/lib/highlight-text.ts
+
+  ```typescript
+
+  import React from 'react';
+
+  export function highlightText(text: string, terms: string[]): React.ReactNode[] {
+    if (!terms.length || !text) return [text];
+    const regex = new RegExp(`(${terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) => regex.test(part) ? <mark key={i} style={{ background: 'var(--color-highlight, #fef08a)', borderRadius: '2px', padding: '0 2px' }}>{part}</mark> : part);
+  }
+
+  ```
+
+
+  ### File 2: src/store/search.ts
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+  export interface SearchResult { id: string; title: string; preview: string; project: string; model: string; date:
+  string; tokens: number; }
+
+  interface SearchState { query: string; filters: { projects: string[]; models: string[]; dateFrom: string; dateTo:
+  string; }; results: SearchResult[]; loading: boolean; activeFilterCount: number; setSearchQuery: (q: string) => void;
+  setFilters: (f: Partial<SearchState['filters']>) => void; clearFilters: () => void; search: () => Promise<void>;
+  clearSearch: () => void; }
+
+  export const useSearchStore = create<SearchState>((set, get) => ({
+    query: '', filters: { projects: [], models: [], dateFrom: '', dateTo: '' }, results: [], loading: false, activeFilterCount: 0,
+    setSearchQuery: (q) => { set({ query: q }); setTimeout(() => get().search(), 300); },
+    setFilters: (f) => { const cur = get().filters; const upd = { ...cur, ...f }; const c = upd.projects.length + upd.models.length + (upd.dateFrom ? 1 : 0) + (upd.dateTo ? 1 : 0); set({ filters: upd, activeFilterCount: c }); },
+    clearFilters: () => set({ filters: { projects: [], models: [], dateFrom: '', dateTo: '' }, activeFilterCount: 0 }),
+    search: async () => { const { query, filters } = get(); set({ loading: true }); try { const p = new URLSearchParams(); if (query) p.set('q', query); if (filters.projects.length) p.set('projects', filters.projects.join(',')); if (filters.models.length) p.set('models', filters.models.join(',')); if (filters.dateFrom) p.set('dateFrom', filters.dateFrom); if (filters.dateTo) p.set('dateTo', filters.dateTo); const r = await fetch(`/api/conversations/search?${p}`); const d = await r.json(); set({ results: d.results || [], loading: false }); } catch { set({ loading: false }); } },
+    clearSearch: () => set({ query: '', results: [], filters: { projects: [], models: [], dateFrom: '', dateTo: '' }, activeFilterCount: 0 }),
+  }));
+
+  ```
+
+
+  ### File 3: src/app/api/conversations/search/route.ts
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+  const MOCK = [
+    { id: '1', title: 'Fix login screen styling', preview: 'Updated login form CSS with dark mode custom properties...', project: 'pi-app', model: 'gpt-4', date: '2026-05-25', tokens: 1250 },
+    { id: '2', title: 'Add WebSocket handling', preview: 'Reconnection logic with exponential backoff...', project: 'pi-app', model: 'claude-3', date: '2026-05-25', tokens: 2100 },
+    { id: '3', title: 'Design system tokens', preview: 'CSS custom properties for colors and spacing...', project: 'docs', model: 'gpt-4', date: '2026-05-24', tokens: 890 },
+    { id: '4', title: 'Build pipeline config', preview: 'GitHub Actions workflow for CI/CD...', project: 'scripts', model: 'gemini-pro', date: '2026-05-24', tokens: 560 },
+    { id: '5', title: 'Message bubble components', preview: 'MessageBubble with Markdown rendering...', project: 'pi-app', model: 'gpt-4', date: '2026-05-23', tokens: 3200 },
+    { id: '6', title: 'PWA service worker', preview: 'next-pwa with offline fallback...', project: 'pi-app', model: 'claude-3', date: '2026-05-23', tokens: 1800 },
+    { id: '7', title: 'Job step timeline UI', preview: 'Expandable step rows with icons...', project: 'pi-app', model: 'gpt-4', date: '2026-05-22', tokens: 2400 },
+    { id: '8', title: 'Notification architecture', preview: 'Zustand store for push notifications...', project: 'pi-app', model: 'gemini-pro', date: '2026-05-22', tokens: 1500 },
+    { id: '9', title: 'Keyboard shortcuts', preview: 'Cmd+K command palette handler...', project: 'pi-app', model: 'claude-3', date: '2026-05-21', tokens: 1100 },
+    { id: '10', title: 'Theme toggle dark mode', preview: 'Sun/Moon icon button with OS preference...', project: 'pi-app', model: 'gpt-4', date: '2026-05-21', tokens: 750 },
+  ];
+
+  export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get('q') || '';
+    const projects = searchParams.get('projects')?.split(',') || [];
+    const models = searchParams.get('models')?.split(',') || [];
+    const dateFrom = searchParams.get('dateFrom') || '';
+    const dateTo = searchParams.get('dateTo') || '';
+    let results = [...MOCK];
+    if (q) { const l = q.toLowerCase(); results = results.filter(r => r.title.toLowerCase().includes(l) || r.preview.toLowerCase().includes(l)); }
+    if (projects.length) results = results.filter(r => projects.includes(r.project));
+    if (models.length) results = results.filter(r => models.includes(r.model));
+    if (dateFrom) results = results.filter(r => r.date >= dateFrom);
+    if (dateTo) results = results.filter(r => r.date <= dateTo);
+    return NextResponse.json({ results, total: results.length });
+  }
+
+  ```
+
+
+  ### File 4: src/components/history/SearchBar.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useState, useRef } from 'react';
+
+  import { Search, X } from 'lucide-react';
+
+  import { useSearchStore } from '@/store/search';
+
+  import styles from './SearchBar.module.css';
+
+  export default function SearchBar() {
+    const { query, setSearchQuery, loading, clearSearch } = useSearchStore();
+    const [local, setLocal] = useState(query);
+    const timer = useRef<ReturnType<typeof setTimeout>>();
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const v = e.target.value; setLocal(v); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setSearchQuery(v), 300); };
+    return (
+      <div className={styles.container}>
+        <Search className={styles.icon} size={18} />
+        {loading ? <div className={styles.spinner} /> : <input className={styles.input} type="text" placeholder="Search conversations..." value={local} onChange={handleChange} />}
+        {local && <button className={styles.clearBtn} onClick={() => { setLocal(''); clearSearch(); }} aria-label="Clear"><X size={16} /></button>}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File 5: src/components/history/SearchBar.module.css
+
+  ```
+
+  .container { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; }
+
+  .container:focus-within { border-color: var(--color-accent, #3b82f6); }
+
+  .icon { color: var(--color-fg-muted, #94a3b8); flex-shrink: 0; }
+
+  .input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: var(--color-fg,
+  #0f172a); }
+
+  .input::placeholder { color: var(--color-fg-muted, #94a3b8); }
+
+  .clearBtn { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0;
+  border: none; border-radius: 4px; background: transparent; color: var(--color-fg-muted, #94a3b8); cursor: pointer; }
+
+  .clearBtn:hover { background: var(--color-bg-hover, #f1f5f9); }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--color-border, #e2e8f0); border-top-color:
+  var(--color-accent, #3b82f6); border-radius: 50%; animation: spin 0.6s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  ```
+
+
+  ### File 6: src/components/history/FilterPanel.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { X } from 'lucide-react';
+
+  import { useSearchStore } from '@/store/search';
+
+  import styles from './FilterPanel.module.css';
+
+  const PROJECTS = ['pi-app', 'docs', 'scripts'];
+
+  const MODELS = ['gpt-4', 'claude-3', 'gemini-pro'];
+
+  interface Props { open: boolean; onClose: () => void; }
+
+  export default function FilterPanel({ open, onClose }: Props) {
+    const { filters, setFilters, clearFilters, activeFilterCount } = useSearchStore();
+    const toggleProject = (p: string) => setFilters({ projects: filters.projects.includes(p) ? filters.projects.filter(x => x !== p) : [...filters.projects, p] });
+    const toggleModel = (m: string) => setFilters({ models: filters.models.includes(m) ? filters.models.filter(x => x !== m) : [...filters.models, m] });
+    if (!open) return null;
+    return (
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.panel} onClick={e => e.stopPropagation()}>
+          <div className={styles.header}><h3>Filters</h3><button onClick={onClose} aria-label="Close"><X size={18} /></button></div>
+          <div className={styles.section}><h4>Projects</h4>{PROJECTS.map(p => <label key={p} className={styles.checkbox}><input type="checkbox" checked={filters.projects.includes(p)} onChange={() => toggleProject(p)} /><span>{p}</span></label>)}</div>
+          <div className={styles.section}><h4>Models</h4>{MODELS.map(m => <label key={m} className={styles.checkbox}><input type="checkbox" checked={filters.models.includes(m)} onChange={() => toggleModel(m)} /><span>{m}</span></label>)}</div>
+          <div className={styles.section}><h4>Date Range</h4><div className={styles.dateRow}><input type="date" value={filters.dateFrom} onChange={e => setFilters({ dateFrom: e.target.value })} /><input type="date" value={filters.dateTo} onChange={e => setFilters({ dateTo: e.target.value })} /></div></div>
+          <div className={styles.actions}><button className={styles.resetBtn} onClick={() => { clearFilters(); onClose(); }}>Reset</button><button className={styles.applyBtn} onClick={onClose}>Apply ({activeFilterCount})</button></div>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File 7: src/components/history/FilterPanel.module.css
+
+  ```
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; justify-content:
+  flex-end; }
+
+  .panel { width: 320px; height: 100%; background: var(--color-surface, #fff); padding: 20px; overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+  .header h3 { margin: 0; font-size: 18px; }
+
+  .header button { background: none; border: none; cursor: pointer; color: var(--color-fg-muted, #94a3b8); }
+
+  .section { margin-bottom: 20px; }
+
+  .section h4 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; color: var(--color-fg-muted, #94a3b8); }
+
+  .checkbox { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
+
+  .checkbox input { accent-color: var(--color-accent, #3b82f6); }
+
+  .dateRow { display: flex; gap: 8px; }
+
+  .dateRow input { flex: 1; padding: 6px 8px; border: 1px solid var(--color-border, #e2e8f0); border-radius: 4px;
+  font-size: 13px; }
+
+  .actions { display: flex; gap: 8px; margin-top: 20px; }
+
+  .resetBtn, .applyBtn { flex: 1; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+
+  .resetBtn { background: transparent; border: 1px solid var(--color-border, #e2e8f0); color: var(--color-fg, #0f172a);
+  }
+
+  .applyBtn { background: var(--color-accent, #3b82f6); border: none; color: #fff; }
+
+  ```
+
+
+  ### File 8: src/components/history/FilterButton.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { Filter } from 'lucide-react';
+
+  import { useSearchStore } from '@/store/search';
+
+  import styles from './FilterButton.module.css';
+
+  interface Props { onClick: () => void; }
+
+  export default function FilterButton({ onClick }: Props) {
+    const { activeFilterCount } = useSearchStore();
+    return <button className={styles.btn} onClick={onClick} aria-label="Filters"><Filter size={18} />{activeFilterCount > 0 && <span className={styles.badge}>{activeFilterCount}</span>}</button>;
+  }
+
+  ```
+
+
+  ### File 9: src/components/history/FilterButton.module.css
+
+  ```
+
+  .btn { position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; background: var(--color-surface, #fff); color:
+  var(--color-fg, #0f172a); cursor: pointer; }
+
+  .btn:hover { background: var(--color-bg-hover, #f1f5f9); }
+
+  .badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius:
+  9px; background: var(--color-accent, #3b82f6); color: #fff; font-size: 11px; font-weight: 600; display: flex;
+  align-items: center; justify-content: center; }
+
+  ```
+
+
+  ### File 10: src/components/history/SearchResultItem.tsx
+
+  ```tsx
+
+  'use client';
+
+  import Link from 'next/link';
+
+  import { Calendar, Bot } from 'lucide-react';
+
+  import { highlightText } from '@/lib/highlight-text';
+
+  import { SearchResult } from '@/store/search';
+
+  import styles from './SearchResultItem.module.css';
+
+  interface Props { result: SearchResult; terms: string[]; }
+
+  export default function SearchResultItem({ result, terms }: Props) {
+    return (
+      <Link href={`/chat/${result.id}`} className={styles.card}>
+        <div className={styles.title}>{highlightText(result.title, terms)}</div>
+        <div className={styles.preview}>{highlightText(result.preview, terms)}</div>
+        <div className={styles.meta}>
+          <span className={styles.badge}>{result.project}</span>
+          <span className={styles.badge}><Bot size={12} /> {result.model}</span>
+          <span className={styles.date}><Calendar size={12} /> {result.date}</span>
+        </div>
+      </Link>
+    );
+  }
+
+  ```
+
+
+  ### File 11: src/components/history/SearchResultItem.module.css
+
+  ```
+
+  .card { display: block; padding: 12px 16px; background: var(--color-surface, #fff); border: 1px solid
+  var(--color-border, #e2e8f0); border-radius: 8px; text-decoration: none; color: inherit; transition: border-color
+  0.2s, box-shadow 0.2s; }
+
+  .card:hover { border-color: var(--color-accent, #3b82f6); box-shadow: 0 2px 8px rgba(59,130,246,0.1); }
+
+  .title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+
+  .preview { font-size: 13px; color: var(--color-fg-muted, #64748b); line-height: 1.5; margin-bottom: 8px; }
+
+  .meta { display: flex; gap: 8px; align-items: center; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--color-bg-secondary,
+  #f8fafc); border-radius: 4px; font-size: 12px; color: var(--color-fg-muted, #64748b); }
+
+  .date { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-fg-muted, #94a3b8); }
+
+  ```
+
+
+  ### File 12: src/components/history/SearchEmptyState.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { Search } from 'lucide-react';
+
+  import styles from './SearchEmptyState.module.css';
+
+  interface Props { query: string; }
+
+  export default function SearchEmptyState({ query }: Props) {
+    return <div className={styles.container}><Search size={48} className={styles.icon} /><h3>No results for "{query}"</h3><p>Try fewer words or adjust your filters</p></div>;
+  }
+
+  ```
+
+
+  ### File 13: src/components/history/SearchEmptyState.module.css
+
+  ```
+
+  .container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px;
+  text-align: center; }
+
+  .icon { color: var(--color-fg-muted, #cbd5e1); margin-bottom: 16px; }
+
+  .container h3 { margin: 0 0 8px; font-size: 16px; color: var(--color-fg, #0f172a); }
+
+  .container p { margin: 0; font-size: 14px; color: var(--color-fg-muted, #94a3b8); }
+
+  ```
+
+
+  ### File 14: src/components/history/SearchResultsView.tsx
+
+  ```tsx
+
+  'use client';
+
+  import { useState } from 'react';
+
+  import { useSearchStore } from '@/store/search';
+
+  import SearchBar from './SearchBar';
+
+  import FilterButton from './FilterButton';
+
+  import FilterPanel from './FilterPanel';
+
+  import SearchResultItem from './SearchResultItem';
+
+  import SearchEmptyState from './SearchEmptyState';
+
+  import styles from './SearchResultsView.module.css';
+
+  export default function SearchResultsView() {
+    const { query, results, loading } = useSearchStore();
+    const [filterOpen, setFilterOpen] = useState(false);
+    const terms = query.split(/\s+/).filter(Boolean);
+    return (
+      <div className={styles.container}>
+        <div className={styles.toolbar}><SearchBar /><FilterButton onClick={() => setFilterOpen(true)} /></div>
+        <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
+        <div className={styles.results}>
+          {loading && <div className={styles.loading}>Searching...</div>}
+          {!loading && query && results.length === 0 && <SearchEmptyState query={query} />}
+          {!loading && results.map(r => <SearchResultItem key={r.id} result={r} terms={terms} />)}
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### File 15: src/components/history/SearchResultsView.module.css
+
+  ```
+
+  .container { padding: 16px; }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+
+  .results { display: flex; flex-direction: column; gap: 8px; }
+
+  .loading { text-align: center; padding: 40px; color: var(--color-fg-muted, #94a3b8); }
+
+  ```
+
+
+  ### File 16: src/app/history/page.tsx (REPLACE existing)
+
+  ```tsx
+
+  'use client';
+
+  import { useSearchStore } from '@/store/search';
+
+  import SearchResultsView from '@/components/history/SearchResultsView';
+
+  import HistoryList from '@/components/history/HistoryList';
+
+  export default function HistoryPage() {
+    const { query, activeFilterCount } = useSearchStore();
+    const isSearching = !!query || activeFilterCount > 0;
+    return <div>{isSearching ? <SearchResultsView /> : <HistoryList />}</div>;
+  }
+
+  ```
+
+
+  After creating all files, run: `npx tsc --noEmit && npm run lint && npm run build`
+
+  Fix ALL errors. Zero errors required.
+
+  Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-history-search-filters.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T06:03:06.741Z

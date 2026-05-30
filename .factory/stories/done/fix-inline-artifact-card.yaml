@@ -1,0 +1,701 @@
+name: "Fix: inline-artifact-card"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/inline-artifact-card.yaml
+
+  Issue: CLI stalled twice, only listing files without writing any code. It's stuck in a survey/listing loop instead of
+  implementing the artifact card feature.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Build inline artifact card for chat messages
+
+
+  STOP listing files. START writing code immediately.
+
+
+  ## Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## DO THIS NOW - Write these files in order:
+
+
+  ### 1. Write `src/lib/detect-language.ts`
+
+  ```typescript
+
+  export function detectLanguage(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    const map: Record<string, string> = {
+      ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx',
+      py: 'python', rs: 'rust', go: 'go', rb: 'ruby', java: 'java',
+      cs: 'csharp', cpp: 'cpp', c: 'c', h: 'cpp',
+      json: 'json', yaml: 'yaml', yml: 'yaml', toml: 'toml',
+      md: 'markdown', html: 'html', css: 'css', scss: 'scss',
+      sh: 'bash', bash: 'bash', zsh: 'bash',
+      sql: 'sql', graphql: 'graphql', gql: 'graphql',
+      xml: 'xml', svg: 'xml',
+      png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', webp: 'image', bmp: 'image', ico: 'image',
+    };
+    return map[ext] || 'plaintext';
+  }
+
+
+  export function isImageFile(filename: string): boolean {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'svg'].includes(ext);
+  }
+
+  ```
+
+
+  ### 2. Write `src/lib/file-icons.ts`
+
+  ```typescript
+
+  import { File, FileCode, FileJson, FileText, Image, FileTerminal } from 'lucide-react';
+
+
+  export function getFileIcon(filename: string): React.ReactNode {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    const iconMap: Record<string, React.ReactNode> = {
+      ts: <FileCode size={16} />, tsx: <FileCode size={16} />,
+      js: <FileCode size={16} />, jsx: <FileCode size={16} />,
+      py: <FileCode size={16} />, rs: <FileCode size={16} />,
+      json: <FileJson size={16} />, yaml: <FileText size={16} />, yml: <FileText size={16} />,
+      md: <FileText size={16} />, html: <FileText size={16} />, css: <FileText size={16} />,
+      png: <Image size={16} />, jpg: <Image size={16} />, jpeg: <Image size={16} />,
+      gif: <Image size={16} />, webp: <Image size={16} />, svg: <Image size={16} />,
+      sh: <FileTerminal size={16} />, bash: <FileTerminal size={16} />,
+    };
+    return iconMap[ext] || <File size={16} />;
+  }
+
+  ```
+
+
+  ### 3. Append to `src/types/chat.ts`
+
+  Add this interface at the end of the file (before any closing braces):
+
+  ```typescript
+
+  export interface ArtifactFile {
+    id: string;
+    path: string;
+    filename: string;
+    language: string;
+    content: string;
+    lineCount: number;
+    isImage?: boolean;
+    imageUrl?: string;
+    isModified?: boolean;
+    diffAdded?: number;
+    diffRemoved?: number;
+    diffContent?: string;
+    createdAt: string;
+  }
+
+  ```
+
+  Also add `artifacts?: ArtifactFile[]` to the ChatMessage interface.
+
+
+  ### 4. Write `src/components/chat/ArtifactCard.module.css`
+
+  ```css
+
+  .artifact-card {
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+    background: var(--color-bg-secondary, #ffffff);
+  }
+
+
+  [data-theme="dark"] .artifact-card {
+    border-color: var(--color-border, #334155);
+    background: var(--color-bg-secondary, #1e293b);
+  }
+
+
+  .artifact-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-bg-tertiary, #f8fafc);
+  }
+
+
+  [data-theme="dark"] .artifact-header {
+    border-color: var(--color-border, #334155);
+    background: var(--color-bg-tertiary, #0f172a);
+  }
+
+
+  .artifact-icon {
+    flex-shrink: 0;
+    color: var(--color-text-secondary, #64748b);
+  }
+
+
+  .artifact-filename {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text, #0f172a);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+
+  [data-theme="dark"] .artifact-filename {
+    color: var(--color-text, #f1f5f9);
+  }
+
+
+  .artifact-badges {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--color-accent, #3b82f6);
+    color: white;
+  }
+
+
+  .badge-diff {
+    background: var(--color-success, #22c55e);
+    color: white;
+  }
+
+
+  .badge-lines {
+    background: var(--color-text-secondary, #64748b);
+    color: white;
+  }
+
+
+  .artifact-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-text-secondary, #64748b);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+
+  .action-btn:hover {
+    background: var(--color-bg-tertiary, #f1f5f9);
+    color: var(--color-text, #0f172a);
+  }
+
+
+  [data-theme="dark"] .action-btn:hover {
+    background: var(--color-bg-tertiary, #334155);
+    color: var(--color-text, #f1f5f9);
+  }
+
+
+  .action-btn.copied {
+    color: var(--color-success, #22c55e);
+  }
+
+
+  .artifact-body {
+    max-height: 320px;
+    overflow: auto;
+    font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+
+  .artifact-body pre {
+    margin: 0;
+    padding: 12px;
+  }
+
+
+  .artifact-body code {
+    font-family: inherit;
+  }
+
+
+  .artifact-image {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    cursor: pointer;
+    background: var(--color-bg-tertiary, #f1f5f9);
+  }
+
+
+  [data-theme="dark"] .artifact-image {
+    background: var(--color-bg-tertiary, #334155);
+  }
+
+
+  .diff-view {
+    font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+
+  .diff-line {
+    display: flex;
+    padding: 0 12px;
+  }
+
+
+  .diff-line.added {
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+
+  .diff-line.removed {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+
+  .diff-line-num {
+    width: 40px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 8px;
+    color: var(--color-text-secondary, #94a3b8);
+    user-select: none;
+  }
+
+
+  .diff-line-content {
+    flex: 1;
+    white-space: pre;
+  }
+
+
+  .diff-line.added .diff-line-content {
+    color: var(--color-success, #16a34a);
+  }
+
+
+  .diff-line.removed .diff-line-content {
+    color: var(--color-error, #dc2626);
+  }
+
+
+  [data-theme="dark"] .diff-line.added {
+    background: rgba(34, 197, 94, 0.15);
+  }
+
+
+  [data-theme="dark"] .diff-line.removed {
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  ```
+
+
+  ### 5. Write `src/components/chat/ArtifactCard.tsx`
+
+  ```tsx
+
+  'use client';
+
+
+  import { useState } from 'react';
+
+  import { Copy, Expand, Check, X } from 'lucide-react';
+
+  import { SyntaxHighlighter } from 'react-syntax-highlighter';
+
+  import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+  import { detectLanguage, isImageFile } from '@/lib/detect-language';
+
+  import { getFileIcon } from '@/lib/file-icons';
+
+  import type { ArtifactFile } from '@/types/chat';
+
+  import styles from './ArtifactCard.module.css';
+
+
+  interface ArtifactCardProps {
+    artifact: ArtifactFile;
+    onExpand?: () => void;
+    onImageClick?: () => void;
+  }
+
+
+  export function ArtifactCard({ artifact, onExpand, onImageClick }: ArtifactCardProps) {
+    const [copied, setCopied] = useState(false);
+    const [showDiff, setShowDiff] = useState(true);
+
+    const language = detectLanguage(artifact.filename);
+    const isImage = artifact.isImage || isImageFile(artifact.filename);
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(artifact.content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // clipboard API not available
+      }
+    };
+
+    const handleExpand = () => {
+      onExpand?.();
+    };
+
+    // Image preview
+    if (isImage && artifact.imageUrl) {
+      return (
+        <div className={styles['artifact-card']}>
+          <div className={styles['artifact-header']}>
+            <span className={styles['artifact-icon']}>{getFileIcon(artifact.filename)}</span>
+            <span className={styles['artifact-filename']}>{artifact.filename}</span>
+            <div className={styles['artifact-badges']}>
+              <span className={styles.badge}>{artifact.language}</span>
+            </div>
+            <div className={styles['artifact-actions']}>
+              <button
+                className={styles['action-btn']}
+                onClick={handleCopy}
+                title="Copy"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+              <button
+                className={styles['action-btn']}
+                onClick={handleExpand}
+                title="Expand"
+              >
+                <Expand size={14} />
+              </button>
+            </div>
+          </div>
+          <img
+            src={artifact.imageUrl}
+            alt={artifact.filename}
+            className={styles['artifact-image']}
+            onClick={onImageClick}
+          />
+        </div>
+      );
+    }
+
+    // Diff view for modified files
+    if (artifact.isModified && artifact.diffContent && showDiff) {
+      const lines = artifact.diffContent.split('\n');
+      const displayLines = lines.slice(0, 20);
+
+      return (
+        <div className={styles['artifact-card']}>
+          <div className={styles['artifact-header']}>
+            <span className={styles['artifact-icon']}>{getFileIcon(artifact.filename)}</span>
+            <span className={styles['artifact-filename']}>{artifact.filename}</span>
+            <div className={styles['artifact-badges']}>
+              <span className={styles.badge}>{artifact.language}</span>
+              <span className={`${styles.badge} ${styles['badge-diff']}`}>
+                +{artifact.diffAdded} -{artifact.diffRemoved}
+              </span>
+              <span className={`${styles.badge} ${styles['badge-lines']}`}>
+                {artifact.lineCount} lines
+              </span>
+            </div>
+            <div className={styles['artifact-actions']}>
+              <button
+                className={styles['action-btn']}
+                onClick={handleCopy}
+                title="Copy"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+              <button
+                className={styles['action-btn']}
+                onClick={handleExpand}
+                title="Expand"
+              >
+                <Expand size={14} />
+              </button>
+            </div>
+          </div>
+          <div className={styles['artifact-body']}>
+            <div className={styles['diff-view']}>
+              {displayLines.map((line, i) => {
+                const isAdded = line.startsWith('+');
+                const isRemoved = line.startsWith('-');
+                const lineNum = i + 1;
+                return (
+                  <div
+                    key={i}
+                    className={`${styles['diff-line']} ${isAdded ? styles.added : isRemoved ? styles.removed : ''}`}
+                  >
+                    <span className={styles['diff-line-num']}>{lineNum}</span>
+                    <span className={styles['diff-line-content']}>{line}</span>
+                  </div>
+                );
+              })}
+              {lines.length > 20 && (
+                <div style={{ padding: '8px 12px', color: 'var(--color-text-secondary)', fontSize: 11 }}>
+                  ... and {lines.length - 20} more lines
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default: syntax highlighted code
+    const contentLines = artifact.content.split('\n').slice(0, 20).join('\n');
+
+    return (
+      <div className={styles['artifact-card']}>
+        <div className={styles['artifact-header']}>
+          <span className={styles['artifact-icon']}>{getFileIcon(artifact.filename)}</span>
+          <span className={styles['artifact-filename']}>{artifact.filename}</span>
+          <div className={styles['artifact-badges']}>
+            <span className={styles.badge}>{artifact.language}</span>
+            <span className={`${styles.badge} ${styles['badge-lines']}`}>
+              {artifact.lineCount} lines
+            </span>
+          </div>
+          <div className={styles['artifact-actions']}>
+            <button
+              className={styles['action-btn']}
+              onClick={handleCopy}
+              title="Copy"
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+            <button
+              className={styles['action-btn']}
+              onClick={handleExpand}
+              title="Expand"
+            >
+              <Expand size={14} />
+            </button>
+          </div>
+        </div>
+        <div className={styles['artifact-body']}>
+          <SyntaxHighlighter
+            language={language === 'plaintext' ? 'text' : language}
+            style={oneDark}
+            customStyle={{
+              background: 'transparent',
+              margin: 0,
+              borderRadius: 0,
+              fontSize: '12px',
+            }}
+            showLineNumbers
+            lineNumberStyle={{
+              minWidth: '24px',
+              paddingRight: '8px',
+              color: '#64748b',
+            }}
+          >
+            {contentLines}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 6. Write `src/components/common/Lightbox.module.css`
+
+  ```css
+
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    animation: fadeIn 0.2s ease;
+  }
+
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+
+  .lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+
+  .lightbox-image {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+
+  .lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+
+  .lightbox-caption {
+    text-align: center;
+    color: white;
+    font-size: 13px;
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+
+  ```
+
+
+  ### 7. Write `src/components/common/Lightbox.tsx`
+
+  ```tsx
+
+  'use client';
+
+
+  import { useEffect } from 'react';
+
+  import { X } from 'lucide-react';
+
+  import styles from './Lightbox.module.css';
+
+
+  interface LightboxProps {
+    imageSrc: string;
+    filename: string;
+    onClose: () => void;
+  }
+
+
+  export function Lightbox({ imageSrc, filename, onClose }: LightboxProps) {
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
+    return (
+      <div className={styles['lightbox-overlay']} onClick={onClose}>
+        <div className={styles['lightbox-content']} onClick={(e) => e.stopPropagation()}>
+          <button className={styles['lightbox-close']} onClick={onClose}>
+            <X size={20} />
+          </button>
+          <img src={imageSrc} alt={filename} className={styles['lightbox-image']} />
+          <div className={styles['lightbox-caption']}>{filename}</div>
+        </div>
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### 8. Update `src/components/chat/MessageBubble.tsx`
+
+  Add artifact card rendering. Import ArtifactCard and Lightbox. Add state for lightbox. After the message content,
+  render artifact cards if message.artifacts exists.
+
+
+  ### 9. Update `src/store/messages.ts`
+
+  Add `addArtifact(messageId: string, artifact: ArtifactFile)` action that finds the message and appends the artifact to
+  its artifacts array.
+
+
+  ### 10. Update `src/lib/ws-client.ts`
+
+  Add file event handling for file_created and file_modified WebSocket events.
+
+
+  ## Build Verification
+
+  After writing all files:
+
+  1. Run `npx tsc --noEmit` to check for TypeScript errors
+
+  2. Run `npm run lint` to check for lint errors
+
+  3. Run `npm run build` to verify the build passes
+
+  4. Fix any errors that arise
+
+
+  Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/inline-artifact-card.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T06:43:42.853Z

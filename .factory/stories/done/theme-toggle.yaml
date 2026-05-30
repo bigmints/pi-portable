@@ -1,0 +1,26 @@
+name: Implement dark/light/system theme toggle
+description: >
+  Three-state theme system (Dark / Light / System) defaulting to System on first launch. Applies via a data-theme
+  attribute on the html element with no flash of wrong theme on load. User preference persists in localStorage.
+status: done
+feature:
+  name: Auth & App Shell
+  slug: auth-app-shell
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Theme toggle in the header cycles through Dark, Light, and System states
+  - System state reads the prefers-color-scheme media query and updates when the OS preference changes
+  - Theme is applied via data-theme="dark" or data-theme="light" on the html element
+  - An inline script in the document head applies the saved theme before React hydrates — no flash of wrong theme
+  - Toggle icon reflects current state: Moon for dark, Sun for light, Monitor for system
+  - Theme preference is saved to localStorage under the key pi-theme
+  - Background and text color transitions are smooth at 200ms when switching themes
+phase: 0
+priority: 997
+dependsOn:
+  - mobile-bottom-tab-bar

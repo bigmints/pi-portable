@@ -1,0 +1,27 @@
+name: Configure PWA install prompt and offline shell
+description: >
+  Makes the app installable as a PWA with a custom install banner appearing on the second visit. The service worker
+  caches the app shell and the last viewed conversation so the UI is usable offline.
+status: done
+feature:
+  name: Mobile & PWA
+  slug: mobile-pwa
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A web app manifest at /manifest.json defines name, short_name, icons, theme_color, background_color, and display: standalone
+  - A custom install banner appears after the user's second visit showing the app icon, name, and Install and Not now
+    buttons
+  - The banner is not shown if the app is already installed or if the browser does not support PWA install
+  - The next-pwa service worker caches the Next.js app shell (HTML, JS, CSS) so the app loads instantly on repeat visits
+  - The last viewed conversation's messages are cached in IndexedDB and rendered from cache when the WebSocket is offline
+  - An Offline banner in amber appears at the top of the chat when the cache is being used instead of live data
+  - Outgoing messages typed while offline are queued in IndexedDB and sent automatically when the connection is restored
+phase: 11
+priority: 958
+dependsOn:
+  - notifications-advanced-settings

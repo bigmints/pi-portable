@@ -1,0 +1,27 @@
+name: Build auto-expanding textarea composer
+description: >
+  The bottom-anchored message input that grows from 1 to 6 lines as the user types, then scrolls internally. Enter sends
+  on desktop; Shift+Enter inserts a newline. Draft text is auto-saved per conversation and restored on revisit.
+status: done
+feature:
+  name: Message Composer
+  slug: message-composer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Textarea starts at a single line and expands up to 6 lines as content grows, then becomes internally scrollable
+  - Pressing Enter on desktop submits the message; Shift+Enter inserts a newline
+  - On mobile the Send button in the composer submits the message
+  - Draft content is saved to localStorage keyed by conversationId and restored when the user returns to that
+    conversation
+  - The composer shows a Generating… placeholder and is read-only while a response is streaming
+  - A character and estimated token count badge appears below the composer when the message exceeds 500 characters
+  - The composer is focused automatically when navigating to a conversation
+phase: 3
+priority: 988
+dependsOn:
+  - new-conversation-flow

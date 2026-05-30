@@ -1,0 +1,99 @@
+name: "Fix: stop-interrupt-streaming"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/stop-interrupt-streaming.yaml
+
+  Issue: CLI stalled twice by listing directory contents instead of implementing. The agent appears to be stuck in a
+  file-enumeration loop and not executing implementation instructions.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: |-
+  The CLI is stalling by listing files instead of implementing. This fix task must force actual code writing.
+
+  IMPLEMENT THESE FILES IN ORDER. WRITE THE CODE. DO NOT LIST FILES. DO NOT ASK QUESTIONS.
+
+  1. **src/types/chat.ts** — Add to existing types:
+     - Add `InterruptFrame = { type: 'interrupt'; conversationId: string }` to WsOutboundFrame union
+     - Add `interrupted?: boolean` to ChatMessage interface
+
+  2. **src/lib/ws-client.ts** — Add method to existing wsClient:
+     ```typescript
+     sendInterrupt(conversationId: string): void {
+       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+         this.ws.send(JSON.stringify({ type: 'interrupt', conversationId }));
+       }
+     }
+     ```
+
+  3. **src/store/messages.ts** — Add to existing Zustand store:
+     ```typescript
+     isStreaming: false,
+     isInterrupting: false,
+     setStreaming: (v: boolean) => set({ isStreaming: v }),
+     setInterrupting: (v: boolean) => set({ isInterrupting: v }),
+     markInterrupted: (messageId: string) => set((state) => ({
+       messages: state.messages.map(m => m.id === messageId ? { ...m, interrupted: true } : m)
+     })),
+     ```
+
+  4. **src/components/chat/StopButton.tsx** — Create new file:
+     ```tsx
+     'use client';
+     import { Square } from 'lucide-react';
+     import styles from './StopButton.module.css';
+     
+     export default function StopButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
+       return (
+         <button className={styles.stopButton} onClick={onClick} disabled={disabled}>
+           <Square size={16} />
+           <span>Stop</span>
+         </button>
+       );
+     }
+     ```
+
+  5. **src/components/chat/StopButton.module.css** — Create new file:
+     ```css
+     .stopButton {
+       display: inline-flex;
+       align-items: center;
+       gap: 6px;
+       padding: 8px 16px;
+       background: var(--color-danger, #dc3545);
+       color: white;
+       border: none;
+       border-radius: 8px;
+       cursor: pointer;
+       font-size: 14px;
+       min-height: 44px;
+     }
+     .stopButton:hover { opacity: 0.9; }
+     .stopButton:disabled { opacity: 0.5; cursor: not-allowed; }
+     ```
+
+  6. **src/components/chat/Composer.tsx** — Modify existing:
+     - Import StopButton
+     - When isStreaming is true: render StopButton instead of Send button
+     - StopButton onClick: send interrupt via wsClient, update store, re-enable textarea, focus it
+     - Add 3-second timeout for error toast
+     - Add Escape key handler for interrupt
+
+  7. **src/components/chat/MessageBubble.tsx** — Modify existing:
+     - If message.interrupted is true, render `<span className="interrupted-label">[interrupted]</span>` after content
+     - Style with muted color
+
+  8. **Verify**: Run `npm run build`. Fix any TypeScript errors. Print DELIVERY COMPLETE.
+
+  CRITICAL: Write the actual code. Do not enumerate files. Do not ask questions. Build it.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/stop-interrupt-streaming.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T22:17:32.908Z

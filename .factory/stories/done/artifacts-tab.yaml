@@ -1,0 +1,28 @@
+name: Build artifacts tab with list sort and filter
+description: >
+  A /artifacts route showing a flat inventory of all files produced by pi CLI across jobs in the current project.
+  Sortable by date, name, or size. Filterable by action type (created / modified / read) and file extension.
+status: done
+feature:
+  name: Artifact Viewer
+  slug: artifact-viewer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Artifacts tab at /artifacts shows a flat list of all artifacts for the active project
+  - Each row shows: file type icon, relative file path, action badge (created / modified / read / deleted), file extension,
+      file size, date, and a link to the full viewer
+  - Column headers for Name, Action, Size, and Date are clickable to sort ascending or descending
+  - A filter bar above the list has: an action type multi-select (created / modified / read) and a file extension
+      multi-select populated from the actual artifacts
+  - Clicking any row opens the file in the full file viewer
+  - An empty state is shown when no artifacts exist for the current project
+  - Artifacts from all jobs are included; a Job column can be toggled on to show which job produced each file
+phase: 9
+priority: 962
+dependsOn:
+  - file-viewer-diff-view

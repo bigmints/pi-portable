@@ -1,0 +1,345 @@
+name: "Fix: queue-live-output-panel"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/queue-live-output-panel.yaml
+
+  Issue: CLI stalled twice — it listed directory contents instead of creating files. The CLI agent appears to be stuck
+  in a "survey/inventory" loop rather than executing file creation commands.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # FIX TASK: Build Live Output Panel — EXECUTE IMMEDIATELY
+
+
+  DO NOT list files. DO NOT inventory the project. DO NOT describe what you will do.
+
+
+  START CREATING FILES NOW. Use cat/heredoc or echo to write each file.
+
+
+  ## Step 1: Create the store
+
+  Write `src/store/queue-output.ts`:
+
+  ```
+
+  cat > src/store/queue-output.ts << 'STORE'
+
+  'use client';
+
+  import { create } from 'zustand';
+
+  export type OutputLineType = 'user' | 'assistant' | 'tool-call' | 'tool-result';
+
+  export interface OutputLine { type: OutputLineType; content: string; timestamp: number; toolName?: string; }
+
+  export interface QueueTask { id: string; position: number; instruction: string; status: 'pending' | 'running' |
+  'completed' | 'error'; conversationId?: string; }
+
+  interface State { activeTask: QueueTask | null; outputLines: OutputLine[]; status: 'idle' | 'running' | 'completed' |
+  'error'; startedAt: number | null; conversationId: string | null; }
+
+  interface Actions { setActiveTask: (t: QueueTask | null) => void; appendOutput: (l: OutputLine) => void; clearOutput:
+  () => void; markComplete: (cid?: string) => void; markError: () => void; resetToIdle: () => void; setStartedAt: (t:
+  number | null) => void; }
+
+  export const useQueueOutputStore = create<State & Actions>((set) => ({
+    activeTask: null, outputLines: [], status: 'idle', startedAt: null, conversationId: null,
+    setActiveTask: (t) => set({ activeTask: t, status: t ? 'running' : 'idle', startedAt: t ? Date.now() : null }),
+    appendOutput: (l) => set((s) => ({ outputLines: [...s.outputLines, l] })),
+    clearOutput: () => set({ outputLines: [] }),
+    markComplete: (cid) => set({ status: 'completed', conversationId: cid || null }),
+    markError: () => set({ status: 'error' }),
+    resetToIdle: () => set({ activeTask: null, outputLines: [], status: 'idle', startedAt: null, conversationId: null }),
+    setStartedAt: (t) => set({ startedAt: t }),
+  }));
+
+  STORE
+
+  ```
+
+
+  ## Step 2: Create DurationCounter component
+
+  Write `src/components/queue/DurationCounter.tsx`:
+
+  ```
+
+  cat > src/components/queue/DurationCounter.tsx << 'COMP'
+
+  'use client';
+
+  import { useEffect, useState } from 'react';
+
+  import styles from './DurationCounter.module.css';
+
+  export default function DurationCounter({ startedAt }: { startedAt: number }) {
+    const [s, setS] = useState(0);
+    useEffect(() => { const t = () => setS(Math.floor((Date.now() - startedAt) / 1000)); t(); const id = setInterval(t, 1000); return () => clearInterval(id); }, [startedAt]);
+    return <span className={styles.d}>{String(Math.floor(s / 60)).padStart(2, '0')}:{String(s % 60).padStart(2, '0')}</span>;
+  }
+
+  COMP
+
+  ```
+
+
+  Write `src/components/queue/DurationCounter.module.css`:
+
+  ```
+
+  cat > src/components/queue/DurationCounter.module.css << 'CSS'
+
+  .d { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--text-secondary); font-family: monospace; }
+
+  CSS
+
+  ```
+
+
+  ## Step 3: Create OutputLineRenderer
+
+  Write `src/components/queue/OutputLineRenderer.tsx`:
+
+  ```
+
+  cat > src/components/queue/OutputLineRenderer.tsx << 'COMP'
+
+  'use client';
+
+  import { OutputLine } from '@/store/queue-output';
+
+  import { Wrench, MessageSquare } from 'lucide-react';
+
+  import styles from './OutputLineRenderer.module.css';
+
+  export default function OutputLineRenderer({ line, isLastStreaming }: { line: OutputLine; isLastStreaming?: boolean })
+  {
+    if (line.type === 'user') return <div className={styles.user}><MessageSquare size={14} className={styles.icon} />{line.content}</div>;
+    if (line.type === 'tool-call' || line.type === 'tool-result') return <div className={`${styles.tool} ${styles[line.type === 'tool-call' ? 'tc' : 'tr']}`}><Wrench size={12} /> {line.toolName || 'tool'}: {line.content}</div>;
+    return <div className={styles.assistant}>{line.content}{isLastStreaming && <span className={styles.cursor}>▌</span>}</div>;
+  }
+
+  COMP
+
+  ```
+
+
+  Write `src/components/queue/OutputLineRenderer.module.css`:
+
+  ```
+
+  cat > src/components/queue/OutputLineRenderer.module.css << 'CSS'
+
+  .user { padding: 8px 12px; margin: 4px 0 4px 12px; background: var(--bg-secondary); border-radius: 8px; font-size:
+  0.875rem; color: var(--text-primary); display: flex; align-items: flex-start; gap: 6px; }
+
+  .user .icon { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+
+  .assistant { padding: 8px 12px; margin: 4px 12px 4px 0; background: var(--accent); color: var(--bg-primary);
+  border-radius: 8px; font-size: 0.875rem; max-width: 85%; display: flex; align-items: flex-start; gap: 4px; }
+
+  .cursor { animation: blink 1s step-end infinite; }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .tool { padding: 4px 12px; margin: 2px 12px; font-size: 0.75rem; border-radius: 4px; display: flex; align-items:
+  center; gap: 4px; }
+
+  .tc { background: rgba(255,193,7,0.1); color: #ffc107; border-left: 2px solid #ffc107; }
+
+  .tr { background: rgba(76,175,80,0.1); color: #4caf50; border-left: 2px solid #4caf50; }
+
+  CSS
+
+  ```
+
+
+  ## Step 4: Create LiveOutputPanel
+
+  Write `src/components/queue/LiveOutputPanel.tsx`:
+
+  ```
+
+  cat > src/components/queue/LiveOutputPanel.tsx << 'COMP'
+
+  'use client';
+
+  import { useEffect, useRef } from 'react';
+
+  import { useRouter } from 'next/navigation';
+
+  import { useQueueOutputStore } from '@/store/queue-output';
+
+  import DurationCounter from './DurationCounter';
+
+  import OutputLineRenderer from './OutputLineRenderer';
+
+  import { Play, ExternalLink, AlertTriangle, Loader2 } from 'lucide-react';
+
+  import styles from './LiveOutputPanel.module.css';
+
+  export default function LiveOutputPanel() {
+    const router = useRouter();
+    const { activeTask, outputLines, status, startedAt, conversationId, resetToIdle } = useQueueOutputStore();
+    const scrollRef = useRef<HTMLDivElement>(null);
+    useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [outputLines]);
+    const truncated = activeTask?.instruction.length! > 60 ? activeTask.instruction.slice(0, 60) + '…' : activeTask?.instruction;
+    if (status === 'idle') return <div className={styles.panel}><div className={styles.idle}><Play size={32} className={styles.idleIcon} /><p>Queue is ready — press Run to start</p></div></div>;
+    return <div className={styles.panel}><div className={styles.header}><div className={styles.hl}><span className={styles.badge}>Task {activeTask?.position}</span><span className={styles.inst}>{truncated || 'Running…'}</span></div><div className={styles.hr}>{status === 'running' && startedAt && <DurationCounter startedAt={startedAt} />}{status === 'running' && <Loader2 size={14} className={styles.spin} />}{status === 'completed' && conversationId && <button className={styles.vc} onClick={() => router.push(`/chat/${conversationId}`)}><ExternalLink size={12} /> View in Chat</button>}{status === 'error' && <AlertTriangle size={14} className={styles.err} />}</div></div><div className={styles.body} ref={scrollRef}>{outputLines.map((l, i) => <OutputLineRenderer key={i} line={l} isLastStreaming={i === outputLines.length - 1 && status === 'running'} />){outputLines.length === 0 && status === 'running' && <div className={styles.ph}>Waiting for output…</div>}</div>{status !== 'running' && <div className={styles.footer}><button className={styles.rb} onClick={resetToIdle}>Clear</button></div>}</div>;
+  }
+
+  COMP
+
+  ```
+
+
+  Write `src/components/queue/LiveOutputPanel.module.css`:
+
+  ```
+
+  cat > src/components/queue/LiveOutputPanel.module.css << 'CSS'
+
+  .panel { display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border-color); border-radius:
+  8px; background: var(--bg-primary); overflow: hidden; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px
+  solid var(--border-color); background: var(--bg-secondary); flex-shrink: 0; }
+
+  .hl { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+
+  .badge { font-size: 0.7rem; font-weight: 600; background: var(--accent); color: var(--bg-primary); padding: 2px 6px;
+  border-radius: 4px; white-space: nowrap; }
+
+  .inst { font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow:
+  ellipsis; }
+
+  .hr { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .spin { animation: spin 1s linear infinite; color: var(--accent); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .err { color: #f44336; }
+
+  .vc { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--accent); background: none;
+  border: 1px solid var(--accent); padding: 3px 8px; border-radius: 4px; cursor: pointer; }
+
+  .vc:hover { background: var(--accent); color: var(--bg-primary); }
+
+  .body { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 120px; }
+
+  .ph { text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 20px; }
+
+  .idle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px
+  20px; color: var(--text-secondary); }
+
+  .idleIcon { color: var(--accent); opacity: 0.5; }
+
+  .footer { padding: 8px 14px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; }
+
+  .rb { font-size: 0.75rem; color: var(--text-secondary); background: none; border: 1px solid var(--border-color);
+  padding: 4px 10px; border-radius: 4px; cursor: pointer; }
+
+  .rb:hover { background: var(--bg-secondary); }
+
+  CSS
+
+  ```
+
+
+  ## Step 5: Create QueueTabs (mobile)
+
+  Write `src/components/queue/QueueTabs.tsx`:
+
+  ```
+
+  cat > src/components/queue/QueueTabs.tsx << 'COMP'
+
+  'use client';
+
+  import styles from './QueueTabs.module.css';
+
+  export default function QueueTabs({ active, onChange }: { active: 'tasks' | 'output'; onChange: (t: 'tasks' |
+  'output') => void }) {
+    return <div className={styles.tabs}><button className={`${styles.tab} ${active === 'tasks' ? styles.active : ''}`} onClick={() => onChange('tasks')}>Tasks</button><button className={`${styles.tab} ${active === 'output' ? styles.active : ''}`} onClick={() => onChange('output')}>Output</button></div>;
+  }
+
+  COMP
+
+  ```
+
+
+  Write `src/components/queue/QueueTabs.module.css`:
+
+  ```
+
+  cat > src/components/queue/QueueTabs.module.css << 'CSS'
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);
+  background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; }
+
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  @media (min-width: 768px) { .tabs { display: none; } }
+
+  CSS
+
+  ```
+
+
+  ## Step 6: Append types to src/types/chat.ts
+
+  ```
+
+  cat >> src/types/chat.ts << 'TYPES'
+
+  export type OutputLineType = 'user' | 'assistant' | 'tool-call' | 'tool-result';
+
+  export interface OutputLine { type: OutputLineType; content: string; timestamp: number; toolName?: string; }
+
+  export interface QueueTask { id: string; position: number; instruction: string; status: 'pending' | 'running' |
+  'completed' | 'error'; conversationId?: string; }
+
+  TYPES
+
+  ```
+
+
+  ## Step 7: Append ws-client methods to src/lib/ws-client.ts
+
+  ```
+
+  cat >> src/lib/ws-client.ts << 'WS'
+    private _queueOutputCbs: Array<(data: any) => void> = [];
+    private _queuePosCbs: Array<(data: any) => void> = [];
+    onQueueTaskOutput(cb: (data: any) => void) { this._queueOutputCbs.push(cb); }
+    onQueueTaskPosition(cb: (data: any) => void) { this._queuePosCbs.push(cb); }
+  WS
+
+  ```
+
+
+  ## Step 8: Modify src/app/queue/page.tsx
+
+  Read the existing file, then rewrite it to include the live output panel with responsive layout. Import
+  LiveOutputPanel and QueueTabs. Add useState for mobile tab switching. Desktop: flex row 60/40. Mobile: tabs.
+
+
+  ## Step 9: Build & Verify
+
+  Run `npm run build`. Fix any TypeScript or lint errors. Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/queue-live-output-panel.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T02:24:39.752Z

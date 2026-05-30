@@ -1,0 +1,27 @@
+name: Build project settings drawer
+description: >
+  A slide-in drawer for configuring a project. Contains sections for Description, Environment Variables (key-value
+  editor), Ignore Patterns, and a Danger Zone with delete. Saves to pi CLI on each section submit.
+status: done
+feature:
+  name: Project Management
+  slug: project-management
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Drawer slides in from the right on desktop and bottom-sheet on mobile
+  - Description section has a multiline textarea that saves on blur
+  - Environment Variables section shows a key-value pair editor with Add row and Remove buttons
+  - Ignore Patterns section shows a tag-style input where pressing Enter adds a pattern
+  - Danger Zone section has a Delete Project button that opens a confirmation dialog requiring the user to type the
+    project name
+  - Each section submits independently to PATCH /api/projects/:id with a success toast on save
+  - Unsaved changes show a warning banner if the user tries to close the drawer
+phase: 1
+priority: 994
+dependsOn:
+  - add-project-flow

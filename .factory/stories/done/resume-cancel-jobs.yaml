@@ -1,0 +1,29 @@
+name: Implement resume and cancel for agentic jobs
+description: >
+  Resume control for paused agentic jobs and a cancel flow with confirmation. Resume re-triggers execution from the last
+  checkpoint. Cancel marks the job as Cancelled and fires a notification. Both are accessible from the Jobs tab.
+status: done
+feature:
+  name: Conversation Controls
+  slug: conversation-controls
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Paused jobs in the Jobs tab show a Resume button; tapping it sends a WebSocket resume frame and updates the job
+    status to running
+  - Running and paused jobs show a Cancel button; tapping opens a confirmation dialog describing the impact
+  - Confirming cancel sends a WebSocket cancel frame; the job card status updates to Cancelled with a grey chip
+  - Cancelled jobs cannot be resumed; the Resume button is absent
+  - A success toast fires after a successful cancel: Job cancelled
+  - If the CLI does not acknowledge resume or cancel within 5 seconds an error toast is shown and no status change is
+    made
+  - Resume and cancel controls are also accessible from the inline job reference card shown in the chat message that
+    triggered the job
+phase: 4
+priority: 982
+dependsOn:
+  - retry-fork-edit-resend

@@ -1,0 +1,27 @@
+name: Build task queue editor with drag-to-reorder
+description: >
+  An ordered list of task cards the user composes before running. Cards can be reordered by dragging. Each card has an
+  editable instruction textarea, a position badge, a status chip, and a remove button.
+status: done
+feature:
+  name: Task Queue
+  slug: task-queue
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Task queue is accessible at /queue and shows an ordered list of task cards
+  - Each card shows a drag handle on the left, a position number badge, an editable textarea for the instruction, a
+    status chip, and a remove icon
+  - Cards can be reordered by dragging the handle; the position badges update to reflect the new order
+  - An Add task button below the list appends a blank card at the bottom and focuses its textarea
+  - Clicking the remove icon deletes the card with a brief fade-out animation
+  - The queue persists to localStorage so it survives a page refresh before the queue has been run
+  - An empty state with the message Add tasks to run autonomously while you step away is shown when the queue is empty
+phase: 6
+priority: 976
+dependsOn:
+  - job-artifact-links

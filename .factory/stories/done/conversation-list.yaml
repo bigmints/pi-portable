@@ -1,0 +1,27 @@
+name: Build conversation list with grouping and swipe actions
+description: >
+  The conversation list panel (desktop sidebar or mobile full-screen). Items grouped by Today / Yesterday / This Week /
+  Older. Supports swipe-to-delete on mobile and a long-press context menu for rename, pin, delete, and export.
+status: done
+feature:
+  name: Conversation Chat
+  slug: conversation-chat
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Conversation items are grouped under day headers: Today, Yesterday, This Week, Older
+  - Each item shows: truncated title, one-line last message preview, relative timestamp, and project colour badge
+  - The active conversation is highlighted with a filled background and left accent border
+  - A New Chat button sits at the top of the list
+  - Swiping left on an item (mobile) reveals a red Delete button
+  - Long-pressing an item shows a context menu with Rename, Pin/Unpin, Delete, and Export options
+  - Pinned conversations appear in a Pinned group at the top of the list
+  - The list is virtualised with react-window to handle hundreds of conversations without performance issues
+phase: 2
+priority: 992
+dependsOn:
+  - websocket-client

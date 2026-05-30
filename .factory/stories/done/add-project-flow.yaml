@@ -1,0 +1,26 @@
+name: Build add project flow for local path and Git URL
+description: >
+  A modal (desktop) or bottom sheet (mobile) to add a new pi CLI project. Two tabs: Local Path and Git URL. pi CLI
+  validates the entry on submit. Inline errors shown without dismissing the modal.
+status: done
+feature:
+  name: Project Management
+  slug: project-management
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Add project opens as a modal on desktop and a bottom sheet on mobile
+  - Local Path tab has a directory path text input with a Browse button on desktop
+  - Git URL tab has a URL input and an optional branch name input
+  - Submitting calls POST /api/projects which validates via pi CLI before saving
+  - Validation errors (invalid path, unreachable repo) show inline below the input
+  - On success the modal closes and the new project appears in the list immediately
+  - A loading spinner replaces the Submit button during the API call
+phase: 1
+priority: 995
+dependsOn:
+  - project-list

@@ -1,0 +1,107 @@
+name: "Fix: fix-account-cli-config-settings"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-account-cli-config-settings.yaml
+
+  Issue: CLI stalled twice — repeatedly listed 449-460 files in target directory instead of writing code. The CLI is
+  stuck in a file-listing loop and never starts implementing the story.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Build Settings Page — Use Shell Commands to Write Files
+
+
+  ## CRITICAL: Do NOT list files. Do NOT scan directories. Use shell commands (cat << 'EOF' > file) to write each file
+  directly.
+
+
+  ## Target Directory
+
+  `cd /home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## Write files using shell heredocs. Example:
+
+  ```bash
+
+  cat << 'EOF' > src/app/api/cli-config/route.ts
+
+  [file contents]
+
+  EOF
+
+  ```
+
+
+  ### Files to create (use cat heredocs for each):
+
+
+  1. `src/app/api/cli-config/route.ts` — API route with GET (returns MOCK_FIELDS) and PATCH (accepts body, returns
+  success)
+
+  2. `src/app/api/session/route.ts` — DELETE handler that clears pi_session cookie
+
+  3. `src/store/cli-config.ts` — Zustand store with ConfigField interface, fetchConfig, updateField, saveConfig,
+  resetChanges
+
+  4. `src/components/settings/SettingsTabs.tsx` — Tab container with 6 tabs (Account, CLI Config, Appearance, Shortcuts,
+  Notifications, Advanced)
+
+  5. `src/components/settings/SettingsTabs.module.css` — Tab bar CSS with active indicator
+
+  6. `src/components/settings/AccountSection.tsx` — Account card with avatar, session info, Extend/Logout buttons
+
+  7. `src/components/settings/AccountSection.module.css` — Account card styles
+
+  8. `src/components/settings/CliConfigSection.tsx` — Config form with text/number/toggle inputs, validation, save/reset
+
+  9. `src/components/settings/CliConfigSection.module.css` — Config form styles with toggle switches
+
+  10. `src/components/settings/AppearanceSection.tsx` — Theme selector (light/dark/system)
+
+  11. `src/components/settings/AppearanceSection.module.css` — Appearance styles
+
+  12. `src/components/settings/ShortcutsSection.tsx` — Wraps ShortcutsReference component
+
+  13. `src/components/settings/ShortcutsSection.module.css` — Minimal padding
+
+  14. `src/components/settings/NotificationsSection.tsx` — Push/Sound toggle switches
+
+  15. `src/components/settings/NotificationsSection.module.css` — Notification row styles
+
+  16. `src/components/settings/AdvancedSection.tsx` — Clear Cache, Reset Settings, Debug Mode, Export Data cards
+
+  17. `src/components/settings/AdvancedSection.module.css` — Advanced card styles
+
+  18. `src/components/settings/index.ts` — Barrel exports for all settings components
+
+  19. `src/app/settings/page.tsx` — Settings page composing all sections with SettingsTabs
+
+
+  ## After writing all files:
+
+  ```bash
+
+  cd /home/bigmints/Projects/pi-app/pi-app
+
+  npm run build
+
+  ```
+
+
+  Fix any TypeScript or lint errors that arise. Build must pass with zero errors.
+
+
+  Print DELIVERY COMPLETE when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-account-cli-config-settings.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T08:30:51.032Z

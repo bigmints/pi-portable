@@ -1,0 +1,27 @@
+name: Build queue run controls and on-failure configuration
+description: >
+  The control bar above the queue editor with Run Queue, Pause after current, and Cancel all buttons, plus a settings
+  gear for configuring what happens when a task fails: pause queue, skip and continue, or abort all.
+status: done
+feature:
+  name: Task Queue
+  slug: task-queue
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A control bar above the queue editor shows: Run Queue button, Pause after current toggle, Cancel all button, and a settings gear icon
+  - Run Queue is disabled when the queue is empty or already running
+  - Pause after current toggle pauses the queue after the in-progress task finishes without interrupting it; the toggle
+    label updates to Resuming when active
+  - Cancel all stops the queue immediately and marks all pending tasks as cancelled; requires a single confirmation click
+  - The settings gear opens a small popover with: On failure selector (Pause queue / Skip and continue / Abort all) and an Auto-clear completed tasks toggle
+  - A queue status summary below the controls shows: N of M tasks complete — X failed in a muted style
+  - All controls are disabled and shown with reduced opacity when the queue is empty
+phase: 6
+priority: 973
+dependsOn:
+  - queue-live-output-panel

@@ -1,0 +1,33 @@
+appName: pi-app
+description: >
+  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat, agentic job monitoring, project
+  management, and full CLI feature parity. Built with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS
+  custom properties — no Tailwind. Designed as a progressive web app with offline shell support and mobile-first
+  responsive layout.
+status: done
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+  linter: eslint
+frontend:
+  ui: vanilla-css
+  theme: dark
+  icons: lucide-react
+  fonts:
+    - Inter
+    - JetBrains Mono
+layout:
+  sidebar: true
+  topbar: true
+  bottombar: true
+deployment:
+  port: 3000
+build:
+  lastBuiltAt: 2026-05-25T11:27:57.453Z
+  buildCount: 6
+  outputDir: /home/bigmints/Projects/pi-app/pi-app
+  commitHash: 5e8e39f
+  filesGenerated: 96
+  iterations: 1
+  taskType: cli:pi

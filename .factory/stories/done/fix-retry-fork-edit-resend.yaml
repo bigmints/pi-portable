@@ -1,0 +1,142 @@
+name: "Fix: retry-fork-edit-resend"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/retry-fork-edit-resend.yaml
+
+  Issue: CLI stalled twice, only listing files without creating or modifying any code. The agent appears stuck in a
+  file-enumeration loop and never proceeds to implementation.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Build retry, fork, and edit-and-resend message actions
+
+
+  ## Target Directory
+
+  `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ## CRITICAL: Do NOT list files. Start coding immediately.
+
+
+  ## Step 1: Update types in src/types/chat.ts
+
+  Add these types to the existing file:
+
+  ```typescript
+
+  export interface RegenerateFrame {
+    type: "regenerate";
+    conversation_id: string;
+    message_id: string;
+  }
+
+  ```
+
+  Add `RegenerateFrame` to the `WsOutboundFrame` union type.
+
+  Add `is_regenerating?: boolean` to the `ChatMessage` interface.
+
+
+  ## Step 2: Update src/lib/ws-client.ts
+
+  Add this method to the wsClient class:
+
+  ```typescript
+
+  regenerate(conversationId: string, messageId: string): void {
+    this.send({ type: "regenerate", conversation_id: conversationId, message_id: messageId });
+  }
+
+  ```
+
+
+  ## Step 3: Update src/store/messages.ts
+
+  Add these actions to the messages store:
+
+  ```typescript
+
+  regenerateMessage: (messageId: string) => void,
+
+  clearRegenerating: (messageId: string) => void,
+
+  rewindToMessage: (messageId: string) => void,
+
+  ```
+
+  - `regenerateMessage`: sets `is_regenerating = true` on the message
+
+  - `clearRegenerating`: sets `is_regenerating = false`
+
+  - `rewindToMessage`: filters messages to keep only those up to and including the given messageId
+
+
+  ## Step 4: Update src/store/conversations.ts
+
+  Add this action:
+
+  ```typescript
+
+  forkConversation: (sourceId: string, messageId: string) => string,
+
+  ```
+
+  Creates a new conversation with messages up to messageId, returns new conversation ID.
+
+
+  ## Step 5: Create src/components/common/Toast.tsx and Toast.module.css
+
+  Simple toast component that shows a message for 2 seconds. Position: bottom-center.
+
+
+  ## Step 6: Create src/components/chat/MessageActionBar.tsx and MessageActionBar.module.css
+
+  Props: `{ message: ChatMessage, onCopy, onRetry, onEdit, onFork }`
+
+  - Desktop: hover to reveal action buttons (Copy, Retry for assistant, Edit for user, Fork)
+
+  - Mobile: 500ms long-press opens bottom sheet with same actions
+
+  - CSS tooltips using `data-tooltip` attribute
+
+  - Copy uses `navigator.clipboard.writeText()` and shows toast
+
+
+  ## Step 7: Create src/components/chat/ForkConfirmationSheet.tsx and ForkConfirmationSheet.module.css
+
+  Bottom sheet with "Fork conversation?" title, branch point preview, Confirm/Cancel buttons.
+
+
+  ## Step 8: Create src/components/chat/EditMessageSheet.tsx and EditMessageSheet.module.css
+
+  Bottom sheet with textarea pre-filled with message text, Send button.
+
+
+  ## Step 9: Update src/components/chat/MessageBubble.tsx
+
+  Import MessageActionBar. Wrap message content with it. Pass handlers. Show loading state when `is_regenerating` is
+  true.
+
+
+  ## Build Verification
+
+  Run `npm run build`. Fix any TypeScript or lint errors. Print DELIVERY COMPLETE when done.
+
+
+  ## Self-Sufficiency Instruction
+
+  Complete all 9 steps above without asking questions. Do NOT list files first — start writing code immediately. Fix all
+  errors. Verify build passes. Print DELIVERY COMPLETE and summary.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/retry-fork-edit-resend.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T22:40:30.169Z

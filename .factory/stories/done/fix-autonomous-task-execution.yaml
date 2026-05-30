@@ -1,0 +1,148 @@
+name: "Fix: autonomous-task-execution"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/autonomous-task-execution.yaml
+
+  Issue: STEP 1 (types & store) was delivered successfully. STEP 2 (WebSocket extensions, server API, UI components,
+  queue page) was not delivered — the second delegation hit the 2-delegation limit before completing.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # Fix: Complete Autonomous Sequential Task Execution — STEP 2
+
+
+  ## Target Directory
+
+  /home/bigmints/Projects/pi-app/pi-app
+
+
+  ## Context
+
+  STEP 1 is done: src/types/chat.ts has queue types, src/store/task-queue.ts exists with Zustand store.
+
+
+  ## What to Build
+
+
+  ### 1. Extend WebSocket Client (src/lib/ws-client.ts)
+
+  Add queue methods to existing wsClient:
+
+  ```typescript
+
+  sendQueueTask(taskId: string, projectId: string, prompt: string): void {
+    this.send({ type: 'queue_task_send', taskId, projectId, prompt });
+  },
+
+  sendQueueStop(): void {
+    this.send({ type: 'queue_stop' });
+  },
+
+  sendQueueNext(): void {
+    this.send({ type: 'queue_next' });
+  },
+
+  onQueueTaskStarted(cb: (taskId: string, conversationId: string) => void): void {
+    this.on('queue_task_started', (data: any) => cb(data.taskId, data.conversationId));
+  },
+
+  onQueueTaskComplete(cb: (taskId: string, conversationId: string) => void): { unsubscribe: () => void } {
+    return this.on('queue_task_complete', (data: any) => cb(data.taskId, data.conversationId));
+  },
+
+  onQueueTaskError(cb: (taskId: string, error: string) => void): { unsubscribe: () => void } {
+    return this.on('queue_task_error', (data: any) => cb(data.taskId, data.error));
+  },
+
+  onQueueStopped(cb: () => void): { unsubscribe: () => void } {
+    return this.on('queue_stopped', () => cb());
+  },
+
+  ```
+
+  Adapt to the existing wsClient pattern (handlers map or on method).
+
+
+  ### 2. Server API (src/app/api/queue/route.ts)
+
+  Create with GET (return current run state) and POST (start/stop/update actions). Use in-memory Map keyed by session
+  cookie.
+
+
+  ### 3. UI Components — Create ALL of these:
+
+
+  **src/components/queue/QueueProgress.tsx** + .module.css
+
+  - Shows "Task N of M — X completed, Y failed" with progress bar
+
+  - Uses CSS custom properties, vanilla CSS
+
+
+  **src/components/queue/TaskCard.tsx** + .module.css
+
+  - Shows task prompt, status icon (○◉✓✗∅), move up/down/remove buttons
+
+  - Links to conversation if conversationId exists
+
+
+  **src/components/queue/QueueControls.tsx** + .module.css
+
+  - Run Queue / Stop buttons, on-failure dropdown (pause/skip/abort)
+
+
+  **src/components/queue/TaskQueueView.tsx** + .module.css
+
+  - Composes QueueProgress + TaskCard list + QueueControls
+
+
+  ### 4. Queue Page (src/app/queue/page.tsx + .module.css)
+
+  Client component that:
+
+  - Renders TaskQueueView
+
+  - Connects to useTaskQueueStore
+
+  - Sets up WebSocket handlers on mount (onQueueTaskComplete → mark done + nextTask, onQueueTaskError → mark failed +
+  apply onFailure, onQueueStopped → stopRun)
+
+  - Polls GET /api/queue on mount to resume monitoring
+
+  - Has add-task input field
+
+
+  ### 5. Update BottomTabBar (src/components/layout/BottomTabBar.tsx)
+
+  Add pending task count badge to Queue tab.
+
+
+  ### 6. Verify
+
+  Run `npx tsc --noEmit`, fix errors, then `npm run build`. Must pass.
+
+
+  ## Conventions
+
+  - Vanilla CSS modules with CSS custom properties (NO Tailwind)
+
+  - Zustand for state
+
+  - Mobile-first responsive
+
+  - All files must pass tsc and lint
+
+
+  Print "DELIVERY COMPLETE" when done.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/autonomous-task-execution.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T01:58:09.277Z

@@ -1,0 +1,278 @@
+name: "Fix: connection-status-bar"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/connection-status-bar.yaml
+
+  Issue: CLI stalled twice, only listing files instead of writing code. The connection status bar feature was never
+  implemented.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## CRITICAL: Do NOT list files. Do NOT read files. Write code immediately.
+
+
+  Create these 4 files and update 2 existing files:
+
+
+  ### FILE 1: `src/store/connection.ts` — REPLACE ENTIRE FILE
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+
+  export type ConnectionStatus = 'connected' | 'reconnecting' | 'offline';
+
+
+  interface ConnectionState {
+    status: ConnectionStatus;
+    reconnectAttempts: number;
+    maxReconnectAttempts: number;
+    lastAttemptAt: Date | null;
+    setConnected: () => void;
+    setReconnecting: () => void;
+    setOffline: () => void;
+    retryConnection: () => void;
+    incrementReconnectAttempt: () => boolean;
+  }
+
+
+  export const useConnectionStore = create<ConnectionState>((set) => ({
+    status: 'connected',
+    reconnectAttempts: 0,
+    maxReconnectAttempts: 10,
+    lastAttemptAt: null,
+    setConnected: () => set({ status: 'connected', reconnectAttempts: 0, lastAttemptAt: null }),
+    setReconnecting: () => set((state) => ({ status: 'reconnecting', reconnectAttempts: state.reconnectAttempts + 1, lastAttemptAt: new Date() })),
+    setOffline: () => set({ status: 'offline' }),
+    retryConnection: () => set({ status: 'reconnecting', reconnectAttempts: 1, lastAttemptAt: new Date() }),
+    incrementReconnectAttempt: () => {
+      const state = useConnectionStore.getState();
+      if (state.reconnectAttempts >= state.maxReconnectAttempts) {
+        set({ status: 'offline' });
+        return false;
+      }
+      set((s) => ({ reconnectAttempts: s.reconnectAttempts + 1, lastAttemptAt: new Date() }));
+      return true;
+    },
+  }));
+
+  ```
+
+
+  ### FILE 2: `src/components/common/ConnectionStatus.tsx` — CREATE NEW
+
+  ```typescript
+
+  'use client';
+
+
+  import { useConnectionStore, ConnectionStatus } from '@/store/connection';
+
+  import styles from './ConnectionStatus.module.css';
+
+
+  export function ConnectionStatus() {
+    const { status, reconnectAttempts, maxReconnectAttempts, retryConnection } = useConnectionStore();
+
+    if (status === 'connected') {
+      return null;
+    }
+
+    return (
+      <div className={styles.container}>
+        {status === 'reconnecting' && (
+          <>
+            <span className={styles.spinner} />
+            <span className={styles.text}>
+              Reconnecting ({reconnectAttempts} of {maxReconnectAttempts})
+            </span>
+          </>
+        )}
+        {status === 'offline' && (
+          <>
+            <span className={styles.dot} />
+            <span className={styles.text}>Offline</span>
+            <button className={styles.button} onClick={retryConnection}>
+              Try again
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  ```
+
+
+  ### FILE 3: `src/components/common/ConnectionStatus.module.css` — CREATE NEW
+
+  ```css
+
+  .container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--color-surface-2, #1e1e2e);
+    font-size: 13px;
+    color: var(--color-text, #cdd6f4);
+  }
+
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--color-amber, #f59e0b);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-red, #ef4444);
+  }
+
+
+  .text {
+    white-space: nowrap;
+  }
+
+
+  .button {
+    padding: 2px 10px;
+    border: 1px solid var(--color-red, #ef4444);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-red, #ef4444);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+
+  .button:hover {
+    background: var(--color-red, #ef4444);
+    color: white;
+  }
+
+  ```
+
+
+  ### FILE 4: Update `src/lib/ws-client.ts` — APPEND AUTO-RECONNECT LOGIC
+
+  Add these variables and methods to the existing ws-client:
+
+  ```typescript
+
+  // Add near top with other imports/state
+
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  let reconnectAttempts = 0;
+
+  const MAX_RECONNECT_ATTEMPTS = 10;
+
+  const BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000];
+
+
+  function getBackoffDelay(attempt: number): number {
+    const idx = Math.min(attempt - 1, BACKOFF_DELAYS.length - 1);
+    return BACKOFF_DELAYS[idx];
+  }
+
+
+  function scheduleReconnect() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      useConnectionStore.getState().setOffline();
+      return;
+    }
+    reconnectAttempts++;
+    useConnectionStore.getState().setReconnecting();
+    const delay = getBackoffDelay(reconnectAttempts);
+    reconnectTimer = setTimeout(() => {
+      // Attempt reconnect
+      connect();
+    }, delay);
+  }
+
+
+  // In the connect() function, on error/close, call scheduleReconnect()
+
+  // On successful open, call:
+
+  //   reconnectAttempts = 0;
+
+  //   useConnectionStore.getState().setConnected();
+
+  //   showToast('Connected');
+
+
+  export function retryConnection() {
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectAttempts = 0;
+    useConnectionStore.getState().retryConnection();
+    connect();
+  }
+
+
+  export function disconnect() {
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+    reconnectAttempts = 0;
+    if (ws) ws.close();
+  }
+
+  ```
+
+
+  ### FILE 5: Update `src/components/layout/Topbar.tsx`
+
+  Add import and render ConnectionStatus in the topbar JSX:
+
+  ```typescript
+
+  import { ConnectionStatus } from '@/components/common/ConnectionStatus';
+
+  // ... in the JSX, add <ConnectionStatus /> in the header
+
+  ```
+
+
+  ### FILE 6: Update existing Toast for connected notification
+
+  In `src/components/common/Toast.tsx`, ensure it can show a green "Connected" toast. If Toast doesn't exist, create a
+  minimal version.
+
+
+  ## BUILD & VERIFY
+
+  1. Run `npm run build`
+
+  2. Fix any TypeScript errors
+
+  3. Fix any lint errors
+
+  4. Print DELIVERY COMPLETE when build passes
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/connection-status-bar.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T03:44:32.780Z

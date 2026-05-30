@@ -1,0 +1,29 @@
+name: Build settings page with Account and CLI Config sections
+description: >
+  The /settings route with a tabbed layout. The Account section shows user and session info with a logout button. The
+  CLI Config section renders all editable fields from the pi CLI config as a live form that writes back on save.
+status: done
+feature:
+  name: Settings
+  slug: settings
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Settings page at /settings has a tab bar with: Account, CLI Config, Appearance, Shortcuts, Notifications, Advanced
+  - Account section shows: connected CLI user identifier, session expiry countdown, an Extend Session button, and a Log Out
+      button that calls DELETE /api/session and redirects to /login
+  - CLI Config section fetches ~/.pi/config.yaml fields from GET /api/cli-config and renders each editable field with
+    its key, current value, input type (text, number, toggle), and a description tooltip
+  - Saving CLI Config POSTs the updated values to PATCH /api/cli-config; a success toast fires on save and an error
+    toast on failure
+  - Unsaved changes in any section show a Save button in that section's footer
+  - Each section is independently scrollable on smaller viewports
+  - Invalid field values show inline validation errors before the save request is made
+phase: 10
+priority: 961
+dependsOn:
+  - artifacts-tab

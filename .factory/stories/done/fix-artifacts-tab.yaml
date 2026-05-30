@@ -1,0 +1,80 @@
+name: "Fix: artifacts-tab"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/artifacts-tab.yaml
+
+  Issue: CLI engineer stalled twice, only listing existing files instead of creating new files for the artifacts tab
+  feature. The CLI appears unable to proceed with file creation from the current brief format.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## FIX TASK: Create Artifacts Tab Files
+
+
+  The previous attempts failed because the CLI only listed files instead of creating them. This fix task requires you to
+  CREATE new files using explicit file write operations.
+
+
+  ### STEP 1: Create src/store/artifacts.ts
+
+  Write a Zustand store file with artifact state management. Include: Artifact interface reference,
+  sortBy/sortDirection/filterActions/filterExtensions/showJobColumn state, actions for filtering/sorting/toggling,
+  persist middleware with key "pi-artifacts".
+
+
+  ### STEP 2: Append to src/types/chat.ts
+
+  Add ArtifactAction type and Artifact interface if not already present.
+
+
+  ### STEP 3: Create src/components/artifacts/ directory and files
+
+  Create these 8 files:
+
+  - ArtifactFilterBar.tsx + .module.css (multi-select filters for action type and extension)
+
+  - ArtifactRow.tsx + .module.css (table row with icon, path, badge, size, date)
+
+  - ArtifactTable.tsx + .module.css (table with sortable columns)
+
+  - ArtifactEmptyState.tsx + .module.css (empty state with FolderOpen icon)
+
+  - ArtifactView.tsx + .module.css (main container composing all parts)
+
+  - index.ts (barrel exports)
+
+
+  ### STEP 4: Create src/app/artifacts/page.tsx + .module.css
+
+  Client component that connects to artifacts store and renders ArtifactView.
+
+
+  ### STEP 5: Update navigation
+
+  - src/components/layout/Sidebar.tsx: Add Artifacts link with FolderOpen icon
+
+  - src/components/layout/BottomTabBar.tsx: Add Artifacts tab
+
+
+  ### STEP 6: Build and verify
+
+  Run `npm run build`. Fix any errors. Print "DELIVERY COMPLETE" when done.
+
+
+  ### CRITICAL: Use explicit file creation
+
+  Do NOT list files. Do NOT describe what you will do. USE FILE WRITE OPERATIONS to create each file. Start with
+  src/store/artifacts.ts and work through each file sequentially. Each file must be written in full before moving to the
+  next.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/artifacts-tab.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T07:46:00.586Z

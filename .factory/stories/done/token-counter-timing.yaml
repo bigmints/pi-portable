@@ -1,0 +1,28 @@
+name: Add token counter and timing per step
+description: >
+  Displays prompt token count, completion token count, duration, and estimated cost at both the per-step level and as a
+  cumulative job total at the bottom of the job detail view.
+status: done
+feature:
+  name: Agentic Job Monitor
+  slug: agentic-job-monitor
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Each expanded step shows prompt tokens, completion tokens, and duration in a compact stat row below the input/output
+    panels
+  - The job detail footer shows cumulative totals: total prompt tokens, total completion tokens, total duration, and estimated cost
+  - Estimated cost is calculated from a model pricing table fetched from GET /api/models and shown with a ~ prefix to
+    indicate approximation
+  - If model pricing is unavailable the cost field is hidden rather than showing zero
+  - Token counts update live as the job progresses; the cumulative total increments with each step completion
+  - Durations are formatted as human-readable strings: milliseconds below 1s, seconds below 1m, and minutes above 1m
+  - A info tooltip on the cost figure explains what is included in the estimate
+phase: 5
+priority: 978
+dependsOn:
+  - job-step-timeline

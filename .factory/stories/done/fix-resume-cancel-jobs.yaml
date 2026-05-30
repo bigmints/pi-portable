@@ -1,0 +1,164 @@
+name: "Fix: resume-cancel-jobs"
+description: |-
+  Automated fix task created by Factory TPM.
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/resume-cancel-jobs.yaml
+  Issue: CLI stalled twice, only listing files instead of implementing resume/cancel for agentic jobs.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: |-
+  ## FIX TASK: Implement Resume and Cancel for Agentic Jobs
+
+  The CLI has stalled twice by listing files instead of implementing. This fix task requires IMMEDIATE code writing.
+
+  ### Files to CREATE (write these files from scratch):
+
+  **1. `src/components/jobs/CancelJobSheet.tsx`**
+  ```tsx
+  "use client";
+  import { X, AlertTriangle } from "lucide-react";
+  import styles from "./CancelJobSheet.module.css";
+
+  interface CancelJobSheetProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+  }
+
+  export default function CancelJobSheet({ isOpen, onClose, onConfirm }: CancelJobSheetProps) {
+    if (!isOpen) return null;
+    return (
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.header}>
+            <h2>Cancel Job?</h2>
+            <button className={styles.closeBtn} onClick={onClose}><X size={20} /></button>
+          </div>
+          <div className={styles.body}>
+            <AlertTriangle size={24} className={styles.icon} />
+            <p>This will permanently stop the job. Any progress made will be lost.</p>
+          </div>
+          <div className={styles.actions}>
+            <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+            <button className={styles.stopBtn} onClick={onConfirm}>Stop Job</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ```
+
+  **2. `src/components/jobs/CancelJobSheet.module.css`**
+  ```css
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .sheet {
+    background: var(--color-surface);
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    box-sizing: border-box;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .closeBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 4px;
+  }
+  .body {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .icon {
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .body p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+  }
+  .cancelBtn, .stopBtn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cancelBtn {
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+  }
+  .stopBtn {
+    background: #ef4444;
+    color: white;
+  }
+  ```
+
+  ### Files to MODIFY:
+
+  **3. `src/types/chat.ts`**
+  - Add `"cancelled"` to `JobStatus` type union
+  - Add `ResumeJobFrame` and `CancelJobFrame` to `WsOutboundFrame` union
+
+  **4. `src/lib/ws-client.ts`**
+  - Add `resumeJob(jobId: string): Promise<void>` method
+  - Add `cancelJob(jobId: string): Promise<void>` method
+
+  **5. `src/store/jobs.ts`**
+  - Add `resumeJob(jobId: string): Promise<boolean>` action with 5s timeout
+  - Add `cancelJob(jobId: string): Promise<boolean>` action with 5s timeout
+
+  **6. `src/components/jobs/JobsView.tsx`**
+  - Import CancelJobSheet, Toast, Play, Square icons
+  - Add state for cancel sheet
+  - Add Resume button for paused jobs (Play icon)
+  - Add Cancel button for running/paused jobs
+  - Cancelled jobs: grey chip, no buttons
+  - Wire up resume/cancel with toasts
+
+  **7. `src/components/chat/MessageBubble.tsx`**
+  - Add inline resume/cancel buttons to job reference cards
+  - Same status rules as JobsView
+
+  ### Build Verification
+  Run `npm run build`. Fix all TypeScript and lint errors. Print DELIVERY COMPLETE.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/resume-cancel-jobs.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T22:55:20.632Z

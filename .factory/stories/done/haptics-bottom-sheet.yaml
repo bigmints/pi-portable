@@ -1,0 +1,26 @@
+name: Add haptic feedback and mobile bottom-sheet menus
+description: >
+  Haptic feedback via the Vibration API for key interactions. Mobile bottom-sheet menus that replace context menus and
+  popovers on small screens — slide up from the bottom with a drag handle and backdrop-blur dismiss.
+status: done
+feature:
+  name: Mobile & PWA
+  slug: mobile-pwa
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A brief 10ms vibration fires on: message send, tab switch, job complete, and error events (only if the Vibration API is available)
+  - Haptic feedback can be disabled globally via the Notifications settings toggle
+  - A bottom-sheet component slides up from the bottom of the screen with a 16px drag handle at the top
+  - Dragging the handle down more than 40% of the sheet height dismisses it with a spring animation
+  - Tapping the backdrop behind the sheet also dismisses it
+  - Bottom sheets are used for: message actions, conversation options, project settings, queue settings, and add project
+  - The bottom sheet traps focus while open and restores focus to the triggering element on close
+phase: 11
+priority: 956
+dependsOn:
+  - swipe-gestures-pull-to-refresh

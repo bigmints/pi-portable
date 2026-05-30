@@ -1,0 +1,25 @@
+name: Build login screen with API token input
+description: >
+  A branded login screen where the user pastes their pi CLI API token or key to authenticate. Validates the token
+  server-side and persists the session in an httpOnly cookie. No email/password — single field entry point.
+status: done
+feature:
+  name: Auth & App Shell
+  slug: auth-app-shell
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Login screen renders at /login with pi-app logo, a single token input field, a "Remember me" checkbox, and an
+    animated submit button
+  - Submitting an invalid token shows an inline error message without a page reload
+  - Successful login stores the session in an httpOnly cookie and redirects to /chat
+  - '"Remember me" checked keeps the session alive across browser restarts'
+  - The input field masks the token by default with a show/hide toggle
+  - Unauthenticated visits to any protected route redirect to /login preserving the original URL
+phase: 0
+priority: 1000
+dependsOn: []

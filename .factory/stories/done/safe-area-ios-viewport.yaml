@@ -1,0 +1,29 @@
+name: Handle safe area insets and iOS viewport quirks
+description: >
+  Correct handling of iPhone notch, Dynamic Island, and home indicator via CSS env() safe area insets. Fixes 100vh
+  overflow on iOS Safari and ensures the keyboard does not push the composer off screen.
+status: done
+feature:
+  name: Mobile & PWA
+  slug: mobile-pwa
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The bottom tab bar has padding-bottom: env(safe-area-inset-bottom) so it clears the iPhone home indicator
+  - The message composer has the same bottom inset padding so it is never obscured by the home indicator
+  - The app shell height uses 100dvh (dynamic viewport height) instead of 100vh to correctly handle the iOS Safari
+    toolbar appearing and disappearing
+  - When the virtual keyboard appears on iOS the composer stays visible and the message feed scrolls to the bottom
+    rather than being pushed off screen
+  - The status bar area at the top of the screen respects env(safe-area-inset-top) for devices with a notch or Dynamic
+    Island
+  - A viewport meta tag in the document head includes viewport-fit=cover to enable safe area inset support
+  - All layout calculations that previously used fixed pixel heights are replaced with CSS env() equivalents
+phase: 11
+priority: 955
+dependsOn:
+  - haptics-bottom-sheet

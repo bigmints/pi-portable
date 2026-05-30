@@ -1,0 +1,27 @@
+name: Add voice input via Web Speech API
+description: >
+  A microphone button in the composer lets users dictate a message. Holding the button records via the Web Speech API;
+  releasing finalises the transcript and inserts it into the textarea. Permission denial is handled gracefully.
+status: done
+feature:
+  name: Message Composer
+  slug: message-composer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A microphone icon button sits in the composer toolbar next to the paperclip
+  - Holding the mic button starts speech recognition via the Web Speech API and animates the button with a pulsing red
+    ring
+  - Interim transcription is shown in the textarea in italic as the user speaks
+  - Releasing the button finalises the transcript as plain text, ready to edit and send
+  - If the browser denies microphone permission a toast explains how to enable it in browser settings
+  - If the Web Speech API is not supported by the browser the mic button is hidden with no error
+  - Pressing Escape while recording cancels the recording and clears the interim transcript
+phase: 3
+priority: 985
+dependsOn:
+  - file-attachment-image-paste

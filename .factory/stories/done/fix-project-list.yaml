@@ -1,0 +1,202 @@
+name: "Fix: project-list"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/project-list.yaml
+
+  Issue: CLI stalled twice while building project list feature. Files were partially created (API routes exist) but
+  implementation incomplete. CLI appears to be listing files instead of writing code.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  # FIX TASK: Complete Project List Implementation
+
+
+  ## Target Directory
+
+  /home/bigmints/Projects/pi-app/pi-app
+
+
+  ## Problem
+
+  Previous attempts stalled. Some files exist but are incomplete. Need to complete ALL files and verify build.
+
+
+  ## Files to Create/Complete (write FULL content for each)
+
+
+  ### 1. src/types/projects.ts
+
+  ```typescript
+
+  export interface Project {
+    id: string;
+    name: string;
+    path: string;
+    lastActive: string;
+    isActive: boolean;
+    status: 'active' | 'idle' | 'error';
+  }
+
+  ```
+
+
+  ### 2. src/app/api/projects/route.ts
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+  import { Project } from '@/types/projects';
+
+
+  const MOCK_PROJECTS: Project[] = [
+    { id: '1', name: 'pi-app', path: '/home/bigmints/Projects/pi-app/pi-app', lastActive: new Date().toISOString(), isActive: true, status: 'active' },
+    { id: '2', name: 'cli-tool', path: '/home/bigmints/Projects/cli-tool', lastActive: new Date(Date.now() - 3600000).toISOString(), isActive: false, status: 'idle' },
+    { id: '3', name: 'dashboard', path: '/home/bigmints/Projects/dashboard', lastActive: new Date(Date.now() - 86400000).toISOString(), isActive: false, status: 'idle' },
+  ];
+
+
+  export async function GET() {
+    try {
+      return NextResponse.json(MOCK_PROJECTS);
+    } catch (error) {
+      return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
+    }
+  }
+
+  ```
+
+
+  ### 3. src/app/api/projects/switch/route.ts
+
+  ```typescript
+
+  import { NextResponse } from 'next/server';
+
+
+  export async function POST(request: Request) {
+    try {
+      const { id } = await request.json();
+      return NextResponse.json({ success: true, activeProjectId: id });
+    } catch {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+  }
+
+  ```
+
+
+  ### 4. src/store/projects.ts
+
+  ```typescript
+
+  import { create } from 'zustand';
+
+  import { Project } from '@/types/projects';
+
+
+  interface ProjectStore {
+    projects: Project[];
+    activeProject: Project | null;
+    loading: boolean;
+    error: string | null;
+    lastFetch: number;
+    fetchProjects: () => Promise<void>;
+    switchProject: (id: string) => Promise<void>;
+    isStale: () => boolean;
+  }
+
+
+  export const useProjectStore = create<ProjectStore>((set, get) => ({
+    projects: [],
+    activeProject: null,
+    loading: false,
+    error: null,
+    lastFetch: 0,
+    fetchProjects: async () => {
+      set({ loading: true, error: null });
+      try {
+        const res = await fetch('/api/projects');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        const active = data.find((p: Project) => p.isActive) || null;
+        set({ projects: data, activeProject: active, loading: false, lastFetch: Date.now() });
+      } catch {
+        set({ error: 'Failed to load projects', loading: false });
+      }
+    },
+    switchProject: async (id: string) => {
+      try {
+        await fetch('/api/projects/switch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+        const { projects } = get();
+        const updated = projects.map((p: Project) => ({ ...p, isActive: p.id === id }));
+        set({ projects: updated, activeProject: updated.find((p: Project) => p.id === id) || null });
+      } catch {
+        set({ error: 'Failed to switch project' });
+      }
+    },
+    isStale: () => {
+      return (Date.now() - get().lastFetch) > 30000;
+    },
+  }));
+
+  ```
+
+
+  ### 5. src/components/projects/ProjectCard.tsx + .module.css
+
+  Create a card component with: folder icon from lucide-react, project name, truncated path (use CSS text-overflow:
+  ellipsis), relative time helper, status dot. Active state: blue ring border (2px solid var(--color-primary, #3b82f6)),
+  "Active" chip badge top-right. Skeleton variant with shimmer animation. Click calls onSwitch(id).
+
+
+  ### 6. src/components/projects/ProjectList.tsx + .module.css
+
+  Grid layout component. Shows 3 skeleton cards while loading. Empty state with EmptyState component. Error state with
+  message + Retry button. Responsive: 1 col mobile, 2 cols ≥768px, 3 cols ≥1024px.
+
+
+  ### 7. src/app/projects/page.tsx + .module.css
+
+  Client component. Uses useProjectStore. Fetches on mount. Shows ProjectList. Page title "Projects".
+
+
+  ### 8. src/components/layout/ActiveProjectBadge.tsx + .module.css
+
+  Small badge for topbar. Shows active project name (truncated) + status dot. Click navigates to /projects.
+
+
+  ### 9. Update src/components/layout/Topbar.tsx
+
+  Import and add ActiveProjectBadge to the topbar.
+
+
+  ### 10. Update src/components/layout/Sidebar.tsx
+
+  Add "Projects" link to navigation.
+
+
+  ## Build Verification
+
+  After writing all files:
+
+  1. Run `npx tsc --noEmit` — fix any type errors
+
+  2. Run `npm run lint` — fix any lint errors  
+
+  3. Run `npm run build` — must succeed
+
+
+  Print DELIVERY COMPLETE when build passes.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/project-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T19:09:38.822Z

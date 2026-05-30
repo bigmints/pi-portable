@@ -1,0 +1,26 @@
+name: Add global keyboard shortcuts
+description: >
+  A set of global keyboard shortcuts covering the most frequent actions: interrupt, new conversation, command palette,
+  and navigation. Shortcuts are documented in a reference panel accessible from Settings.
+status: done
+feature:
+  name: Conversation Controls
+  slug: conversation-controls
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Escape interrupts an active stream when the chat view is focused (delegates to the interrupt flow)
+  - Cmd+K (Mac) / Ctrl+K (Windows) opens a global command palette for searching conversations and commands
+  - Cmd+N / Ctrl+N starts a new conversation
+  - Cmd+1 through Cmd+5 navigate to Chat, Queue, Jobs, History, and Settings tabs respectively
+  - Shortcuts do not fire when the user is typing inside a textarea or input element
+  - A keyboard shortcuts reference panel in Settings lists all shortcuts in a table grouped by category
+  - The shortcuts reference panel can also be opened via Cmd+? / Ctrl+?
+phase: 4
+priority: 981
+dependsOn:
+  - resume-cancel-jobs

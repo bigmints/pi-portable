@@ -1,0 +1,97 @@
+name: "Fix: history-search-filters"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/history-search-filters.yaml
+
+  Issue: CLI stalled twice while implementing history search filters. The API route file was created but the rest of the
+  feature (search store, components, highlighting utility, history page integration) was not completed.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## Fix Task: Complete History Search Filters Implementation
+
+
+  The previous attempt stalled. Some files may exist partially. Complete ALL of the following:
+
+
+  ### Step 1: Check existing files
+
+  Run: `ls -la src/app/api/conversations/search/ src/store/search.ts src/lib/highlight-text.ts
+  src/components/history/SearchBar.tsx src/components/history/FilterPanel.tsx src/components/history/FilterButton.tsx
+  src/components/history/SearchResultItem.tsx src/components/history/SearchEmptyState.tsx
+  src/components/history/SearchResultsView.tsx 2>&1`
+
+
+  ### Step 2: Create/complete ALL missing files
+
+
+  **A. `src/lib/highlight-text.ts`**
+
+  ```typescript
+
+  export function highlightText(text: string, terms: string[]): React.ReactNode[] {
+    if (!terms.length || !text) return [text];
+    const regex = new RegExp(`(${terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) =>
+      regex.test(part) ? <mark key={i} style={{ background: 'var(--color-highlight, #fef08a)', borderRadius: '2px', padding: '0 2px' }}>{part}</mark> : part
+    );
+  }
+
+  ```
+
+
+  **B. `src/store/search.ts`** — Zustand store with query, filters (projects[], models[], dateFrom, dateTo), results,
+  loading, activeFilterCount. Debounced search (300ms). Actions: setSearchQuery, setFilters, clearFilters, search,
+  clearSearch.
+
+
+  **C. `src/app/api/conversations/search/route.ts`** — GET handler accepting q, projects, models, dateFrom, dateTo query
+  params. Returns `{ results: SearchResult[], total: number }` with mock data for now.
+
+
+  **D. Components in `src/components/history/`:**
+
+  - `SearchBar.tsx` + `.module.css` — Search input, Search icon, debounce, loading spinner
+
+  - `FilterPanel.tsx` + `.module.css` — Slide-out panel with project checkboxes, date range inputs, model checkboxes,
+  Apply/Reset buttons
+
+  - `FilterButton.tsx` + `.module.css` — Filter icon button with badge for active filter count
+
+  - `SearchResultItem.tsx` + `.module.css` — Result card with highlighted terms (yellow mark), project/model badges,
+  date
+
+  - `SearchEmptyState.tsx` + `.module.css` — Shows query term + "Try fewer words" suggestion
+
+  - `SearchResultsView.tsx` + `.module.css` — Composes search bar, filter button, results list
+
+
+  **E. Update `src/app/history/page.tsx`** — Conditionally show SearchResultsView when search is active, default grouped
+  view when cleared.
+
+
+  ### Step 3: Build verification
+
+  Run: `npx tsc --noEmit && npm run lint && npm run build`
+
+  Fix ALL errors. Zero errors required.
+
+
+  ### Step 4: Print DELIVERY COMPLETE with file summary
+
+
+  Do NOT ask questions. Complete everything. Use vanilla CSS modules, CSS custom properties, lucide-react icons, Zustand
+  stores. No Tailwind.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/history-search-filters.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T05:43:32.072Z

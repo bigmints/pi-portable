@@ -1,0 +1,26 @@
+name: Build artifact links within job detail
+description: >
+  A list of files created or modified during a job shown at the bottom of the job detail view. Each file links to the
+  full artifact viewer. Action badges indicate whether the file was created, modified, or read.
+status: done
+feature:
+  name: Agentic Job Monitor
+  slug: agentic-job-monitor
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - A Files section appears at the bottom of the job detail when the job has produced artifacts
+  - Each artifact row shows: file icon, relative file path, an action badge (created / modified / read / deleted), file size, and a link button
+  - Clicking the link button opens the artifact in the full file viewer (see artifact-viewer feature)
+  - Artifacts are sorted with created files first, then modified, then read
+  - The section shows a count in its header: Files (4)
+  - If a job produces no files the Files section is omitted entirely
+  - Artifact rows are populated in real time as the job runs via job_event frames that include artifact metadata
+phase: 5
+priority: 977
+dependsOn:
+  - token-counter-timing

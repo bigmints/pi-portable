@@ -1,0 +1,29 @@
+name: "Fix: conversation-export-actions"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-export-actions.yaml
+
+  Issue: CLI engineer (pi) stalled twice in a row, repeatedly listing directory contents instead of building any files.
+  Both delegation attempts resulted in INTERVENTION [STALL] with no code written. The CLI appears unable to proceed past
+  initial reconnaissance/file listing phase. A fix task with explicit file contents was provided in the second
+  intervention but the CLI still stalled. This requires human intervention to either reset the CLI agent or investigate
+  why it cannot execute file creation commands.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI engineer (pi) stalled twice in a row, repeatedly listing directory contents instead of building
+  any files. Both delegation attempts resulted in INTERVENTION [STALL] with no code written. The CLI appears unable to
+  proceed past initial reconnaissance/file listing phase. A fix task with explicit file contents was provided in the
+  second intervention but the CLI still stalled. This requires human intervention to either reset the CLI agent or
+  investigate why it cannot execute file creation commands.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/conversation-export-actions.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T06:26:14.660Z

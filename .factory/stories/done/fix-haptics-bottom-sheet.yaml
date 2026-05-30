@@ -1,0 +1,116 @@
+name: "Fix: haptics-bottom-sheet"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/haptics-bottom-sheet.yaml
+
+  Issue: CLI stalled twice, only listing files without creating any new files. The brief was too broad and the CLI got
+  stuck in a file-scanning loop instead of writing code.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  ## Fix: Haptic Feedback + Bottom Sheet (Split into focused steps)
+
+
+  Work in `/home/bigmints/Projects/pi-app/pi-app`
+
+
+  ### STEP 1: Create src/lib/haptics.ts
+
+  Write this exact file:
+
+  ```ts
+
+  let hapticsEnabled = true;
+
+
+  try {
+    const stored = localStorage.getItem('pi-settings');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      hapticsEnabled = parsed?.notifications?.haptics ?? true;
+    }
+  } catch {
+    // ignore
+  }
+
+
+  export function setHapticsEnabled(enabled: boolean) {
+    hapticsEnabled = enabled;
+    try {
+      const stored = localStorage.getItem('pi-settings');
+      const parsed = stored ? JSON.parse(stored) : {};
+      parsed.notifications = parsed.notifications || {};
+      parsed.notifications.haptics = enabled;
+      localStorage.setItem('pi-settings', JSON.stringify(parsed));
+    } catch {
+      // ignore
+    }
+  }
+
+
+  export function isHapticsEnabled(): boolean {
+    return hapticsEnabled;
+  }
+
+
+  export function triggerHaptic(_event: 'messageSend' | 'tabSwitch' | 'jobComplete' | 'error'): void {
+    if (!hapticsEnabled) return;
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(10);
+    }
+  }
+
+  ```
+
+
+  ### STEP 2: Create src/components/common/BottomSheet.tsx
+
+  Write this file with: isOpen/onClose/children/triggerRef props, 16px drag handle, touch-drag dismiss (>40% height),
+  backdrop dismiss, focus trap, slide-up animation. Use CSS module.
+
+
+  ### STEP 3: Create src/components/common/BottomSheet.module.css
+
+  Write CSS with: fixed bottom sheet, backdrop with blur, drag handle pill, slide-up/spring animations, mobile-only via
+  @media.
+
+
+  ### STEP 4: Create src/hooks/useBottomSheet.ts
+
+  Simple useState hook returning { isOpen, open, close, toggle }.
+
+
+  ### STEP 5: Modify src/components/chat/Composer.tsx
+
+  Import `triggerHaptic` from `@/lib/haptics`. Add `triggerHaptic('messageSend')` in the send handler.
+
+
+  ### STEP 6: Modify src/components/layout/BottomTabBar.tsx
+
+  Import `triggerHaptic`. Add `triggerHaptic('tabSwitch')` on tab click.
+
+
+  ### STEP 7: Modify src/components/settings/SettingsView.tsx
+
+  Add a "Haptic Feedback" toggle in Notifications section using `setHapticsEnabled` and `isHapticsEnabled` from
+  `@/lib/haptics`.
+
+
+  ### STEP 8: Build verification
+
+  Run `npx tsc --noEmit`, `npm run lint`, `npm run build`. Fix any errors. Print DELIVERY COMPLETE.
+
+
+  DO NOT list files. DO NOT scan the directory. Write the files immediately.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/haptics-bottom-sheet.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T11:49:21.349Z

@@ -1,0 +1,26 @@
+name: Implement slash command palette with fuzzy search
+description: >
+  Typing "/" in the composer opens a command palette above it listing all pi CLI slash commands with fuzzy filtering.
+  Keyboard-navigable and dismissable with Escape. Selecting a command inserts it into the composer.
+status: done
+feature:
+  name: Message Composer
+  slug: message-composer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - Typing a forward slash as the first character opens the slash command palette immediately above the composer
+  - The palette lists all available pi CLI commands fetched from GET /api/commands with name, description, and an icon
+  - Typing additional characters after the slash fuzzy-filters the list in real time
+  - Arrow keys navigate the highlighted item; Enter selects it and inserts the command text into the composer
+  - Escape closes the palette and returns focus to the composer without clearing its content
+  - The palette scrolls if there are more than 6 results and shows a total count
+  - Selecting a command that requires arguments places the cursor inside the first argument placeholder
+phase: 3
+priority: 987
+dependsOn:
+  - composer-textarea

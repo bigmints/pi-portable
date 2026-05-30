@@ -1,0 +1,27 @@
+name: Build live output panel for the running task
+description: >
+  A panel beside (desktop) or below (mobile) the queue editor that streams the live conversation output for the
+  currently executing task, so the user can watch progress in real time without leaving the queue screen.
+status: done
+feature:
+  name: Task Queue
+  slug: task-queue
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The live output panel is shown to the right of the task editor on desktop and in a separate tab on mobile
+  - When a task is running the panel shows the streaming conversation output: user message at top, then streaming assistant tokens, then tool-call annotations as they arrive
+  - The panel header shows the task position and a truncated version of the instruction
+  - A live duration counter in the panel header updates every second while the task runs
+  - If no task is running the panel shows an idle state: Queue is ready — press Run to start
+  - When a task completes the panel keeps the final output visible and a View in Chat link navigates to the full
+    conversation
+  - The panel automatically switches to the next task's output when the queue advances
+phase: 6
+priority: 974
+dependsOn:
+  - autonomous-task-execution

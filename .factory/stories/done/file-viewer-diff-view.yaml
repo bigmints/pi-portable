@@ -1,0 +1,29 @@
+name: Build full file viewer with syntax highlight and diff view
+description: >
+  A modal on desktop and full-screen on mobile for reading a complete file. Syntax highlighted with line numbers, a
+  copy-all button, a download button, and a toggle to switch between the full file view and a unified diff view.
+status: done
+feature:
+  name: Artifact Viewer
+  slug: artifact-viewer
+target:
+  app: pi-app
+stack:
+  framework: next.js
+  language: typescript
+  packageManager: npm
+acceptance_criteria:
+  - The file viewer opens as a modal on screens ≥768px and as a full-screen page on mobile
+  - Full file view shows the complete file content with syntax highlighting, line numbers in a gutter, and a scrollable
+    viewport
+  - A Copy all button copies the entire file content; a Download button triggers a browser file download
+  - A Diff toggle in the toolbar switches to a unified diff view for modified files showing red for deleted lines and
+    green for added lines
+  - The diff view shows the original and modified line numbers in the gutter
+  - A language badge and the file path are shown in the viewer header
+  - An Open in VS Code button generates a vscode:// deep-link; if VS Code is not installed the button copies the file
+    path to the clipboard instead
+phase: 9
+priority: 963
+dependsOn:
+  - inline-artifact-card
