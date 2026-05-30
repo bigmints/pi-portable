@@ -8,7 +8,6 @@ export { ShortcutsReference } from './ShortcutsReference';
 export { default as NotificationSettings } from './NotificationSettings';
 export { default as ToggleSwitch } from './ToggleSwitch';
 export { default as ModelSelector } from './ModelSelector';
-export { default as ModelSliders } from './ModelSliders';
-export { default as SystemPromptEditor } from './SystemPromptEditor';
-export { default as ModelPreview } from './ModelPreview';
-
+export { default as AppearanceSettings } from './AppearanceSettings';
+export { default as ModelParameters } from './ModelParameters';
+export { default as ProjectSettingsDrawer } from './ProjectSettingsDrawer';

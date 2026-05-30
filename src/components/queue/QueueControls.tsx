@@ -5,13 +5,15 @@
 
 'use client';
 
-import { Play, X, Settings, Pause } from 'lucide-react';
+import { useState } from 'react';
+import { Play, X, Settings, Pause, Save } from 'lucide-react';
 import { useTaskQueueStore } from '@/store/task-queue';
 import { useQueueControlStore } from '@/store/queue-control';
 import { wsClient } from '@/lib/ws-client';
 import type { WsQueueStopFrame, WsQueueStartFrame, OnFailureAction } from '@/types/chat';
 import CancelConfirmDialog from './CancelConfirmDialog';
 import QueueSettingsPopover from './QueueSettingsPopover';
+import SaveQueueDialog from './SaveQueueDialog';
 import styles from './QueueControls.module.css';
 
 export default function QueueControls() {
@@ -27,6 +29,8 @@ export default function QueueControls() {
     dismissCancelConfirm,
     setStatus,
   } = useQueueControlStore();
+
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   const isEmpty = tasks.length === 0;
   const isRunning = status === 'running';
@@ -96,6 +100,18 @@ export default function QueueControls() {
         Cancel all
       </button>
 
+      {/* Save Queue */}
+      <button
+        className={styles.btn}
+        disabled={isEmpty}
+        onClick={() => setShowSaveDialog(true)}
+        data-testid="save-queue-btn"
+        aria-label="Save queue"
+      >
+        <Save size={16} />
+        Save
+      </button>
+
       {/* Settings gear */}
       <QueueSettingsPopover />
 
@@ -105,6 +121,14 @@ export default function QueueControls() {
         onConfirm={handleCancelAll}
         onDismiss={dismissCancelConfirm}
       />
+
+      {/* Save queue dialog */}
+      <SaveQueueDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        tasks={tasks}
+      />
     </div>
   );
 }
+

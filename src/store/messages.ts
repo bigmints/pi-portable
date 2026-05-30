@@ -39,6 +39,7 @@ interface MessagesState {
   regenerateMessage: (messageId: string) => void;
   clearRegenerating: (messageId: string) => void;
   rewindToMessage: (messageId: string) => void;
+  clearMessages: () => void;
 }
 
 export const useMessagesStore = create<MessagesState>((set, get) => ({
@@ -46,6 +47,7 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
   inProgressMessageId: null,
   activeConversationId: null,
   isInterrupting: false,
+  clearMessages: () => set({ messages: {}, inProgressMessageId: null, activeConversationId: null }),
   addMessage: (message) =>
     set((s) => ({ messages: { ...s.messages, [message.id]: message } })),
   appendToken: (messageId, token) =>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FolderOpen, CheckCircle2 } from 'lucide-react';
+import { FolderOpen, CheckCircle2, Trash2 } from 'lucide-react';
 import type { Project } from '@/types/projects';
 import styles from './ProjectCard.module.css';
 
@@ -34,9 +34,10 @@ const STATUS_COLORS: Record<Project['status'], string> = {
 interface ProjectCardProps {
   project: Project;
   onSwitch?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function ProjectCard({ project, onSwitch }: ProjectCardProps) {
+export default function ProjectCard({ project, onSwitch, onDelete }: ProjectCardProps) {
   const handleClick = () => {
     if (!project.isActive) {
       onSwitch?.(project.id);
@@ -71,9 +72,44 @@ export default function ProjectCard({ project, onSwitch }: ProjectCardProps) {
         />
       </div>
 
+      {project.description && (
+        <p className={styles.description}>{project.description}</p>
+      )}
+
       <div className={styles.details}>
-        <span className={styles.path}>{truncatePath(project.path)}</span>
+        <span className={styles.path} title={project.path}>
+          {truncatePath(project.path)}
+        </span>
         <span className={styles.time}>{formatRelativeTime(project.lastActive)}</span>
+      </div>
+
+      <div className={styles.actions}>
+        {!project.isActive && onSwitch && (
+          <button
+            type="button"
+            className={styles.actionBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSwitch(project.id);
+            }}
+          >
+            Activate
+          </button>
+        )}
+        {onDelete && (
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.deleteBtn}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(project.id);
+            }}
+            aria-label={`Delete project ${project.name}`}
+          >
+            <Trash2 size={13} strokeWidth={1.8} />
+            <span>Delete</span>
+          </button>
+        )}
       </div>
     </div>
   );

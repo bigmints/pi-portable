@@ -1,127 +1,157 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Sun, Moon, Monitor, Type, LayoutGrid, Code } from 'lucide-react';
-import { useAppearanceStore, type AppearanceTheme, type AppearanceFontSize, type AppearanceDensity, type AppearanceCodeFont } from '@/store/appearance';
+import React from 'react';
+import { useModelSettingsStore, AppearanceSettings as SettingsType } from '@/store/model-settings';
+import { Palette, Type, AlignLeft } from 'lucide-react';
 import styles from './AppearanceSettings.module.css';
 
-const THEMES: { id: AppearanceTheme; label: string; icon: typeof Sun }[] = [
-  { id: 'dark', label: 'Dark', icon: Moon },
-  { id: 'light', label: 'Light', icon: Sun },
-  { id: 'system', label: 'System', icon: Monitor },
-];
-
-const FONT_SIZES: { id: AppearanceFontSize; label: string; value: string }[] = [
-  { id: 'small', label: 'Small', value: '14px' },
-  { id: 'medium', label: 'Medium', value: '16px' },
-  { id: 'large', label: 'Large', value: '18px' },
-];
-
-const DENSITIES: { id: AppearanceDensity; label: string }[] = [
-  { id: 'compact', label: 'Compact' },
-  { id: 'comfortable', label: 'Comfortable' },
-];
-
-const CODE_FONTS: { id: AppearanceCodeFont; label: string }[] = [
-  { id: 'jetbrains-mono', label: 'JetBrains Mono' },
-  { id: 'fira-code', label: 'Fira Code' },
-  { id: 'cascadia-code', label: 'Cascadia Code' },
-];
-
 export default function AppearanceSettings() {
-  const { settings, setTheme, setFontSize, setDensity, setCodeFont } = useAppearanceStore();
+  const { appearance, updateAppearance } = useModelSettingsStore();
+
+  const handleFontSizeChange = (size: SettingsType['fontSize']) => {
+    updateAppearance({ fontSize: size });
+  };
+
+  const handleCodeThemeChange = (theme: SettingsType['codeTheme']) => {
+    updateAppearance({ codeTheme: theme });
+  };
+
+  const handleLineHeightChange = (height: SettingsType['lineHeights']) => {
+    updateAppearance({ lineHeights: height });
+  };
+
+  // Swatches color profiles for visual representation
+  const themeSwatches = {
+    'github-dark': { bg: '#0d1117', border: '#30363d', dots: ['#ff7b72', '#79c0ff', '#7ee787'] },
+    'github-light': { bg: '#ffffff', border: '#d0d7de', dots: ['#cf222e', '#0969da', '#1a7f37'] },
+    'monokai': { bg: '#272822', border: '#49483e', dots: ['#f92672', '#66d9ef', '#a6e22e'] },
+    'nord': { bg: '#2e3440', border: '#4c566a', dots: ['#bf616a', '#88c0d0', '#a3be8c'] },
+  };
 
   return (
     <div className={styles.container}>
-      {/* Theme */}
-      <div className={styles.controlGroup}>
-        <div className={styles.controlLabel}>
-          <PaletteIcon />
-          <span>Theme</span>
+      {/* Font Size Section */}
+      <div className={styles.sectionCard}>
+        <div className={styles.sectionHeader}>
+          <Type size={18} className={styles.icon} />
+          <div>
+            <h3 className={styles.title}>Font Size</h3>
+            <p className={styles.subtitle}>Adjust the readability of the chat text</p>
+          </div>
         </div>
-        <div className={styles.segmentedControl}>
-          {THEMES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`${styles.segmentButton} ${settings.theme === t.id ? styles.active : ''}`}
-              onClick={() => setTheme(t.id)}
-            >
-              <t.icon size={14} strokeWidth={1.5} />
-              <span>{t.label}</span>
-            </button>
-          ))}
+
+        <div className={styles.optionGrid}>
+          {(['small', 'medium', 'large'] as SettingsType['fontSize'][]).map((size) => {
+            const isActive = appearance.fontSize === size;
+            return (
+              <button
+                key={size}
+                type="button"
+                className={`${styles.cardButton} ${isActive ? styles.cardActive : ''}`}
+                onClick={() => handleFontSizeChange(size)}
+              >
+                <span className={`${styles.sizeIndicator} ${styles[`indicator-${size}`]}`}>Aa</span>
+                <span className={styles.cardLabel}>{size.charAt(0).toUpperCase() + size.slice(1)}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Live Font Size Preview */}
+        <div className={styles.previewBox}>
+          <div className={styles.previewHeader}>Preview</div>
+          <p className={`${styles.previewText} ${styles[`preview-${appearance.fontSize}`]}`}>
+            The quick brown fox jumps over the lazy dog.
+          </p>
         </div>
       </div>
 
-      {/* Font Size */}
-      <div className={styles.controlGroup}>
-        <div className={styles.controlLabel}>
-          <Type size={16} strokeWidth={1.5} />
-          <span>Font Size</span>
+      {/* Code Theme Section */}
+      <div className={styles.sectionCard}>
+        <div className={styles.sectionHeader}>
+          <Palette size={18} className={styles.icon} />
+          <div>
+            <h3 className={styles.title}>Code Block Theme</h3>
+            <p className={styles.subtitle}>Choose your code syntax highlighting flavor</p>
+          </div>
         </div>
-        <div className={styles.segmentedControl}>
-          {FONT_SIZES.map((fs) => (
-            <button
-              key={fs.id}
-              type="button"
-              className={`${styles.segmentButton} ${settings.fontSize === fs.id ? styles.active : ''}`}
-              onClick={() => setFontSize(fs.id)}
-              style={{ fontSize: fs.id === 'small' ? '12px' : fs.id === 'large' ? '16px' : '14px' }}
-            >
-              <span>{fs.label}</span>
-            </button>
-          ))}
+
+        <div className={styles.optionGrid}>
+          {(['github-dark', 'github-light', 'monokai', 'nord'] as SettingsType['codeTheme'][]).map((theme) => {
+            const isActive = appearance.codeTheme === theme;
+            const colors = themeSwatches[theme];
+            return (
+              <button
+                key={theme}
+                type="button"
+                className={`${styles.cardButton} ${isActive ? styles.cardActive : ''}`}
+                onClick={() => handleCodeThemeChange(theme)}
+              >
+                <div
+                  className={styles.swatch}
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                >
+                  <div className={styles.swatchDots}>
+                    {colors.dots.map((dotColor, idx) => (
+                      <span
+                        key={idx}
+                        className={styles.swatchDot}
+                        style={{ backgroundColor: dotColor }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <span className={styles.cardLabel}>
+                  {theme
+                    .split('-')
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(' ')}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Density */}
-      <div className={styles.controlGroup}>
-        <div className={styles.controlLabel}>
-          <LayoutGrid size={16} strokeWidth={1.5} />
-          <span>Density</span>
+      {/* Line Height Section */}
+      <div className={styles.sectionCard}>
+        <div className={styles.sectionHeader}>
+          <AlignLeft size={18} className={styles.icon} />
+          <div>
+            <h3 className={styles.title}>Line Height</h3>
+            <p className={styles.subtitle}>Set vertical spacing for message bodies</p>
+          </div>
         </div>
-        <div className={styles.segmentedControl}>
-          {DENSITIES.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              className={`${styles.segmentButton} ${settings.density === d.id ? styles.active : ''}`}
-              onClick={() => setDensity(d.id)}
-            >
-              <span>{d.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Code Font */}
-      <div className={styles.controlGroup}>
-        <div className={styles.controlLabel}>
-          <Code size={16} strokeWidth={1.5} />
-          <span>Code Font</span>
+        <div className={styles.optionGrid}>
+          {(['compact', 'comfortable', 'spacious'] as SettingsType['lineHeights'][]).map((height) => {
+            const isActive = appearance.lineHeights === height;
+            return (
+              <button
+                key={height}
+                type="button"
+                className={`${styles.cardButton} ${isActive ? styles.cardActive : ''}`}
+                onClick={() => handleLineHeightChange(height)}
+              >
+                <div className={`${styles.lineIndicator} ${styles[`lines-${height}`]}`}>
+                  <span />
+                  <span />
+                </div>
+                <span className={styles.cardLabel}>{height.charAt(0).toUpperCase() + height.slice(1)}</span>
+              </button>
+            );
+          })}
         </div>
-        <select
-          className={styles.codeFontSelect}
-          value={settings.codeFont}
-          onChange={(e) => setCodeFont(e.target.value as AppearanceCodeFont)}
-        >
-          {CODE_FONTS.map((f) => (
-            <option key={f.id} value={f.id}>{f.label}</option>
-          ))}
-        </select>
+
+        {/* Live Line Height Preview */}
+        <div className={styles.previewBox}>
+          <div className={styles.previewHeader}>Preview</div>
+          <div className={`${styles.linePreviewText} ${styles[`lh-${appearance.lineHeights}`]}`}>
+            <p>Artificial intelligence is general technology advancing at high velocity.</p>
+            <p>Optimizing readability enhances long coding and chat sessions.</p>
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
-
-function PaletteIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="8" r="2" fill="currentColor" />
-      <circle cx="8" cy="14" r="2" fill="currentColor" />
-      <circle cx="16" cy="14" r="2" fill="currentColor" />
-    </svg>
   );
 }

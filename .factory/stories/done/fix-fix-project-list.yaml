@@ -1,0 +1,27 @@
+name: "Fix: fix-project-list"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-project-list.yaml
+
+  Issue: CLI engineer (pi) is fundamentally broken: it repeatedly stalls by listing directory contents (207 files)
+  instead of writing code. This happened twice despite completely different prompts with explicit instructions to STOP
+  listing and START writing. The CLI never attempts to create any files - it just outputs a file listing and times out.
+  This requires human intervention to fix the CLI engineer's behavior before any story can be delivered.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: "CLI engineer (pi) is fundamentally broken: it repeatedly stalls by listing directory contents (207
+  files) instead of writing code. This happened twice despite completely different prompts with explicit instructions to
+  STOP listing and START writing. The CLI never attempts to create any files - it just outputs a file listing and times
+  out. This requires human intervention to fix the CLI engineer's behavior before any story can be delivered."
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-project-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T19:24:32.554Z

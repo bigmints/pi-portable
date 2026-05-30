@@ -3,6 +3,7 @@
  */
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Conversation, GroupedConversations, ConversationGroupEntry } from '@/types/chat';
 import { useMessagesStore } from './messages';
 
@@ -44,11 +45,36 @@ interface ConversationsState {
   // Legacy alias
   getGrouped: () => GroupedConversations;
   forkConversation: (sourceId: string, messageId: string) => string;
+  newConversation: () => string;
 }
 
-export const useConversationsStore = create<ConversationsState>((set, get) => ({
-  conversations: [],
-  selectedId: null,
+export const useConversationsStore = create<ConversationsState>()(
+  persist(
+    (set, get) => ({
+      conversations: [],
+      selectedId: null,
+
+      newConversation: () => {
+        const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        const newConv: Conversation = {
+          id: newId,
+          title: 'New Conversation',
+          projectId: '',
+          lastMessagePreview: '',
+          lastMessageAt: Date.now(),
+          isPinned: false,
+          messageCount: 0,
+          messages: [],
+          createdAt: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          conversations: [newConv, ...state.conversations],
+          selectedId: newId,
+        }));
+
+        return newId;
+      },
 
   addConversation: (conversation: Conversation) =>
     set((state) => ({
@@ -180,6 +206,13 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
     return newId;
   },
+}),
+{
+  name: 'pi-conversations-storage',
+  partialize: (state) => ({
+    conversations: state.conversations,
+    selectedId: state.selectedId,
+  }),
 }));
 
 function getGroupedConversations(conversations: Conversation[]): GroupedConversations {

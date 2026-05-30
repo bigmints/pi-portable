@@ -1,135 +1,140 @@
-/**
- * Saved queues store — persists named queue templates to localStorage
- * and syncs to POST /api/queues for cross-device access.
- */
-
 import { create } from 'zustand';
-import type { TaskCard, QueueTaskStatus } from '@/types/taskQueue';
-
-export interface SavedQueue {
-  id: string;
-  name: string;
-  tasks: TaskCard[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-const STORAGE_KEY = 'pi-saved-queues';
-
-function loadFromStorage(): SavedQueue[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as SavedQueue[];
-  } catch {
-    // ignore corrupt data
-  }
-  return [];
-}
-
-function saveToStorage(queues: SavedQueue[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(queues));
-  } catch {
-    // storage full — silently ignore
-  }
-}
+import { persist } from 'zustand/middleware';
+import { SavedQueue, QueueTask } from '@/types/queue';
 
 interface SavedQueuesState {
-  savedQueues: SavedQueue[];
-
-  saveQueue: (name: string, tasks: TaskCard[]) => SavedQueue | null;
-  loadQueue: (id: string) => TaskCard[] | null;
+  // New API
+  queues: SavedQueue[];
+  addQueue: (name: string, tasks: QueueTask[]) => SavedQueue;
+  loadQueue: (id: string) => (QueueTask & { instruction: string })[] | null;
   deleteQueue: (id: string) => void;
-  syncToServer: () => Promise<void>;
-  pullFromServer: () => Promise<void>;
+  updateQueue: (id: string, name: string, tasks: QueueTask[]) => void;
+
+  // Legacy API compatibility
+  savedQueues: any[];
+  saveQueue: (name: string, tasks: any[]) => void;
 }
 
-export const useSavedQueuesStore = create<SavedQueuesState>((set, get) => ({
-  savedQueues: loadFromStorage(),
+const addQueueInternal = (name: string, tasks: any[]) => {
+  const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+  const now = new Date().toISOString();
+  
+  const queueTasks: QueueTask[] = tasks.map(t => ({
+    id: t.id || Math.random().toString(36).substring(2, 10),
+    prompt: t.prompt || t.instruction || '',
+    status: (t.status as any) === 'skipped' ? 'pending' : (t.status || 'pending'),
+    conversationId: t.conversationId,
+    createdAt: t.createdAt || now
+  }));
 
-  saveQueue: (name: string, tasks: TaskCard[]) => {
-    const queues = get().savedQueues;
-    const now = new Date().toISOString();
-    const existingIdx = queues.findIndex((q) => q.name === name);
+  const legacyTasks = tasks.map(t => ({
+    id: t.id || Math.random().toString(36).substring(2, 10),
+    instruction: t.instruction || t.prompt || '',
+    status: t.status || 'pending',
+    conversationId: t.conversationId,
+    startedAt: t.startedAt,
+    completedAt: t.completedAt,
+    error: t.error
+  }));
 
-    // Deep-clone tasks so the saved copy is independent
-    const clonedTasks: TaskCard[] = tasks.map((t) => ({ ...t, status: 'pending' as QueueTaskStatus }));
+  const newQueue: SavedQueue = {
+    id: newId,
+    name,
+    tasks: queueTasks,
+    createdAt: now,
+    updatedAt: now
+  };
 
-    if (existingIdx >= 0) {
-      // Update existing queue
-      const updated = [...queues];
-      updated[existingIdx] = {
-        ...updated[existingIdx],
-        name,
-        tasks: clonedTasks,
-        updatedAt: now,
-      };
-      saveToStorage(updated);
-      set({ savedQueues: updated });
-      get().syncToServer().catch(() => {});
-      return updated[existingIdx];
-    }
+  const newLegacyQueue = {
+    id: newId,
+    name,
+    tasks: legacyTasks,
+    createdAt: now,
+    updatedAt: now
+  };
 
-    // Create new queue
-    const newQueue: SavedQueue = {
-      id: crypto.randomUUID(),
-      name,
-      tasks: clonedTasks,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const updated = [...queues, newQueue];
-    saveToStorage(updated);
-    set({ savedQueues: updated });
-    get().syncToServer().catch(() => {});
-    return newQueue;
-  },
+  return { newQueue, newLegacyQueue };
+};
 
-  loadQueue: (id: string) => {
-    const queue = get().savedQueues.find((q) => q.id === id);
-    return queue ? queue.tasks : null;
-  },
-
-  deleteQueue: (id: string) => {
-    const queues = get().savedQueues.filter((q) => q.id !== id);
-    saveToStorage(queues);
-    set({ savedQueues: queues });
-    get().syncToServer().catch(() => {});
-  },
-
-  syncToServer: async () => {
-    try {
-      await fetch('/api/queues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ queues: get().savedQueues }),
-      });
-    } catch {
-      // Server sync failure is non-fatal
-    }
-  },
-
-  pullFromServer: async () => {
-    try {
-      const res = await fetch('/api/queues');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.queues && Array.isArray(data.queues)) {
-        const local = get().savedQueues;
-        const serverMap = new Map<string, SavedQueue>(data.queues.map((q: SavedQueue) => [q.id, q] as [string, SavedQueue]));
-        const merged: SavedQueue[] = local.map((q) => serverMap.get(q.id) ?? q);
-        for (const sq of data.queues) {
-          if (!local.find((q) => q.id === sq.id)) {
-            merged.push(sq);
-          }
-        }
-        saveToStorage(merged);
-        set({ savedQueues: merged });
-      }
-    } catch {
-      // Server pull failure is non-fatal
-    }
-  },
-}));
+export const useSavedQueuesStore = create<SavedQueuesState>()(
+  persist(
+    (set, get) => ({
+      queues: [],
+      savedQueues: [],
+      
+      addQueue: (name, tasks) => {
+        const { newQueue, newLegacyQueue } = addQueueInternal(name, tasks);
+        set((state) => ({
+          queues: [...(state.queues || []), newQueue],
+          savedQueues: [...(state.savedQueues || []), newLegacyQueue]
+        }));
+        return newQueue;
+      },
+      
+      saveQueue: (name, tasks) => {
+        const { newQueue, newLegacyQueue } = addQueueInternal(name, tasks);
+        set((state) => ({
+          queues: [...(state.queues || []), newQueue],
+          savedQueues: [...(state.savedQueues || []), newLegacyQueue]
+        }));
+      },
+      
+      loadQueue: (id) => {
+        const queue = get().queues?.find((q) => q.id === id);
+        if (!queue) return null;
+        return queue.tasks.map(t => ({
+          ...t,
+          instruction: t.prompt
+        }));
+      },
+      
+      deleteQueue: (id) => {
+        set((state) => ({
+          queues: (state.queues || []).filter((q) => q.id !== id),
+          savedQueues: (state.savedQueues || []).filter((q) => q.id !== id),
+        }));
+      },
+      
+      updateQueue: (id, name, tasks) => {
+        const now = new Date().toISOString();
+        set((state) => ({
+          queues: (state.queues || []).map((q) =>
+            q.id === id
+              ? {
+                  ...q,
+                  name,
+                  tasks: tasks.map(t => ({
+                    id: t.id || Math.random().toString(36).substring(2, 10),
+                    prompt: t.prompt || (t as any).instruction || '',
+                    status: (t.status as any) === 'skipped' ? 'pending' : (t.status || 'pending'),
+                    conversationId: t.conversationId,
+                    createdAt: (t as any).createdAt || now
+                  })),
+                  updatedAt: now
+                }
+              : q
+          ),
+          savedQueues: (state.savedQueues || []).map((q) =>
+            q.id === id
+              ? {
+                  ...q,
+                  name,
+                  tasks: tasks.map(t => ({
+                    id: t.id || Math.random().toString(36).substring(2, 10),
+                    instruction: (t as any).instruction || t.prompt || '',
+                    status: t.status || 'pending',
+                    conversationId: t.conversationId,
+                    startedAt: (t as any).startedAt,
+                    completedAt: (t as any).completedAt,
+                    error: (t as any).error
+                  })),
+                  updatedAt: now
+                }
+              : q
+          ),
+        }));
+      },
+    }),
+    { name: 'pi-saved-queues' }
+  )
+);

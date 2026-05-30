@@ -15,19 +15,18 @@ import {
   RotateCcw,
   Monitor as MonitorIcon,
   Cpu,
+  FolderOpen,
+  Palette,
 } from 'lucide-react';
 import { useSettingsStore, type ThemeMode, type CodeTheme } from '@/store/settings';
-import { usePushNotificationsStore } from '@/store/push-notifications';
-import { subscribeUser, unsubscribeUser } from '@/lib/push-manager';
-import AccountSettings from './AccountSettings';
 import styles from './SettingsView.module.css';
 import NotificationSettings from './NotificationSettings';
 import { useModelSettingsStore } from '@/store/model-settings';
 import ModelSelector from './ModelSelector';
-import ModelSliders from './ModelSliders';
-import SystemPromptEditor from './SystemPromptEditor';
-import ModelPreview from './ModelPreview';
-
+import AppearanceSettings from './AppearanceSettings';
+import ModelParameters from './ModelParameters';
+import ProjectSettingsDrawer from './ProjectSettingsDrawer';
+import { useProjectSettingsStore } from '@/store/project-settings';
 
 // ─── Code Theme Options ──────────────────────────────────────────────────────
 
@@ -198,6 +197,7 @@ export default function SettingsView() {
     clearAllData,
   } = useSettingsStore();
   const { resetToDefaults } = useModelSettingsStore();
+  const { openDrawer } = useProjectSettingsStore();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -262,26 +262,23 @@ export default function SettingsView() {
         />
       </Section>
 
-      {/* Model Settings */}
-      <Section title="Model Settings" icon={<Cpu size={18} strokeWidth={1.5} />}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md, var(--spacing-md, 16px))' }}>
-          <ModelSelector />
-          <ModelSliders />
-          <SystemPromptEditor />
-          <ModelPreview />
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 'var(--space-xs, var(--spacing-xs, 4px))' }}>
+      {/* Project Settings */}
+      <Section title="Project Settings" icon={<FolderOpen size={18} strokeWidth={1.5} />}>
+        <SettingRow
+          label="Project Parameters"
+          description="Configure your active workspace directory, model selection, temperature, and system prompt"
+          control={
             <button
               type="button"
               className={styles.resetButton}
-              onClick={resetToDefaults}
+              onClick={openDrawer}
+              style={{ margin: 0 }}
             >
-              <RotateCcw size={14} strokeWidth={1.5} />
-              Reset to Defaults
+              Configure Settings
             </button>
-          </div>
-        </div>
+          }
+        />
       </Section>
-
 
       {/* Notifications */}
       <Section title="Notifications" icon={<Bell size={18} strokeWidth={1.5} />}>
@@ -527,6 +524,25 @@ export default function SettingsView() {
       {/* Advanced Notifications */}
       <NotificationSettings />
 
+      {/* Model & Appearance */}
+      <Section title="Model & Appearance" icon={<Palette size={18} strokeWidth={1.5} />}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md, var(--spacing-md, 16px))' }}>
+          <ModelSelector />
+          <AppearanceSettings />
+          <ModelParameters />
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 'var(--space-xs, var(--spacing-xs, 4px))' }}>
+            <button
+              type="button"
+              className={styles.resetButton}
+              onClick={resetToDefaults}
+            >
+              <RotateCcw size={14} strokeWidth={1.5} />
+              Reset to Defaults
+            </button>
+          </div>
+        </div>
+      </Section>
+
       {/* Reset */}
       <div className={styles.resetSection}>
         <button
@@ -568,6 +584,9 @@ export default function SettingsView() {
           onCancel={() => setShowResetConfirm(false)}
         />
       )}
+
+      {/* Project Settings Drawer */}
+      <ProjectSettingsDrawer />
     </div>
   );
 }

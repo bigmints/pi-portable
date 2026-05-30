@@ -14,6 +14,9 @@ import EmptyState from '@/components/queue/EmptyState';
 import LiveOutputPanel from '@/components/queue/LiveOutputPanel';
 import QueueTabs from '@/components/queue/QueueTabs';
 import QueueControls from '@/components/queue/QueueControls';
+import QueueManagementView from '@/components/queue/QueueManagementView';
+import type { TaskCard } from '@/types/taskQueue';
+import type { QueueTask } from '@/types/queue';
 import styles from './queue.module.css';
 
 type Tab = 'tasks' | 'output';
@@ -52,6 +55,19 @@ export default function QueuePage() {
     }, 50);
   }, [addTask]);
 
+  const handleLoadTasks = useCallback((loadedTasks: QueueTask[]) => {
+    const taskCards: TaskCard[] = loadedTasks.map((task) => ({
+      id: task.id,
+      instruction: task.prompt,
+      status: task.status,
+      conversationId: task.conversationId,
+    }));
+    useTaskQueueStore.setState({ tasks: taskCards });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pi-task-queue', JSON.stringify(taskCards));
+    }
+  }, []);
+
   const showOutputPanel = status !== 'idle';
 
   return (
@@ -79,6 +95,9 @@ export default function QueuePage() {
             ) : (
               <TaskQueueList />
             )}
+            <div style={{ marginTop: '24px', borderTop: '1px solid var(--color-border)', paddingTop: '24px' }}>
+              <QueueManagementView tasks={tasks} onLoadTasks={handleLoadTasks} />
+            </div>
           </div>
 
           {showOutputPanel && (

@@ -6,6 +6,10 @@ import { cn } from '@/lib/utils';
 import { Square, Terminal, Sparkles, ArrowUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useConversationsStore } from '@/store/conversations';
+import { useMessagesStore } from '@/store/messages';
+import NewChatButton from '@/components/chat/NewChatButton';
+import MobileNewChatFab from '@/components/chat/MobileNewChatFab';
 
 type MessageRole = 'user' | 'assistant';
 type MessageStatus = 'streaming' | 'complete' | 'error';
@@ -35,6 +39,16 @@ const SUGGESTIONS = [
 ];
 
 export default function ChatPage() {
+  const conversationsStore = useConversationsStore();
+  const messagesStore = useMessagesStore();
+
+  const handleNewChat = useCallback(() => {
+    conversationsStore.newConversation();
+    messagesStore.clearMessages();
+    setMessages([]);
+    setInput('');
+  }, [conversationsStore, messagesStore]);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -179,7 +193,13 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {/* Mobile topbar area */}
+      <div className="lg:hidden flex items-center justify-between border-b border-border bg-card px-4 py-2 shrink-0">
+        <span className="text-sm font-semibold text-foreground">Chat</span>
+        <NewChatButton onClick={handleNewChat} />
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-4 py-12 gap-8">
@@ -258,6 +278,7 @@ export default function ChatPage() {
           <p className="text-center text-xs text-muted-foreground/50 mt-2">pi can make mistakes - verify important info</p>
         </div>
       </div>
+      <MobileNewChatFab onClick={handleNewChat} />
     </div>
   );
 }

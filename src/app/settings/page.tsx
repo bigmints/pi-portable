@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import {
   SettingsTabs,
   AccountSettings,
@@ -8,15 +9,32 @@ import {
   NotificationsSection,
   AdvancedSection,
   ModelSelector,
-  ModelSliders,
-  SystemPromptEditor,
-  ModelPreview,
+  AppearanceSettings,
+  ModelParameters,
 } from '@/components/settings';
 import { useModelSettingsStore } from '@/store/model-settings';
 import { RotateCcw } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { resetToDefaults } = useModelSettingsStore();
+  const { resetToDefaults, setModels } = useModelSettingsStore();
+
+  // Fetch available models on mount
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const response = await fetch('/api/models');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setModels(data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    }
+    fetchModels();
+  }, [setModels]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -25,12 +43,11 @@ export default function SettingsPage() {
         <AppearanceSection />
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderBottom: '1px solid var(--color-border)', paddingBottom: '24px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>Model Settings</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>Model & Appearance Settings</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <ModelSelector />
-            <ModelSliders />
-            <SystemPromptEditor />
-            <ModelPreview />
+            <AppearanceSettings />
+            <ModelParameters />
             <button
               onClick={resetToDefaults}
               style={{
@@ -70,4 +87,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

@@ -92,6 +92,8 @@ export interface Conversation {
   taskId?: string;
   /** ISO timestamp when soft-deleted; cleared when restored */
   softDeletedAt?: string;
+  messages?: any[];
+  createdAt?: string;
 }
 
 export type ConversationGroup = 'pinned' | 'today' | 'yesterday' | 'thisWeek' | 'older';

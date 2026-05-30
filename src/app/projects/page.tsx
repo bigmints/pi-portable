@@ -1,38 +1,44 @@
 /**
- * Projects page — displays all projects with active project indicator
+ * Projects page — displays all projects with active project indicator and adding sheet drawer
  */
 
 'use client';
 
-import { useEffect } from 'react';
-import { FolderOpen } from 'lucide-react';
-import ProjectList from '@/components/projects/ProjectList';
+import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { ProjectList, AddProjectSheet } from '@/components/projects';
 import { useProjectStore } from '@/store/projects';
+import styles from './page.module.css';
 
 export default function ProjectsPage() {
-  const { projects, loading, error, fetchProjects } = useProjectStore();
+  const fetchProjects = useProjectStore((state) => state.fetchProjects);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Projects</h1>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Projects</h1>
+        <button
+          type="button"
+          onClick={() => setIsAddSheetOpen(true)}
+          className={styles.addButton}
+          aria-label="Add project"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+          <span>Add Project</span>
+        </button>
       </div>
 
       <ProjectList />
 
-      {projects.length === 0 && !loading && !error && (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FolderOpen size={48} strokeWidth={1.5} className="text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">No projects yet</h2>
-          <p className="text-muted-foreground">
-            Connect to the pi CLI to see your projects here.
-          </p>
-        </div>
-      )}
+      <AddProjectSheet
+        isOpen={isAddSheetOpen}
+        onClose={() => setIsAddSheetOpen(false)}
+      />
     </div>
   );
 }
