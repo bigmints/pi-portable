@@ -18,4 +18,5 @@ export { default as NewChatButton } from './NewChatButton';
 export { default as NewConversation } from './NewConversation';
 export { default as StopButton } from './StopButton';
 export { default as ToolCallAnnotation } from './ToolCallAnnotation';
+export { default as ToolCallCard } from './ToolCallCard';
 export { default as VoiceInput } from './VoiceInput';

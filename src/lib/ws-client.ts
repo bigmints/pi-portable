@@ -261,6 +261,16 @@ export class WsClient {
       case 'message_complete':
         this.handleMessageCompleteFrame(frame as WsInboundFrame);
         break;
+      case 'message_start':
+        this.handleMessageStartFrame(frame as WsInboundFrame);
+        break;
+      case 'message_update':
+        this.handleMessageUpdateFrame(frame as WsInboundFrame);
+        break;
+      case 'message_end':
+      case 'agent_end':
+        this.handleMessageEndFrame(frame as WsInboundFrame);
+        break;
       case 'job_event':
         this.handleJobEventFrame(frame as WsInboundFrame);
         break;
@@ -285,6 +295,95 @@ export class WsClient {
       case 'queue_stopped':
         this.handleQueueStopped(frame as any);
         break;
+    }
+  }
+
+  private handleMessageStartFrame(frame: WsInboundFrame): void {
+    const msg = frame.message;
+    if (msg?.role === 'assistant') {
+      const id = frame.messageId || `pi-${Date.now()}`;
+      useMessagesStore.getState().setInProgressMessageId(id);
+      
+      const assistantMsg = {
+        id,
+        conversationId: frame.conversationId || useMessagesStore.getState().activeConversationId || '',
+        role: 'assistant' as const,
+        content: '',
+        status: 'streaming' as const,
+        timestamp: Date.now(),
+      };
+      useMessagesStore.getState().addMessage(assistantMsg);
+    }
+  }
+
+  private handleMessageUpdateFrame(frame: WsInboundFrame): void {
+    const ev = frame.assistantMessageEvent;
+    if (!ev) return;
+
+    const messageId = frame.messageId || useMessagesStore.getState().inProgressMessageId;
+    if (!messageId) return;
+
+    if (ev.type === 'text_delta' && typeof ev.delta === 'string') {
+      useMessagesStore.getState().appendToken(messageId, ev.delta);
+    } else if (ev.type === 'tool_use_start') {
+      this.onToolCallStart(messageId, ev);
+    } else if (ev.type === 'tool_use_complete' || ev.type === 'tool_result') {
+      this.onToolCallComplete(messageId, ev);
+    } else if (ev.type === 'tool_use_error') {
+      this.onToolCallError(messageId, ev);
+    }
+  }
+
+  private handleMessageEndFrame(frame: WsInboundFrame): void {
+    const messageId = frame.messageId || useMessagesStore.getState().inProgressMessageId;
+    if (messageId) {
+      useMessagesStore.getState().completeMessage(messageId);
+    }
+  }
+
+  onToolCallStart(messageId: string, event: any): void {
+    const toolCall = {
+      id: event.toolUseId || crypto.randomUUID(),
+      toolName: event.toolName || 'unknown',
+      input: typeof event.toolInput === 'string' 
+        ? this.parseJsonSafely(event.toolInput) 
+        : (event.toolInput || {}),
+      status: 'running' as const,
+      timestamp: Date.now(),
+    };
+    useMessagesStore.getState().addToolCall(messageId, toolCall);
+  }
+
+  onToolCallComplete(messageId: string, event: any): void {
+    const toolUseId = event.toolUseId;
+    if (!toolUseId) return;
+    const output = event.content || event.output || '';
+    useMessagesStore.getState().updateToolCallStatus(
+      messageId,
+      toolUseId,
+      'complete',
+      typeof output === 'string' ? output : JSON.stringify(output)
+    );
+  }
+
+  onToolCallError(messageId: string, event: any): void {
+    const toolUseId = event.toolUseId;
+    if (!toolUseId) return;
+    const errorMsg = event.error || 'Tool call failed';
+    useMessagesStore.getState().updateToolCallStatus(
+      messageId,
+      toolUseId,
+      'error',
+      undefined,
+      errorMsg
+    );
+  }
+
+  private parseJsonSafely(str: string): Record<string, unknown> {
+    try {
+      return JSON.parse(str);
+    } catch {
+      return { raw: str };
     }
   }
 

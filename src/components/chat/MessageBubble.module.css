@@ -225,3 +225,11 @@
   font-size: var(--font-size-sm);
   margin-top: var(--space-xs);
 }
+
+.toolCallsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs, 8px);
+  width: 100%;
+  margin-top: var(--space-sm, 12px);
+}

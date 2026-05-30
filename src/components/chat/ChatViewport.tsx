@@ -85,7 +85,7 @@ export default function ChatViewport({ conversationId }: ChatViewportProps) {
               output: t.output as Record<string, unknown> | string | undefined,
               error: t.error,
               durationMs: t.durationMs,
-              status: t.status === 'running' ? 'running' : t.status === 'success' ? 'completed' : 'error',
+              status: t.status === 'running' ? 'running' : ((t.status as string) === 'success' || t.status === 'complete') ? 'completed' : 'error',
             }))} />;
           }
           return <MessageBubble key={msg.id} message={msg as ChatMessage} />;

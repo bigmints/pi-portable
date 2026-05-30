@@ -79,11 +79,11 @@ export default function ChatView({ conversationId }: ChatViewProps) {
   useEffect(() => {
     const handler = (frame: WsInboundFrame) => {
       switch (frame.type) {
-        case 'token':
-          break;
-        case 'message_complete':
-          break;
-        case 'job_event':
+        case 'message_start':
+        case 'message_update':
+        case 'message_end':
+        case 'agent_end':
+          // Handled globally by wsClient routeFrame and wired directly to useMessagesStore
           break;
       }
     };

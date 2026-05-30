@@ -37,18 +37,19 @@ export interface ChatMessage {
   interrupted?: boolean;
   is_regenerating?: boolean;
   artifacts?: ArtifactFile[];
+  toolCalls?: ToolCall[];
 }
 
-export type ToolCallStatus = 'running' | 'success' | 'error';
+export type ToolCallStatus = 'running' | 'complete' | 'error';
 
 export interface ToolCall {
   id: string;
   toolName: string;
+  status: ToolCallStatus;
   input: Record<string, unknown>;
-  output?: unknown;
+  output?: string;
   error?: string;
   durationMs?: number;
-  status: ToolCallStatus;
   timestamp: number;
 }
 
@@ -126,7 +127,21 @@ export interface QueueSettings {
 }
 
 export interface WsInboundFrame {
-  type: 'token' | 'message_complete' | 'job_event' | 'queue_task_started' | 'queue_task_complete' | 'queue_task_error' | 'queue_stopped' | 'queue_task_output' | 'queue_task_position';
+  type:
+    | 'token'
+    | 'message_complete'
+    | 'job_event'
+    | 'queue_task_started'
+    | 'queue_task_complete'
+    | 'queue_task_error'
+    | 'queue_stopped'
+    | 'queue_task_output'
+    | 'queue_task_position'
+    | 'message_start'
+    | 'message_update'
+    | 'message_end'
+    | 'agent_end'
+    | 'interrupt_ack';
   messageId?: string;
   token?: string;
   conversationId?: string;
@@ -135,6 +150,16 @@ export interface WsInboundFrame {
   data?: any;
   taskId?: string;
   error?: string;
+  message?: any;
+  assistantMessageEvent?: {
+    type: 'text_delta' | 'tool_use_start' | 'tool_use_complete' | 'tool_use_error' | 'tool_result';
+    delta?: string;
+    toolName?: string;
+    toolUseId?: string;
+    toolInput?: any;
+    content?: string;
+    error?: string;
+  };
 }
 
 /** Artifact event frame — carries artifact metadata in job_event frames */
