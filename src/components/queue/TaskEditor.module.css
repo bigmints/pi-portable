@@ -1,0 +1,105 @@
+.editorContainer {
+  background: var(--color-bg-secondary, #fafafa);
+  border: 2px solid var(--color-accent, #3b82f6);
+  border-radius: 8px;
+  padding: var(--spacing-md, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 12px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-fg-muted, #6b7280);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dirtyBadge {
+  color: var(--color-warning, #f59e0b);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  background: var(--color-bg, #ffffff);
+  color: var(--color-fg, #111827);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 6px;
+  padding: var(--spacing-sm, 12px);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea:focus {
+  border-color: var(--color-accent, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm, 8px);
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--spacing-md, 16px);
+  height: 44px; /* 44px minimum touch target for mobile */
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.cancel {
+  color: var(--color-fg-muted, #6b7280);
+  background: var(--color-bg-muted, #f3f4f6);
+}
+
+.cancel:hover {
+  background: var(--color-bg-tertiary, #e5e7eb);
+  color: var(--color-fg, #111827);
+}
+
+.save {
+  color: #ffffff;
+  background: var(--color-accent, #3b82f6);
+}
+
+.save:hover {
+  background: var(--color-accent-hover, #2563eb);
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+  
+  .button {
+    width: 100%;
+    justify-content: center;
+  }
+}

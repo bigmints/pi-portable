@@ -31,6 +31,15 @@ import type {
   OutputLine,
   WsQueueTaskOutputFrame,
   WsQueueTaskPositionFrame,
+  WsQueueStartFrame,
+  WsQueueTaskSendFrame,
+  WsQueueStopFrame,
+  WsQueueNextFrame,
+  WsQueueTaskStartedFrame,
+  WsQueueTaskCompleteFrame,
+  WsQueueTaskErrorFrame,
+  WsQueueStoppedFrame,
+  OnFailureAction,
 } from '@/types/chat';
 import type { JobStatus } from '@/store/jobs';
 
@@ -196,6 +205,37 @@ export class WsClient {
     });
   }
 
+  sendQueueStart(taskId: string, projectId: string, onFailure: OnFailureAction): void {
+    const frame: WsQueueStartFrame = {
+      type: 'queue_start',
+      taskId,
+      projectId,
+      onFailure,
+    };
+    this.sendRaw(frame as unknown as Record<string, unknown>);
+  }
+
+  sendQueueTask(taskId: string, projectId: string, prompt: string): void {
+    const frame: WsQueueTaskSendFrame = {
+      type: 'queue_task_send',
+      taskId,
+      projectId,
+      prompt,
+    };
+    this.sendRaw(frame as unknown as Record<string, unknown>);
+  }
+
+  sendQueueStop(): void {
+    const frame: WsQueueStopFrame = { type: 'queue_stop' };
+    this.sendRaw(frame as unknown as Record<string, unknown>);
+  }
+
+  sendQueueNext(): void {
+    const frame: WsQueueNextFrame = { type: 'queue_next' };
+    this.sendRaw(frame as unknown as Record<string, unknown>);
+  }
+
+
   private handleServerEvent(frame: { event: string; message?: string; pid?: number }): void {
     switch (frame.event) {
       case 'pi_ready':
@@ -232,6 +272,18 @@ export class WsClient {
         break;
       case 'queue_task_position':
         this.handleQueueTaskPositionFrame(frame as WsInboundFrame);
+        break;
+      case 'queue_task_started':
+        this.handleQueueTaskStarted(frame as any);
+        break;
+      case 'queue_task_complete':
+        this.handleQueueTaskComplete(frame as any);
+        break;
+      case 'queue_task_error':
+        this.handleQueueTaskError(frame as any);
+        break;
+      case 'queue_stopped':
+        this.handleQueueStopped(frame as any);
         break;
     }
   }
@@ -280,6 +332,81 @@ export class WsClient {
       useQueueOutputStore.getState().setPosition(positionFrame.position, positionFrame.total);
     }
   }
+
+  private handleQueueTaskStarted(frame: WsQueueTaskStartedFrame): void {
+    if (frame.taskId) {
+      const { useQueueEditorStore } = require('@/store/queue-editor');
+      const store = useQueueEditorStore.getState();
+      store.updateTaskStatus(frame.taskId, 'running');
+      
+      const task = store.tasks.find((t: any) => t.id === frame.taskId);
+      if (task) {
+        useQueueOutputStore.getState().setActiveTask(
+          {
+            id: task.id,
+            prompt: task.instruction,
+            status: 'running',
+            conversationId: frame.conversationId,
+          },
+          store.tasks.indexOf(task) + 1,
+          store.tasks.length
+        );
+      }
+    }
+  }
+
+  private handleQueueTaskComplete(frame: WsQueueTaskCompleteFrame): void {
+    if (frame.taskId) {
+      const { useQueueEditorStore } = require('@/store/queue-editor');
+      const store = useQueueEditorStore.getState();
+      store.updateTaskStatus(frame.taskId, 'completed');
+
+      if (frame.conversationId) {
+        useQueueOutputStore.getState().markComplete(frame.conversationId);
+      }
+      
+      const { useQueueControlStore } = require('@/store/queue-control');
+      const controlState = useQueueControlStore.getState();
+      if (controlState.status === 'running') {
+        if (controlState.pauseAfterCurrent) {
+          controlState.setStatus('paused');
+          controlState.togglePauseAfterCurrent();
+        } else {
+          this.sendQueueNext();
+        }
+      }
+    }
+  }
+
+  private handleQueueTaskError(frame: WsQueueTaskErrorFrame): void {
+    if (frame.taskId) {
+      const { useQueueEditorStore } = require('@/store/queue-editor');
+      const store = useQueueEditorStore.getState();
+      store.updateTaskStatus(frame.taskId, 'failed');
+
+      useQueueOutputStore.getState().markError(frame.error || 'Task execution failed');
+
+      const { useQueueControlStore } = require('@/store/queue-control');
+      const controlState = useQueueControlStore.getState();
+      
+      if (controlState.status === 'running') {
+        if (controlState.settings.onFailure === 'skip') {
+          this.sendQueueNext();
+        } else if (controlState.settings.onFailure === 'abort') {
+          controlState.setStatus('idle');
+          this.sendQueueStop();
+        } else {
+          controlState.setStatus('paused');
+        }
+      }
+    }
+  }
+
+  private handleQueueStopped(frame: WsQueueStoppedFrame): void {
+    const { useQueueControlStore } = require('@/store/queue-control');
+    useQueueControlStore.getState().setStatus('idle');
+  }
+
 
   private clearReconnectTimer(): void {
     if (this.reconnectTimer) {

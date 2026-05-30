@@ -1,20 +1,23 @@
 /**
- * Task queue page — ordered list of task cards with drag-to-reorder
- * and live output panel for running tasks
+ * Task queue page — ordered list of task cards with drag-to-reorder,
+ * inline editing, inline task addition, and live output panel for running tasks.
  */
 
 'use client';
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useTaskQueueStore } from '@/store/task-queue';
+import { useQueueEditorStore } from '@/store/queue-editor';
 import { useQueueOutputStore } from '@/store/queue-output';
-import TaskQueueList from '@/components/queue/TaskQueueList';
-import EmptyState from '@/components/queue/EmptyState';
-import LiveOutputPanel from '@/components/queue/LiveOutputPanel';
-import QueueTabs from '@/components/queue/QueueTabs';
-import QueueControls from '@/components/queue/QueueControls';
-import QueueManagementView from '@/components/queue/QueueManagementView';
+import {
+  TaskList,
+  AddTaskInput,
+  EmptyState,
+  LiveOutputPanel,
+  QueueTabs,
+  QueueControls,
+  QueueManagementView
+} from '@/components/queue';
 import type { TaskCard } from '@/types/taskQueue';
 import type { QueueTask } from '@/types/queue';
 import styles from './queue.module.css';
@@ -22,9 +25,8 @@ import styles from './queue.module.css';
 type Tab = 'tasks' | 'output';
 
 export default function QueuePage() {
-  const { tasks, addTask } = useTaskQueueStore();
+  const { tasks, addTask, startEditing } = useQueueEditorStore();
   const { status } = useQueueOutputStore();
-  const newTaskRef = useRef<HTMLTextAreaElement | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('tasks');
 
   // Auto-switch to output tab when a task starts running
@@ -34,26 +36,17 @@ export default function QueuePage() {
     }
   }, [status]);
 
-  // After adding a task, focus its textarea
-  const prevTaskCount = useRef(tasks.length);
-
-  useEffect(() => {
-    if (tasks.length > prevTaskCount.current && tasks.length > 0) {
-      const lastTask = tasks[tasks.length - 1];
-      if (lastTask && newTaskRef.current) {
-        newTaskRef.current.focus();
-      }
-    }
-    prevTaskCount.current = tasks.length;
-  }, [tasks]);
-
   const handleAddTask = useCallback(() => {
     const newId = addTask();
+    startEditing(newId);
+
+    // Scroll to new editing card
     setTimeout(() => {
-      const textarea = document.querySelector(`[data-testid="task-textarea-${newId}"]`) as HTMLTextAreaElement | null;
+      const textarea = document.querySelector(`[data-testid="task-editor-textarea-${newId}"]`) as HTMLTextAreaElement | null;
       textarea?.focus();
-    }, 50);
-  }, [addTask]);
+      textarea?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }, [addTask, startEditing]);
 
   const handleLoadTasks = useCallback((loadedTasks: QueueTask[]) => {
     const taskCards: TaskCard[] = loadedTasks.map((task) => ({
@@ -62,7 +55,7 @@ export default function QueuePage() {
       status: task.status,
       conversationId: task.conversationId,
     }));
-    useTaskQueueStore.setState({ tasks: taskCards });
+    useQueueEditorStore.setState({ tasks: taskCards });
     if (typeof window !== 'undefined') {
       localStorage.setItem('pi-task-queue', JSON.stringify(taskCards));
     }
@@ -90,11 +83,16 @@ export default function QueuePage() {
         <div className={styles.layout}>
           <div className={`${styles.editorPane} ${activeTab === 'tasks' ? styles.visible : ''}`}>
             <QueueControls />
+            
+            {/* Inline task addition input at the top of the queue list */}
+            <AddTaskInput />
+
             {tasks.length === 0 ? (
               <EmptyState />
             ) : (
-              <TaskQueueList />
+              <TaskList />
             )}
+            
             <div style={{ marginTop: '24px', borderTop: '1px solid var(--color-border)', paddingTop: '24px' }}>
               <QueueManagementView tasks={tasks} onLoadTasks={handleLoadTasks} />
             </div>

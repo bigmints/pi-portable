@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Play, X, Settings, Pause, Save } from 'lucide-react';
-import { useTaskQueueStore } from '@/store/task-queue';
+import { useQueueEditorStore } from '@/store/queue-editor';
 import { useQueueControlStore } from '@/store/queue-control';
 import { wsClient } from '@/lib/ws-client';
 import type { WsQueueStopFrame, WsQueueStartFrame, OnFailureAction } from '@/types/chat';
@@ -17,7 +17,7 @@ import SaveQueueDialog from './SaveQueueDialog';
 import styles from './QueueControls.module.css';
 
 export default function QueueControls() {
-  const { tasks, updateTaskStatus } = useTaskQueueStore();
+  const { tasks, updateTaskStatus } = useQueueEditorStore();
   const {
     status,
     pauseAfterCurrent,
@@ -39,13 +39,12 @@ export default function QueueControls() {
   const handleRunQueue = () => {
     if (isEmpty || isRunning) return;
     runQueue();
-    const frame: WsQueueStartFrame = {
-      type: 'queue_start',
-      taskId: tasks[0]?.id ?? '',
-      projectId: '',
-      onFailure: settings.onFailure,
-    };
-    wsClient.sendRaw(frame as unknown as Record<string, unknown>);
+    // Send all task prompts to the server first
+    tasks.forEach((t) => {
+      wsClient.sendQueueTask(t.id, '', t.instruction);
+    });
+    // Start running the queue
+    wsClient.sendQueueStart(tasks[0]?.id ?? '', '', settings.onFailure);
   };
 
   // Cancel All — marks all pending tasks as cancelled, stops run
@@ -57,8 +56,7 @@ export default function QueueControls() {
     });
     setStatus('idle');
     dismissCancelConfirm();
-    const stopFrame: WsQueueStopFrame = { type: 'queue_stop' };
-    wsClient.sendRaw(stopFrame as unknown as Record<string, unknown>);
+    wsClient.sendQueueStop();
   };
 
   return (
