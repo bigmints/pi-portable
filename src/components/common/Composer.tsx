@@ -8,7 +8,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import styles from './Composer.module.css';
 
 export interface ComposerHandle {
@@ -21,6 +21,8 @@ interface ComposerProps {
   onSubmit: (_content: string) => void;
   autoFocus?: boolean;
   disabled?: boolean;
+  isStreaming?: boolean;
+  onStop?: () => void;
 }
 
 const Composer = forwardRef<ComposerHandle, ComposerProps>(
@@ -30,6 +32,8 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(
       onSubmit,
       autoFocus = false,
       disabled = false,
+      isStreaming = false,
+      onStop,
     },
     ref
   ) => {
@@ -99,14 +103,24 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(
             disabled={disabled}
             rows={1}
           />
-          <button
-            className={`${styles.sendButton} ${content.trim() ? styles.active : ''}`}
-            onClick={handleSend}
-            disabled={!content.trim() || disabled}
-            aria-label="Send message"
-          >
-            <Send size={16} strokeWidth={1.5} />
-          </button>
+          {isStreaming ? (
+            <button
+              className={`${styles.sendButton} ${styles.active}`}
+              onClick={onStop}
+              aria-label="Stop generation"
+            >
+              <Square size={14} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              className={`${styles.sendButton} ${content.trim() ? styles.active : ''}`}
+              onClick={handleSend}
+              disabled={!content.trim() || disabled}
+              aria-label="Send message"
+            >
+              <Send size={16} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       </div>
     );

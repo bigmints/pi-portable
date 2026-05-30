@@ -2,10 +2,10 @@ import webPush from 'web-push';
 
 const VAPID_PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  'BONWQ70Wuw9PSXO2dlaJHAqG20nNBJ88jJ6MPH6RfG2DwHsBIeT/2jFXsSbiOvX3qQw7mqHJWdqzRVHJBJCjQHE';
+  'BHve1i3dDoczjd4lVAzL2V075ZzSS1KoopsEMDZQO9CYk4-r_NDWKGMKBoU3JC_F5imrhrzfbS9uAFj-eOKO4GY';
 const VAPID_PRIVATE_KEY =
   process.env.VAPID_PRIVATE_KEY ||
-  'jR0yI0sFwBdO8SjOoIVUfWqMYGbjlDdRAI8aGjJQROE';
+  '09VPEkSny5iG4HT81ETLhanxaDvqGFTe6RCHywbFlOA';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:pi@app.local';
 
 webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
@@ -31,8 +31,8 @@ export interface PushPayload {
 
 export async function triggerPushNotification(
   payload: PushPayload
-): Promise<webPush.PushNotificationResponse[]> {
-  const results: webPush.PushNotificationResponse[] = [];
+): Promise<any[]> {
+  const results: any[] = [];
   const body = JSON.stringify({
     title: payload.title,
     body: payload.body,
@@ -42,7 +42,7 @@ export async function triggerPushNotification(
 
   for (const sub of subscriptions) {
     try {
-      const res = await webPush.sendNotification(sub, body, { TTL: 60 });
+      const res = await webPush.sendNotification(sub as any, body, { TTL: 60 });
       results.push(res);
     } catch (err) {
       console.error('Push failed for subscription:', err);
@@ -54,6 +54,6 @@ export async function triggerPushNotification(
 // Used by API routes
 export async function triggerPush(
   payload: PushPayload
-): Promise<webPush.PushNotificationResponse[]> {
+): Promise<any[]> {
   return triggerPushNotification(payload);
 }

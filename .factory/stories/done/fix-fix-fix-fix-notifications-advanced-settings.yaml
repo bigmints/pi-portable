@@ -1,0 +1,32 @@
+name: "Fix: fix-fix-fix-notifications-advanced-settings"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story:
+  /home/bigmints/Projects/pi-app/.factory/stories/features/fix-fix-fix-notifications-advanced-settings.yaml
+
+  Issue: CLI agent is stuck in a persistent file-listing loop. Both delegation attempts resulted in the agent listing
+  513 directory contents instead of executing the Python script to create files. The agent ignores direct instructions
+  to stop listing files and execute commands. This appears to be a fundamental behavioral issue with the CLI agent (pi)
+  that requires human intervention to fix — likely the agent's system prompt or configuration is causing it to default
+  to file-listing behavior regardless of instructions. The fix task's Python script approach was designed specifically
+  to bypass this loop, but the agent never reached the execution step.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: CLI agent is stuck in a persistent file-listing loop. Both delegation attempts resulted in the agent
+  listing 513 directory contents instead of executing the Python script to create files. The agent ignores direct
+  instructions to stop listing files and execute commands. This appears to be a fundamental behavioral issue with the
+  CLI agent (pi) that requires human intervention to fix — likely the agent's system prompt or configuration is causing
+  it to default to file-listing behavior regardless of instructions. The fix task's Python script approach was designed
+  specifically to bypass this loop, but the agent never reached the execution step.
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/fix-fix-fix-notifications-advanced-settings.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-26T11:06:27.931Z

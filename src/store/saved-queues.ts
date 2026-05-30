@@ -118,8 +118,8 @@ export const useSavedQueuesStore = create<SavedQueuesState>((set, get) => ({
       const data = await res.json();
       if (data.queues && Array.isArray(data.queues)) {
         const local = get().savedQueues;
-        const serverMap = new Map(data.queues.map((q: SavedQueue) => [q.id, q]));
-        const merged = local.map((q) => serverMap.get(q.id) ?? q);
+        const serverMap = new Map<string, SavedQueue>(data.queues.map((q: SavedQueue) => [q.id, q] as [string, SavedQueue]));
+        const merged: SavedQueue[] = local.map((q) => serverMap.get(q.id) ?? q);
         for (const sq of data.queues) {
           if (!local.find((q) => q.id === sq.id)) {
             merged.push(sq);

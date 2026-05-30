@@ -22,24 +22,13 @@ export interface NotificationSettings {
   };
 }
 
-export interface NotificationSettingsState {
-  settings: NotificationSettings;
-  updateSettings: (update: Partial<NotificationSettings> | ((prev: NotificationSettings) => Partial<NotificationSettings>)) => void;
-  resetSettings: () => void;
-  toggleChannel: (channel: keyof NotificationSettings['channels']) => void;
-}
-
-export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+export const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: true,
   sound: true,
   desktop: true,
-  email: true,
+  email: false,
   frequency: 'instant',
-  quietHours: {
-    enabled: false,
-    start: '22:00',
-    end: '07:00',
-  },
+  quietHours: { enabled: false, start: '22:00', end: '07:00' },
   channels: {
     jobComplete: true,
     jobError: true,
@@ -50,27 +39,22 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   },
 };
 
+interface NotificationSettingsState {
+  settings: NotificationSettings;
+  updateSettings: (settings: Partial<NotificationSettings>) => void;
+  resetSettings: () => void;
+  toggleChannel: (channel: keyof NotificationSettings['channels']) => void;
+}
+
 export const useNotificationSettingsStore = create<NotificationSettingsState>()(
   persist(
     (set) => ({
-      settings: DEFAULT_NOTIFICATION_SETTINGS,
-      updateSettings: (update) =>
-        set((state) => {
-          const nextSettings = typeof update === 'function' ? update(state.settings) : update;
-          return {
-            settings: {
-              ...state.settings,
-              ...nextSettings,
-              quietHours: nextSettings.quietHours
-                ? { ...state.settings.quietHours, ...nextSettings.quietHours }
-                : state.settings.quietHours,
-              channels: nextSettings.channels
-                ? { ...state.settings.channels, ...nextSettings.channels }
-                : state.settings.channels,
-            },
-          };
-        }),
-      resetSettings: () => set({ settings: DEFAULT_NOTIFICATION_SETTINGS }),
+      settings: DEFAULT_SETTINGS,
+      updateSettings: (partial) =>
+        set((state) => ({
+          settings: { ...state.settings, ...partial },
+        })),
+      resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
       toggleChannel: (channel) =>
         set((state) => ({
           settings: {
@@ -82,8 +66,6 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
           },
         })),
     }),
-    {
-      name: 'pi-notification-settings',
-    }
+    { name: 'pi-notification-settings' }
   )
 );

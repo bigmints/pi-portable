@@ -1,240 +1,93 @@
 .section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-md);
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
+  padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
-.sectionIcon {
-  color: var(--color-brand);
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
-.sectionTitle {
-  font-size: var(--font-size-md);
+.header h2 {
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text);
-}
-
-.sectionBody {
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+  margin: 0;
 }
 
 .toggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-xs) 0;
-}
-
-.settingInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.settingLabel {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.settingDescription {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-}
-
-.dependentSettings {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  transition: opacity 0.2s ease, pointer-events 0.2s ease;
-}
-
-.dependentSettings.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.frequencySection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-xs) 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .frequencyGroup {
-  display: flex;
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
+  margin: var(--spacing-md) 0;
 }
 
-.frequencyLabel {
-  flex: 1;
+.frequencyGroup label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.radioGroup {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.radioLabel {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-sm);
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
+  gap: var(--spacing-xs);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
 }
 
-.frequencyLabel:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-}
-
-.frequencyLabel.activeFrequency {
-  background: var(--color-brand);
-  color: white;
-  border-color: var(--color-brand);
-}
-
-.radioInput {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.frequencyText {
-  user-select: none;
-}
-
-.quietHoursSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+.radioLabel input {
+  accent-color: var(--color-primary);
 }
 
 .quietHours {
-  margin-top: var(--space-xs);
-  padding: var(--space-md);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  margin: var(--spacing-md) 0;
 }
 
-.timePickerContainer {
+.timePickers {
   display: flex;
-  gap: var(--space-md);
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding-left: calc(44px + var(--spacing-sm));
 }
 
-.timePickerLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  flex: 1;
-}
-
-.timeInput {
-  padding: var(--space-xs) var(--space-sm);
+.timePickers input[type="time"] {
+  padding: var(--spacing-xs) var(--spacing-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text);
-  font-size: var(--font-size-xs);
-  font-family: var(--font-mono);
-  outline: none;
-  width: 100%;
-}
-
-.timeInput:focus {
-  border-color: var(--color-brand);
-}
-
-.channelsSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-xs) 0;
 }
 
 .channelGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
-  margin-top: var(--space-xs);
-}
-
-.channelItem {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.channelLabel {
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.resetContainer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-md);
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
 }
 
 .resetButton {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  transition: all var(--transition-fast);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
 }
 
 .resetButton:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-}
-
-@media (max-width: 767px) {
-  .frequencyGroup {
-    flex-direction: column;
-  }
-
-  .timePickerContainer {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .channelGrid {
-    grid-template-columns: 1fr;
-    gap: var(--space-sm);
-  }
+  background: var(--color-primary);
+  color: var(--color-surface);
 }

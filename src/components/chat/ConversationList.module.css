@@ -24,22 +24,38 @@
   font-size: var(--font-size-sm);
   font-weight: 600;
   transition: background var(--transition-fast);
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
 }
 
 .newChatButton:hover {
-  background: var(--color-brand-hover);
+  background: var(--color-brand-hover, color-mix(in srgb, var(--color-brand) 85%, white));
 }
 
 .newChatButton svg {
   flex-shrink: 0;
 }
 
+/* ── List container ── */
 .list {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0 var(--space-sm) var(--space-md);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* ── Pull-to-refresh indicator ── */
+.list > :first-child {
+  /* PullToRefreshIndicator sits at top of scroll container */
+  display: flex;
+  justify-content: center;
+  padding: var(--space-sm) 0;
+}
+
+/* ── Groups ── */
 .group {
   margin-bottom: var(--space-md);
 }
@@ -53,15 +69,17 @@
   padding: var(--space-sm) var(--space-sm) var(--space-xs);
 }
 
+/* ── Conversation item wrapper (for swipe-to-delete) ── */
 .itemWrapper {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-md);
 }
 
+/* ── Conversation item ── */
 .item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   width: 100%;
   padding: var(--space-sm) var(--space-md);
@@ -72,20 +90,19 @@
   text-align: left;
   cursor: pointer;
   transition: background var(--transition-fast);
+  min-height: 48px;
+  gap: var(--space-sm);
 }
 
 .item:hover {
   background: var(--color-surface-hover);
 }
 
+/* Active / selected indicator: left border accent */
 .item.selected {
   background: var(--color-bg-tertiary);
   border-left: 3px solid var(--color-brand);
   padding-left: calc(var(--space-md) - 3px);
-}
-
-.item.swiped {
-  transform: translateX(-80px);
 }
 
 .itemContent {
@@ -122,69 +139,83 @@
   margin-top: 2px;
 }
 
-.itemMeta {
-  flex-shrink: 0;
-  margin-left: var(--space-sm);
-}
-
 .itemTime {
+  flex-shrink: 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
-.deleteButton {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 80px;
+/* ── Empty state ── */
+.emptyState {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-error);
-  color: white;
-  border: none;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  min-height: 200px;
 }
 
-.itemWrapper:has(.item.swiped) .deleteButton {
-  opacity: 1;
+.emptyIcon {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-md);
+  opacity: 0.5;
 }
 
-/* Context Menu */
-.contextMenu {
-  position: fixed;
-  z-index: 20;
-  min-width: 180px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-xs);
+.emptyTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
 }
 
-.contextMenuItem {
+.emptyDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+  max-width: 280px;
+}
+
+.emptyCta {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-sm) var(--space-sm);
-  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-brand);
+  color: var(--color-user-bubble-text);
   font-size: var(--font-size-sm);
-  color: var(--color-text);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
   transition: background var(--transition-fast);
+  min-height: 44px;
 }
 
-.contextMenuItem:hover {
-  background: var(--color-surface-hover);
+.emptyCta:hover {
+  background: var(--color-brand-hover, color-mix(in srgb, var(--color-brand) 85%, white));
 }
 
-.contextMenuDelete {
-  color: var(--color-error);
-}
+/* ── Mobile: larger touch targets ── */
+@media (max-width: 768px) {
+  .item {
+    min-height: 56px;
+    padding: var(--space-md);
+  }
 
-.contextMenuDelete:hover {
-  background: rgba(239, 68, 68, 0.1);
+  .item.selected {
+    padding-left: calc(var(--space-md) - 3px);
+  }
+
+  .newChatButton {
+    min-height: 48px;
+    padding: var(--space-md);
+  }
+
+  .emptyCta {
+    min-height: 48px;
+    padding: var(--space-md) var(--space-xl);
+  }
 }

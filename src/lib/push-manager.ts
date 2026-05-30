@@ -1,9 +1,9 @@
 const VAPID_PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  'BONWQ70Wuw9PSXO2dlaJHAqG20nNBJ88jJ6MPH6RfG2DwHsBIeT/2jFXsSbiOvX3qQw7mqHJWdqzRVHJBJCjQHE';
+  'BHve1i3dDoczjd4lVAzL2V075ZzSS1KoopsEMDZQO9CYk4-r_NDWKGMKBoU3JC_F5imrhrzfbS9uAFj-eOKO4GY';
 const VAPID_PRIVATE_KEY =
   process.env.VAPID_PRIVATE_KEY ||
-  'jR0yI0sFwBdO8SjOoIVUfWqMYGbjlDdRAI8aGjJQROE';
+  '09VPEkSny5iG4HT81ETLhanxaDvqGFTe6RCHywbFlOA';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:pi@app.local';
 
 export async function getPublicKeyBase64(): Promise<string> {
@@ -35,7 +35,7 @@ export async function subscribeUser(): Promise<PushSubscription | null> {
   const applicationServerKey = await urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey,
+    applicationServerKey: applicationServerKey as any,
   });
 
   return subscription;
@@ -57,7 +57,7 @@ export async function sendPushNotification(
   const webPush = await import('web-push');
   webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   await webPush.sendNotification(
-    subscription as unknown as webPush.PushSubscription,
+    subscription as any,
     JSON.stringify(payload),
     { TTL: 60 }
   );

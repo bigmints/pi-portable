@@ -1,6 +1,6 @@
 'use client';
 
-import React, { KeyboardEvent } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './ToggleSwitch.module.css';
 
 interface ToggleSwitchProps {
@@ -10,33 +10,32 @@ interface ToggleSwitchProps {
   disabled?: boolean;
 }
 
-export default function ToggleSwitch({
-  checked,
-  onChange,
-  label,
-  disabled = false,
-}: ToggleSwitchProps) {
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    if (e.key === ' ' || e.key === 'Enter') {
+export function ToggleSwitch({ checked, onChange, label, disabled }: ToggleSwitchProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       onChange(!checked);
     }
   };
 
   return (
-    <div
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      tabIndex={disabled ? -1 : 0}
-      className={`${styles.switch} ${checked ? styles.checked : ''} ${
-        disabled ? styles.disabled : ''
-      }`}
-      onClick={() => !disabled && onChange(!checked)}
-      onKeyDown={handleKeyDown}
-    >
-      <div className={styles.slider} />
+    <div className={styles.toggleContainer}>
+      {label && <span className={styles.label}>{label}</span>}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        className={`${styles.toggle} ${checked ? styles.checked : ''} ${disabled ? styles.disabled : ''}`}
+        onClick={() => !disabled && onChange(!checked)}
+        onKeyDown={handleKeyDown}
+      >
+        <span className={styles.knob} />
+      </button>
     </div>
   );
 }
+
+export default ToggleSwitch;
+

@@ -46,7 +46,7 @@ function getWsUrl(): string {
     return process.env.NEXT_PUBLIC_PI_WS_URL;
   }
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return ;
+  return `${proto}//${window.location.host}/ws`;
 }
 
 export class WsClient {
@@ -148,7 +148,7 @@ export class WsClient {
     this.sendRaw({ type: 'new_session' });
   }
 
-  send(frame: WsOutboundFrame): void {
+  send(frame: any): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(frame));
     }

@@ -267,7 +267,7 @@ export const useJobsStore = create<JobsState>((set, get) => ({
           [jobId]: {
             ...s.jobs[jobId],
             status,
-            ...(data.steps && { steps: (data as any).steps as DetailedJobStep[] }),
+            ...((data as any).steps ? { steps: (data as any).steps as DetailedJobStep[] } : {}),
             updatedAt: Date.now(),
           },
         },

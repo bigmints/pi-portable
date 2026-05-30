@@ -133,9 +133,8 @@ export const useHistoryStore = create<HistoryState>()(
     }),
     {
       name: 'pi-history',
-      onRehydrateState: (state) => {
-        // Purge permanently deleted conversations on every hydration
-        if (state.purgePermanentlyDeleted) {
+      onRehydrateStorage: () => (state) => {
+        if (state && state.purgePermanentlyDeleted) {
           state.purgePermanentlyDeleted();
         }
       },
