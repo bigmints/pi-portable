@@ -11,12 +11,13 @@
   - UI/Layout: Tailwind utilities exclusively; respect `dvh`/safe-area constraints; standardize on native `<dialog>` or Radix UI for modals/drawers.
   - File Attachments: Route via `/api/upload`; track `PendingFile` in `useAttachmentsStore`; inject resolved `uploadedId` into WS payloads.
   - Search/Commands: Fuzzy matching utilities for command palettes; scoped CLI/grep operations to prevent unbounded traversal.
+- **UI/UX & Component Standards:** Radix UI for accessible drawers/modals; native `<dialog>` for lightweight modals; responsive touch-target optimization (`py-3` mobile, `md:py-2` desktop); CSS truncation for overflow prevention; `h-[calc(100dvh-3.5rem)]` constraints for mobile layout alignment.
 
 ## 2. Chronology of Major Milestones & What Worked
 - **2026-05-23 | Core Architecture Ratification:** ADR-001/002/003 approved. Established modular directory structure, centralized WS client abstraction, and Zustand reactivity model. Baseline separation of concerns achieved.
 - **2026-05-25 | Lint & Build Hardening:** Resolved 3 ESLint errors & 67 warnings. Achieved clean `tsc`/`lint`/`build` pipeline. Standardized unused variable prefixing (`_`), purged dead imports, eliminated redundant local state.
 - **2026-05-30 | Factory Critique & Backlog Generation:** Post-build audit identified critical runtime gaps in WS initialization and chat protocol serialization. Generated targeted fix stories for default connectivity and payload mismatches.
-- **2026-05-30 | File Attachment & Image Paste:** Validated `Composer` paste handling via `/api/upload`. Confirmed `useAttachmentsStore` tracks `PendingFile` objects and resolves `uploadedId`. Verified `ChatView` injection. Implemented `Set`-based clipboard deduplication.
+- **2026-05-30 | File Attachment & Image Paste:** Validated `Composer` paste handling via `/api/upload`. Confirmed `useAttachmentsStore` tracks `PendingFile` objects and resolves `uploadedId`. Verified `ChatView` injection. Implemented `Set`-based clipboard deduplication for `image/png|jpeg|gif|webp`.
 - **2026-05-31 | Model Appearance Settings:** Delivered `useModelSettingsStore` with `localStorage` persistence. Implemented `ModelSelector`, `AppearanceSettings`, `ThemeToggle`, `ModelSettingsPanel`. Integrated into root layout & settings page. Passed all build gates.
 - **2026-05-31 | Project Management & Routing:** Centralized `projects.ts` Zustand store with `localStorage` sync & `rAF` wrapping. Rebuilt `ProjectList`, `ProjectItem`, `NewProjectDialog` (native `<dialog>`), dynamic `[id]` route. Implemented touch-target optimization & CSS truncation.
 - **2026-05-31 | Settings Drawer & UI State:** Added `settingsOpen` to `useUIStore`. Built `SettingsDrawer` using Radix UI with Tailwind dark-mode compatibility. Integrated into `AppShell`, `Sidebar`, `BottomNav`. Fixed invalid HTML hierarchy in `settings/page.tsx`.
@@ -55,7 +56,7 @@
   - *Symptom:* Fixed bottom navigation overlapping chat input on small viewports, reducing touch target usability.
   - *Fix:* Apply `h-[calc(100dvh-3.5rem)]` constraints, use `lg:hidden`/`md:py-2` responsive utilities, and defer to `requestAnimationFrame` for dynamic height calculations.
 - **SSR/Prerendering Crashes**
-  - *Symptom:* Build-time crashes due to browser-specific API access (e.g., `useSearchParams`, localStorage) outside of client-side hydration boundaries.
+  - *Symptom:* Build-time crashes due to browser-specific API access (e.g., `useSearchParams`, `localStorage`) outside of client-side hydration boundaries; `useContext` crashes in `.next/server/chunks`.
   - *Fix:* Wrap components using `useSearchParams` in `<Suspense>` boundaries; gate browser APIs inside `useEffect` or client-only hooks to ensure static generation safety.
 - **Clipboard API Deduplication Overlap**
   - *Symptom:* `handlePaste` in `Composer` triggered duplicate image attachments when `clipboardData.files` and `clipboardData.items` returned overlapping references.
