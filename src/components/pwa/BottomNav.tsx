@@ -17,7 +17,7 @@ const navItems = [
 ];
 
 export default function BottomNav({ pathname }: BottomNavProps) {
-  const { settingsOpen, setSettingsOpen } = useUIStore();
+  const { settingsOpen, toggleSettingsDrawer } = useUIStore();
 
   return (
     <nav
@@ -41,7 +41,7 @@ export default function BottomNav({ pathname }: BottomNavProps) {
           return (
             <button
               key={href}
-              onClick={() => setSettingsOpen(true)}
+              onClick={() => toggleSettingsDrawer()}
               className={className}
             >
               {content}

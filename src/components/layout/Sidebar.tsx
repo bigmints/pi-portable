@@ -38,7 +38,7 @@ const navItems = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { sidebarOpen, toggleSidebar, settingsOpen, setSettingsOpen } = useUIStore();
+  const { sidebarOpen, toggleSidebar, settingsOpen, toggleSettingsDrawer } = useUIStore();
   const { conversations, selectedId, selectConversation } = useConversationsStore();
 
   return (
@@ -69,7 +69,7 @@ export default function Sidebar() {
             return (
               <button
                 key={href}
-                onClick={() => href === '/settings' ? setSettingsOpen(true) : router.push(href)}
+                onClick={() => href === '/settings' ? toggleSettingsDrawer() : router.push(href)}
                 title={!sidebarOpen ? label : undefined}
                 className={cn(
                   'relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',

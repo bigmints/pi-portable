@@ -14,6 +14,7 @@ interface UIState {
   toggleMobileSidebar: () => void;
   setSettingsOpen: (_open: boolean) => void;
   toggleSettings: () => void;
+  toggleSettingsDrawer: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -26,4 +27,5 @@ export const useUIStore = create<UIState>((set) => ({
   toggleMobileSidebar: () => set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
   setSettingsOpen: (open: boolean) => set(() => ({ settingsOpen: open })),
   toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+  toggleSettingsDrawer: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
 }));
