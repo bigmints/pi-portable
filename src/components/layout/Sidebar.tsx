@@ -44,10 +44,10 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed top-14 left-0 bottom-0 z-30 hidden lg:flex flex-col',
+        'hidden lg:flex flex-col h-full shrink-0',
         'bg-card border-r border-border',
         'transition-[width] duration-200 ease-in-out overflow-hidden',
-        sidebarOpen ? 'w-60' : 'w-16'
+        sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       <div className="flex-1 overflow-y-auto p-2 pt-3 space-y-4">
@@ -67,15 +67,16 @@ export default function Sidebar() {
               ? settingsOpen 
               : (pathname === href || pathname.startsWith(href + '/'));
             return (
-              <button
+              <Button
                 key={href}
+                variant="ghost"
                 onClick={() => href === '/settings' ? toggleSettingsDrawer() : router.push(href)}
                 title={!sidebarOpen ? label : undefined}
                 className={cn(
-                  'relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
+                  'relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all justify-start h-auto',
                   active
-                    ? 'bg-violet-600/15 text-violet-400'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    ? 'bg-violet-600/15 text-violet-400 hover:bg-violet-600/20 hover:text-violet-400'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                   !sidebarOpen && 'justify-center px-0'
                 )}
               >
@@ -84,7 +85,7 @@ export default function Sidebar() {
                 )}
                 <Icon size={18} strokeWidth={active ? 2 : 1.5} className="shrink-0" />
                 {sidebarOpen && <span className="truncate">{label}</span>}
-              </button>
+              </Button>
             );
           })}
         </nav>
@@ -104,22 +105,23 @@ export default function Sidebar() {
                   conversations.map((conv) => {
                     const active = conv.id === selectedId;
                     return (
-                      <button
+                      <Button
                         key={conv.id}
+                        variant="ghost"
                         onClick={() => {
                           selectConversation(conv.id);
                           router.push(`/chat/${conv.id}`);
                         }}
                         className={cn(
-                          'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left truncate',
+                          'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left justify-start h-auto truncate',
                           active
-                            ? 'bg-violet-600/15 text-violet-400'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            ? 'bg-violet-600/15 text-violet-400 hover:bg-violet-600/20 hover:text-violet-400'
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                         )}
                       >
                         <MessageSquare size={18} strokeWidth={active ? 2 : 1.5} className="shrink-0" />
                         <span className="truncate">{conv.title}</span>
-                      </button>
+                      </Button>
                     );
                   })
                 ) : (
@@ -135,15 +137,17 @@ export default function Sidebar() {
               <div className="flex justify-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       title="Conversations"
                       className={cn(
                         'flex items-center justify-center rounded-xl p-2.5 transition-all',
-                        'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                       )}
                     >
                       <MessageSquare size={18} strokeWidth={1.5} className="shrink-0 text-violet-400" />
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="right" align="start" className="w-56 p-2 bg-card border-border shadow-lg">
                     <DropdownMenuLabel className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase px-2 py-1.5">
@@ -155,22 +159,23 @@ export default function Sidebar() {
                         conversations.map((conv) => {
                           const active = conv.id === selectedId;
                           return (
-                            <button
+                            <Button
                               key={conv.id}
+                              variant="ghost"
                               onClick={() => {
                                 selectConversation(conv.id);
                                 router.push(`/chat/${conv.id}`);
                               }}
                               className={cn(
-                                'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left truncate',
+                                'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-left justify-start h-auto truncate',
                                 active
-                                  ? 'bg-violet-600/15 text-violet-400'
-                                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                  ? 'bg-violet-600/15 text-violet-400 hover:bg-violet-600/20 hover:text-violet-400'
+                                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                               )}
                             >
                               <MessageSquare size={18} strokeWidth={1.5} className="shrink-0" />
                               <span className="truncate">{conv.title}</span>
-                            </button>
+                            </Button>
                           );
                         })
                       ) : (
@@ -206,15 +211,17 @@ export default function Sidebar() {
               <div className="flex justify-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       title="Switch Project"
                       className={cn(
                         'flex items-center justify-center rounded-xl p-2.5 transition-all',
-                        'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                       )}
                     >
                       <FolderOpen size={18} strokeWidth={1.5} className="shrink-0 text-violet-400" />
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="right" align="start" className="w-56 p-2 bg-card border-border shadow-lg">
                     <DropdownMenuLabel className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase px-2 py-1.5">

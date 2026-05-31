@@ -1,15 +1,13 @@
 name: "UI Overhaul: Layout & App Shell"
 description: >
-  Migrate and refactor the entire application shell layout, top navigation bar, collapsible sidebar,
-  and theme toggles to use pure Tailwind CSS classes and Shadcn components. Completely eradicate
-  legacy layout CSS modules and inline styling hacks.
+  Migrate and refactor the entire application shell layout, top navigation bar, collapsible sidebar, and theme toggles
+  to use pure Tailwind CSS classes and Shadcn components. Completely eradicate legacy layout CSS modules and inline
+  styling hacks.
 
-  WHAT TO CLEAN UP:
-  - Delete `src/components/layout/ThemeToggle.module.css` and remove any other local layout CSS files.
+  WHAT TO CLEAN UP: - Delete `src/components/layout/ThemeToggle.module.css` and remove any other local layout CSS files.
   - Remove all inline custom styled paddings or width definitions in layout components.
 
-  WHAT TO IMPLEMENT:
-  1. File: `src/components/layout/AppShell.tsx`
+  WHAT TO IMPLEMENT: 1. File: `src/components/layout/AppShell.tsx`
      - Rewrite the grid/flex structure using pure Tailwind utilities (e.g., flex, min-h-screen, bg-background).
      - Incorporate top safe area and bottom safe area padding using pure tailwind utilities or inline style mappings tied solely to safe-area-inset values.
   2. File: `src/components/layout/Sidebar.tsx`
@@ -21,10 +19,9 @@ description: >
      - Eliminate arbitrary z-index overrides; keep them standard.
   4. File: `src/components/layout/ThemeToggle.tsx`
      - Rewrite to use a standard Shadcn Button and standard Tailwind styling instead of `.module.css` imports.
-
-status: draft
+status: done
 feature:
-  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  name: 🎨 UI Overhaul (Shadcn + Tailwind)
   slug: ui-overhaul
 target:
   app: pi-app

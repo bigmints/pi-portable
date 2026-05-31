@@ -26,11 +26,11 @@ stack:
   language: typescript
   packageManager: npm
   linter: eslint
-status: in-progress
+status: building
 features:
   - name: Core Foundation
     description: Foundational scaffolding and layout styling for pi-app.
-    status: pending
+    status: ready-to-build
     stories:
       - name: pi-app
         file: stories/apps/pi-app.yaml
@@ -47,7 +47,7 @@ features:
   - name: 🎨 UI Overhaul (Shadcn + Tailwind)
     description: Overhaul the Entire pi-app UI to standard Shadcn/UI and pure Tailwind CSS, removing all custom CSS modules
       and overrides.
-    status: in-progress
+    status: building
     stories:
       - name: "UI Overhaul: Design Tokens & Globals"
         file: .factory/stories/features/ui-overhaul/001-design-tokens.yaml
@@ -55,8 +55,8 @@ features:
         progressPercent: 100
       - name: "UI Overhaul: Layout & App Shell"
         file: .factory/stories/features/ui-overhaul/002-layout-shell.yaml
-        status: ready
-        progressPercent: 0
+        status: done
+        progressPercent: 100
       - name: "UI Overhaul: Chat Primitives & Views"
         file: .factory/stories/features/ui-overhaul/003-chat-views.yaml
         status: ready
@@ -73,7 +73,7 @@ features:
         file: .factory/stories/features/ui-overhaul/006-dashboards.yaml
         status: ready
         progressPercent: 0
-    progressPercent: 17
+    progressPercent: 33
 structure:
   src: true
   appRouter: true
