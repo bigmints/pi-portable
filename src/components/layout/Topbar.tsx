@@ -2,6 +2,7 @@
 import { Terminal } from 'lucide-react';
 import ConnectionStatus from '@/components/common/ConnectionStatus';
 import { useProjectStore } from '@/store/projects';
+import { NewChatButton } from '@/components/chat/NewChatButton';
 
 export default function Topbar() {
   const activeProject = useProjectStore((s) => s.activeProject);
@@ -16,7 +17,11 @@ export default function Topbar() {
           {activeProject?.name ?? 'pi'}
         </span>
       </div>
-      <ConnectionStatus />
+      <div className="flex items-center gap-2">
+        <NewChatButton iconOnly className="lg:hidden h-8 w-8 rounded-lg bg-violet-600 hover:bg-violet-700 text-white shadow-sm flex items-center justify-center" />
+        <ConnectionStatus />
+      </div>
     </header>
   );
 }
+

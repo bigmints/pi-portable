@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import '@/styles/globals.css';
 import AppShell from '@/components/layout/AppShell';
+import { SettingsEffect } from '@/components/settings';
+import { useModelSettingsStore } from '@/store/modelSettings';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const jetBrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap' });
@@ -29,10 +31,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${inter.variable} ${jetBrainsMono.variable}`}>
+    <html lang="en" data-theme="system" suppressHydrationWarning className={`${inter.variable} ${jetBrainsMono.variable}`}>
       <body className="antialiased">
+        <SettingsEffect />
         <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
+
+

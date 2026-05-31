@@ -32,9 +32,10 @@ export interface DetailedJobStep {
   completion_tokens?: number;
   /** Model used for this step (e.g. 'gpt-4o') */
   model?: string;
+  /** Cumulative tokens */
   tokens?: number;
-  durationMs?: number;
-  cost?: number;
+  /** Step duration */
+  duration?: number;
 }
 
 export interface AgenticJob {

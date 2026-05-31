@@ -86,27 +86,12 @@
   flex-shrink: 0;
 }
 
-/* Description paragraph */
-.description {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  line-height: 1.4;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* Details row: path + time */
 .details {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  margin-top: auto;
-  border-top: 1px dashed var(--color-border);
-  padding-top: var(--space-xs);
 }
 
 .path {
@@ -116,7 +101,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70%;
 }
 
 .time {
@@ -124,47 +108,6 @@
   color: var(--color-text-muted);
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-/* Actions Row */
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
-}
-
-.actionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px var(--space-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-
-.actionBtn:hover {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text);
-}
-
-.deleteBtn {
-  background-color: transparent;
-  color: var(--color-text-muted);
-  border: 1px solid transparent;
-}
-
-.deleteBtn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-error);
-  border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Skeleton */

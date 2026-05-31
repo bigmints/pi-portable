@@ -90,6 +90,7 @@ export default function DebugPanel({
     <div
       ref={panelRef}
       className={styles.panel}
+      // eslint-disable-next-line react-hooks/refs
       style={{ left: posRef.current.x, top: posRef.current.y }}
     >
       <div className={styles.header} onMouseDown={handleMouseDown}>

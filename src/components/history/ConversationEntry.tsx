@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Pin, PinOff, MessageSquare, Calendar } from 'lucide-react';
 import type { Conversation } from '@/types/chat';
-import { useHistoryStore } from '@/store/history';
+import { useConversationsStore } from '@/store/conversations';
 import styles from './ConversationEntry.module.css';
 
 function formatRelativeTime(timestamp: number): string {
@@ -29,20 +29,17 @@ interface ConversationEntryProps {
 
 export default function ConversationEntry({ conversation }: ConversationEntryProps) {
   const router = useRouter();
-  const { pinnedIds, pinConversation, unpinConversation } = useHistoryStore();
-  const isPinned = pinnedIds.includes(conversation.id);
+  const { togglePin, selectConversation } = useConversationsStore();
+  const isPinned = conversation.isPinned;
 
   const handleTogglePin = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPinned) {
-      unpinConversation(conversation.id);
-    } else {
-      pinConversation(conversation.id);
-    }
+    togglePin(conversation.id);
   };
 
   const handleNavigate = () => {
-    router.push(`/history/${conversation.id}`);
+    selectConversation(conversation.id);
+    router.push(`/chat/${conversation.id}`);
   };
 
   return (

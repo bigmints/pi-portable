@@ -23,13 +23,13 @@ export default function JobDetailPage() {
   }
 
   return (
-    <div className="space-y-4 p-4" style={{ paddingBottom: '90px' }}>
+    <div className="space-y-4 p-4">
       <JobDetail job={job} />
       <div className="px-4">
         <StepTimeline steps={job.steps} jobId={jobId} />
       </div>
       <ArtifactList artifacts={job.artifacts ?? []} />
-      <JobDetailFooter job={job} />
+      <JobDetailFooter steps={job.steps} />
     </div>
   );
 }

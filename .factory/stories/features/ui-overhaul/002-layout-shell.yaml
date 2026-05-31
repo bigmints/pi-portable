@@ -1,0 +1,46 @@
+name: "UI Overhaul: Layout & App Shell"
+description: >
+  Migrate and refactor the entire application shell layout, top navigation bar, collapsible sidebar,
+  and theme toggles to use pure Tailwind CSS classes and Shadcn components. Completely eradicate
+  legacy layout CSS modules and inline styling hacks.
+
+  WHAT TO CLEAN UP:
+  - Delete `src/components/layout/ThemeToggle.module.css` and remove any other local layout CSS files.
+  - Remove all inline custom styled paddings or width definitions in layout components.
+
+  WHAT TO IMPLEMENT:
+  1. File: `src/components/layout/AppShell.tsx`
+     - Rewrite the grid/flex structure using pure Tailwind utilities (e.g., flex, min-h-screen, bg-background).
+     - Incorporate top safe area and bottom safe area padding using pure tailwind utilities or inline style mappings tied solely to safe-area-inset values.
+  2. File: `src/components/layout/Sidebar.tsx`
+     - Rewrite layout utilizing pure Tailwind flex layout, standard transitions, and background/border classes (e.g., transition-[width] duration-200, bg-card, border-r).
+     - Standardize state transitions (collapsing sidebar) using Shadcn primitives if applicable, or clean Tailwind state triggers.
+     - Replace drop-downs and buttons with standard Shadcn Button and DropdownMenu components.
+  3. File: `src/components/layout/Topbar.tsx`
+     - Standardize top sticky nav using `backdrop-blur` and premium semi-transparent borders.
+     - Eliminate arbitrary z-index overrides; keep them standard.
+  4. File: `src/components/layout/ThemeToggle.tsx`
+     - Rewrite to use a standard Shadcn Button and standard Tailwind styling instead of `.module.css` imports.
+
+status: draft
+feature:
+  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  slug: ui-overhaul
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - AppShell, Sidebar, Topbar, and ThemeToggle have no `.module.css` imports or inline custom layout styles
+  - Sidebar transitions smoothly when collapsed or expanded using pure Tailwind classes
+  - Standard Shadcn Button, DropdownMenu, and Radix primitives are utilized correctly
+  - Light and Dark modes switch instantly and conform to the standard Shadcn tokens
+  - npx tsc --noEmit and linting pass successfully
+phase: 1
+priority: 2
+dependsOn:
+  - .factory/stories/features/ui-overhaul/001-design-tokens.yaml
+createdBy: antigravity-tpm
+createdAt: 2026-05-31T11:00:00.000Z

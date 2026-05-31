@@ -2,21 +2,49 @@ import type { DetailedJobStep } from '@/store/jobs';
 import type { ModelPricing } from '@/types/chat';
 
 /**
- * Format milliseconds into a human-readable duration string.
- * < 1000ms → "Xms"
- * < 60000ms → "X.Xs"
- * >= 60000ms → "Xm Ys"
+ * Format a token count with comma separators.
+ */
+export function formatTokenCount(count: number): string {
+  return new Intl.NumberFormat('en-US').format(count);
+}
+
+/**
+ * Export formatTokens(count: number): string — formats token count with commas (e.g., "1,234 tokens")
+ */
+export function formatTokens(count: number): string {
+  return `${formatTokenCount(count)} tokens`;
+}
+
+/**
+ * Export formatDuration(ms: number): string — formats milliseconds to human readable (e.g., "2.5s", "1m 30s")
  */
 export function formatDuration(ms: number | null | undefined): string {
-  if (!ms || ms <= 0) return '';
-  if (ms < 1000) return `${Math.round(ms)}ms`;
+  if (ms === null || ms === undefined || ms <= 0) return '0s';
+  if (ms < 1000) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
   const totalSeconds = ms / 1000;
   if (totalSeconds < 60) {
     return `${totalSeconds.toFixed(1)}s`;
   }
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = Math.round(totalSeconds % 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  if (seconds === 0) {
+    return `${minutes}m`;
+  }
   return `${minutes}m ${seconds}s`;
+}
+
+/**
+ * Export formatCost(dollars: number): string — formats cost to currency (e.g., "$0.002")
+ */
+export function formatCost(dollars: number): string {
+  if (dollars === 0) return '$0.00';
+  if (dollars < 0.01) {
+    // E.g. $0.002
+    return `$${dollars.toFixed(3)}`;
+  }
+  return `$${dollars.toFixed(2)}`;
 }
 
 /**
@@ -92,11 +120,4 @@ export function computeJobTotals(
     estimatedCost,
     hasPricing,
   };
-}
-
-/**
- * Format a token count with comma separators.
- */
-export function formatTokenCount(count: number): string {
-  return new Intl.NumberFormat('en-US').format(count);
 }

@@ -14,6 +14,7 @@ import ReactMarkdown from 'react-markdown';
 import type { DetailedJobStep } from '@/store/jobs';
 import JsonPanel from './JsonPanel';
 import StepStatsRow from './StepStatsRow';
+import CostTooltip from './CostTooltip';
 import styles from './StepItem.module.css';
 
 interface StepItemProps {
@@ -54,7 +55,10 @@ export default function StepItem({ step, isLast }: StepItemProps) {
 
   // Auto-expand running steps
   useEffect(() => {
-    if (isRunning) setExpanded(true);
+    if (isRunning) {
+      const t = setTimeout(() => setExpanded(true), 0);
+      return () => clearTimeout(t);
+    }
   }, [isRunning]);
 
   // Auto-scroll expanded panel when output changes
@@ -106,6 +110,16 @@ export default function StepItem({ step, isLast }: StepItemProps) {
               </span>
             )}
 
+            {/* Cost Badge */}
+            {step.model && (step.tokens || step.prompt_tokens) && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium leading-none">
+                <CostTooltip
+                  tokens={step.tokens ?? ((step.prompt_tokens ?? 0) + (step.completion_tokens ?? 0))}
+                  modelId={step.model}
+                />
+              </span>
+            )}
+
             {/* Shimmer for running steps */}
             {isRunning && (
               <span className={styles.shimmer} />
@@ -120,7 +134,10 @@ export default function StepItem({ step, isLast }: StepItemProps) {
           </div>
         </button>
 
-        <StepStatsRow step={step} />
+        <StepStatsRow
+          tokens={step.tokens ?? ((step.prompt_tokens ?? 0) + (step.completion_tokens ?? 0) || undefined)}
+          duration={step.duration ?? (step.duration_ms ? step.duration_ms : undefined)}
+        />
 
         {/* Expanded panels */}
         {expanded && (

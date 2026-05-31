@@ -1,19 +1,17 @@
 name: pi-app
 description: >
-  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat,
-  agentic job monitoring, project management, and full CLI feature parity. Built
-  with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS custom
-  properties — no Tailwind. Designed as a progressive web app with offline shell
-  support and mobile-first responsive layout.
+  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat, agentic job monitoring, project
+  management, and full CLI feature parity. Built with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS
+  custom properties — no Tailwind. Designed as a progressive web app with offline shell support and mobile-first
+  responsive layout.
 brd: >-
   # pi-app (BRD)
 
 
-  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat,
-  agentic job monitoring, project management, and full CLI feature parity. Built
-  with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS custom
-  properties — no Tailwind. Designed as a progressive web app with offline shell
-  support and mobile-first responsive layout.
+  Mobile-first PWA web client for the pi CLI. Provides real-time streaming chat, agentic job monitoring, project
+  management, and full CLI feature parity. Built with Next.js 14 App Router, TypeScript strict mode, and Vanilla CSS
+  custom properties — no Tailwind. Designed as a progressive web app with offline shell support and mobile-first
+  responsive layout.
 
 
 
@@ -28,11 +26,11 @@ stack:
   language: typescript
   packageManager: npm
   linter: eslint
-status: complete
+status: draft
 features:
   - name: Core Foundation
     description: Foundational scaffolding and layout styling for pi-app.
-    status: complete
+    status: pending
     stories:
       - name: pi-app
         file: stories/apps/pi-app.yaml
@@ -44,6 +42,38 @@ features:
           - id: task-pages
             title: Implement main pages, layout, and styling views
             status: complete
+        progressPercent: 0
+    progressPercent: 0
+  - name: 🎨 UI Overhaul (Shadcn + Tailwind)
+    description: Overhaul the Entire pi-app UI to standard Shadcn/UI and pure Tailwind CSS, removing all custom CSS modules
+      and overrides.
+    status: pending
+    stories:
+      - name: "UI Overhaul: Design Tokens & Globals"
+        file: .factory/stories/features/ui-overhaul/001-design-tokens.yaml
+        status: ready
+        progressPercent: 0
+      - name: "UI Overhaul: Layout & App Shell"
+        file: .factory/stories/features/ui-overhaul/002-layout-shell.yaml
+        status: ready
+        progressPercent: 0
+      - name: "UI Overhaul: Chat Primitives & Views"
+        file: .factory/stories/features/ui-overhaul/003-chat-views.yaml
+        status: ready
+        progressPercent: 0
+      - name: "UI Overhaul: Message Bubbles & Code Blocks"
+        file: .factory/stories/features/ui-overhaul/004-message-bubbles.yaml
+        status: ready
+        progressPercent: 0
+      - name: "UI Overhaul: Sheets, Dialogs & Modals"
+        file: .factory/stories/features/ui-overhaul/005-interactive-sheets.yaml
+        status: ready
+        progressPercent: 0
+      - name: "UI Overhaul: Queue & Jobs Dashboard"
+        file: .factory/stories/features/ui-overhaul/006-dashboards.yaml
+        status: ready
+        progressPercent: 0
+    progressPercent: 0
 structure:
   src: true
   appRouter: true
@@ -139,3 +169,4 @@ styles:
 pwa:
   manifest: public/manifest.json
   status: complete
+progressPercent: 0

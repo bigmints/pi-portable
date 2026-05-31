@@ -17,10 +17,10 @@
   padding: var(--space-md);
   width: 100%;
   max-width: 480px;
-  max-height: 80dvh;
+  max-height: 80vh;
   overflow-y: auto;
   animation: slideUp 0.3s ease-out;
-  padding-bottom: calc(var(--space-md) + var(--safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
 }
 
 .header {

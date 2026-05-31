@@ -1,0 +1,41 @@
+name: "UI Overhaul: Queue & Jobs Dashboard"
+description: >
+  Overhaul the auxiliary user pages—specifically `QueueView`, `JobsView`, `HistoryView`,
+  and `SettingsView`—to use pure Tailwind CSS utility classes and standard Shadcn/UI
+  layout, cards, badges, and tables. Eliminate all local CSS modules completely.
+
+  WHAT TO CLEAN UP:
+  - Delete any local CSS module files associated with queue list, job logs, or setting panel views.
+  - Remove all inline custom styled heights or tables in these views.
+
+  WHAT TO IMPLEMENT:
+  1. Files: `src/components/queue/*` and `src/components/jobs/*`
+     - Rewrite queue lists, execution lists, and active job panels using Shadcn standard Card, Table, and Badge components.
+     - Apply pure Tailwind grid/flex styles for progress bars, stats counters, and elapsed time labels.
+     - Eliminate any custom styling overrides for loading indicators or state checkmarks.
+  2. File: `src/components/settings/SettingsView.tsx`
+     - Overhaul form controls, inputs, selects, and switches to use standard Shadcn Switch, Input, Select, and Form primitives.
+     - Arrange configuration sections utilizing Tailwind grid layouts and clear text hierarchies.
+
+status: draft
+feature:
+  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  slug: ui-overhaul
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - All dashboard views and settings panels contain no `.module.css` imports or raw custom HTML styles
+  - Job logs, task lists, and queue grids are responsive and leverage Shadcn Table, Card, and Badge components
+  - Forms in the Settings page leverage standard Shadcn Form input primitives and transition smoothly
+  - No custom styling overlaps remain in stats badges or timeline circles
+  - npx tsc --noEmit and linting pass successfully
+phase: 1
+priority: 6
+dependsOn:
+  - .factory/stories/features/ui-overhaul/003-chat-views.yaml
+createdBy: antigravity-tpm
+createdAt: 2026-05-31T11:00:00.000Z

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useProjectSettingsStore } from '@/store/project-settings';
 import { showToast } from '@/components/common/Toast';
-import styles from './DescriptionSection.module.css';
 
 interface DescriptionSectionProps {
   projectId: string;
@@ -47,7 +46,6 @@ export default function DescriptionSection({ projectId }: DescriptionSectionProp
     updateDescription(value);
     markUnsaved();
 
-    // Debounced save on blur — we save immediately on blur, this is for auto-save
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveDescription(value);
@@ -60,13 +58,13 @@ export default function DescriptionSection({ projectId }: DescriptionSectionProp
   };
 
   return (
-    <div className={styles.section}>
-      <label className={styles.label} htmlFor="project-description">
+    <div className="flex flex-col gap-2 w-full">
+      <label className="text-sm font-semibold text-foreground" htmlFor="project-description">
         Description
       </label>
       <textarea
         id="project-description"
-        className={styles.textarea}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-y min-h-[120px]"
         rows={6}
         value={description}
         onChange={handleChange}

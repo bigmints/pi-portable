@@ -3,7 +3,7 @@ version: 1
 
 project:
   name: pi-app
-  bootstrapped: false   # false = new project; scaffold epic must build first.
+  bootstrapped: true    # true = existing project; feature stories build immediately.
                         # The engine sets this to true automatically after the
                         # '⚙️ Scaffold & Foundation' AppStory completes successfully.
                         # Set to true manually for existing projects being connected.
@@ -17,7 +17,7 @@ stack:
   version: "14"
   language: typescript
   packageManager: npm
-  styling: vanilla-css
+  styling: tailwind-css
   realtime: websocket
   pwa: next-pwa
 
@@ -25,8 +25,8 @@ stack:
 conventions:
   - "Use TypeScript strict mode throughout; no 'any' types"
   - "All components in src/components/<category>/<ComponentName>.tsx"
-  - "Per-component styles in co-located <ComponentName>.module.css files"
-  - "No Tailwind — use CSS custom properties from src/styles/tokens.css"
+  - "Use standard Tailwind CSS classes directly for component styling; no legacy CSS modules"
+  - "Always use standard Shadcn/UI primitives and Tailwind CSS utility classes — strictly no Vanilla CSS custom property overrides or custom styling hacks"
   - "API routes in src/app/api/<resource>/route.ts (Next.js App Router)"
   - "Shared types in src/types/<domain>.ts"
   - "Zustand stores in src/store/<slice>.ts — one slice per domain"

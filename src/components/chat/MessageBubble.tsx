@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage, ToolCallMessage, ToolCallData } from '@/types/chat';
 import type { AnyMessage } from '@/store/messages';
+import type { ToolCall as InlineToolCall } from '@/types/tool-call';
 import ToolCallAnnotation from './ToolCallAnnotation';
 import ToolCallCard from './ToolCallCard';
 import styles from './MessageBubble.module.css';
@@ -20,9 +21,9 @@ function formatTime(timestamp: number): string {
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
-  const isLegacyToolCall = !('role' in message);
+  const isToolCall = 'toolCalls' in message && !('role' in message);
 
-  if (isLegacyToolCall) {
+  if (isToolCall) {
     return <ToolCallBubble message={message as ToolCallMessage} />;
   }
 
@@ -30,28 +31,35 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = chatMsg.role === 'user';
   const isAssistant = chatMsg.role === 'assistant';
 
+  const toolCallsMap = chatMsg.toolCalls;
+  const toolCallsArray = toolCallsMap
+    ? Object.values(toolCallsMap).sort((a, b) => a.timestamp - b.timestamp)
+    : [];
+
   return (
     <div className={`${styles.bubble} ${isUser ? styles.user : styles.assistant}`}>
       <div className={styles.content}>
         {isAssistant ? (
-          <div className={styles.markdownContent}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {chatMsg.content}
-            </ReactMarkdown>
+          <div className="space-y-3">
+            {chatMsg.content && (
+              <div className={styles.markdownContent}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {chatMsg.content}
+                </ReactMarkdown>
+              </div>
+            )}
+            {toolCallsArray.length > 0 && (
+              <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/50 pt-2 mt-2">
+                {toolCallsArray.map((tc) => (
+                  <ToolCallCard key={tc.id} toolCall={tc} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <span>{chatMsg.content}</span>
         )}
       </div>
-      
-      {isAssistant && chatMsg.toolCalls && chatMsg.toolCalls.length > 0 && (
-        <div className={styles.toolCallsContainer}>
-          {chatMsg.toolCalls.map((tc) => (
-            <ToolCallCard key={tc.id} toolCall={tc} />
-          ))}
-        </div>
-      )}
-
       <div className={styles.metadata}>
         <span className={styles.role}>
           {isUser ? 'You' : 'pi'}
@@ -77,9 +85,7 @@ function ToolCallBubble({ message }: { message: ToolCallMessage }) {
     output: tc.output as Record<string, unknown> | string | undefined,
     error: tc.error,
     durationMs: tc.durationMs,
-    status: ((tc.status as string) === 'success' || tc.status === 'complete')
-      ? 'completed' as const
-      : (tc.status === 'running' ? 'running' as const : 'error' as const),
+    status: tc.status === 'success' ? 'completed' : tc.status,
   }));
 
   const hasError = message.status === 'error';

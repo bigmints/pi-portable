@@ -43,14 +43,14 @@ export function useSwipeGesture({
   enabled = true,
 }: SwipeGestureOptions = {}) {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const isDraggingRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
   const elementRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
 
   const reset = useCallback(() => {
     touchStartRef.current = null;
-    isDraggingRef.current = false;
+    setIsDragging(false);
     setProgress(0);
     setDirection(null);
   }, []);
@@ -64,7 +64,7 @@ export function useSwipeGesture({
         y: touch.clientY,
         time: Date.now(),
       };
-      isDraggingRef.current = false;
+      setIsDragging(false);
     },
     [enabled],
   );
@@ -76,7 +76,6 @@ export function useSwipeGesture({
       const touch = event.touches[0];
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
-      const elapsed = Date.now() - touchStartRef.current.time;
 
       // Check angle — only track if mostly horizontal
       const angle = Math.abs(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
@@ -87,8 +86,8 @@ export function useSwipeGesture({
         // Right swipe — only from left edge
         if (touchStartRef.current!.x > edgeThreshold) return;
 
-        if (!isDraggingRef.current) {
-          isDraggingRef.current = true;
+        if (!isDragging) {
+          setIsDragging(true);
           setDirection('right');
         }
 
@@ -101,8 +100,8 @@ export function useSwipeGesture({
         }
       } else if (deltaX < 0) {
         // Left swipe
-        if (!isDraggingRef.current) {
-          isDraggingRef.current = true;
+        if (!isDragging) {
+          setIsDragging(true);
           setDirection('left');
         }
 
@@ -115,12 +114,12 @@ export function useSwipeGesture({
         }
       }
     },
-    [enabled, maxAngle, edgeThreshold, minSwipeDistance, onSwipeRight, onSwipeLeft],
+    [enabled, maxAngle, edgeThreshold, minSwipeDistance, onSwipeRight, onSwipeLeft, isDragging],
   );
 
   const handleTouchEnd = useCallback(
     (event: TouchEvent) => {
-      if (!touchStartRef.current || !isDraggingRef.current) return;
+      if (!touchStartRef.current || !isDragging) return;
 
       const touch = event.changedTouches[0];
       const deltaX = touch.clientX - touchStartRef.current.x;
@@ -147,7 +146,7 @@ export function useSwipeGesture({
 
       reset();
     },
-    [minSwipeDistance, minVelocity, maxAngle, onSwipeRightComplete, onSwipeLeftComplete, onGestureEnd, reset],
+    [minSwipeDistance, minVelocity, maxAngle, onSwipeRightComplete, onSwipeLeftComplete, onGestureEnd, reset, isDragging],
   );
 
   useEffect(() => {
@@ -170,7 +169,7 @@ export function useSwipeGesture({
   return {
     progress,
     direction,
-    isDragging: isDraggingRef.current,
+    isDragging,
     setElementRef: (el: HTMLElement | null) => {
       elementRef.current = el;
     },

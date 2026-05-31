@@ -37,6 +37,11 @@
   background: var(--color-surface-hover, hsl(210 40% 96.1%));
 }
 
+.pill.uploading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .thumbnail {
   width: 24px;
   height: 24px;

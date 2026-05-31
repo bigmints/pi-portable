@@ -1,0 +1,112 @@
+name: "Fix: fix-fix-conversation-list"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /Users/pretheesh/Projects/pi-app/.factory/stories/features/fix-fix-conversation-list.yaml
+
+  Issue: CLI engineer is stuck in a planning/searching loop. It keeps asking for approval of plans and searching for
+  files instead of implementing the conversation list fix. Two delegation attempts failed due to LOOP.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  CRITICAL: Do NOT create plans. Do NOT ask for approval. Do NOT search for files. IMPLEMENT NOW.
+
+
+  WORKING DIRECTORY: /Users/pretheesh/Projects/pi-app
+
+
+  TASK: Fix the history page to display real conversations from the Zustand store.
+
+
+  STEP 1: Read these files to understand the codebase:
+
+  - cat src/app/history/page.tsx
+
+  - Find the conversations store: find src -name "*.ts" -o -name "*.tsx" | xargs grep -l "conversations" | head -10
+
+  - Read the store file(s) you find
+
+
+  STEP 2: Rewrite src/app/history/page.tsx with this exact structure:
+
+  ```typescript
+
+  'use client';
+
+  import { useEffect } from 'react';
+
+  import { useRouter } from 'next/navigation';
+
+  import { useConversationsStore } from '@/lib/conversations-store'; // adjust path based on actual store location
+
+
+  export default function HistoryPage() {
+    const router = useRouter();
+    const { conversations, loadConversations } = useConversationsStore(); // adjust based on actual store API
+
+    useEffect(() => {
+      loadConversations();
+    }, [loadConversations]);
+
+    if (conversations.length === 0) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+          <p>No conversations yet</p>
+          <p style={{ fontSize: '14px' }}>Start a new conversation to see it here.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ padding: '20px' }}>
+        <h2 style={{ marginBottom: '16px' }}>Conversation History</h2>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {conversations.map((conv) => (
+            <li
+              key={conv.id}
+              onClick={() => router.push(`/chat?id=${conv.id}`)}
+              style={{
+                padding: '12px',
+                marginBottom: '8px',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ fontWeight: 'bold' }}>{conv.title || 'Untitled'}</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {conv.updatedAt ? new Date(conv.updatedAt).toLocaleString() : ''}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  ```
+
+
+  STEP 3: Adjust the import paths and store API calls to match the ACTUAL store in the codebase. If the store doesn't
+  exist, create it at src/lib/conversations-store.ts with a basic Zustand store that holds an array of conversation
+  objects with id, title, updatedAt fields.
+
+
+  STEP 4: Run `npm run build` to verify zero errors. Fix any TypeScript or lint errors.
+
+
+  STEP 5: Print "DELIVERY COMPLETE" and a summary of what was changed.
+
+
+  DO NOT ASK QUESTIONS. DO NOT CREATE PLANS. JUST CODE AND BUILD.
+original_story: /Users/pretheesh/Projects/pi-app/.factory/stories/features/fix-fix-conversation-list.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-30T15:44:43.859Z

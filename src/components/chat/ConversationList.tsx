@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, MessageSquare } from 'lucide-react';
 import { useConversationsStore } from '@/store/conversations';
@@ -65,6 +65,7 @@ function ConversationItem({
 
 export default function ConversationList() {
   const router = useRouter();
+  const listRef = useRef<HTMLDivElement | null>(null);
   const {
     conversations,
     selectedId,
@@ -88,6 +89,7 @@ export default function ConversationList() {
   // Sync scroll element ref for pull-to-refresh
   const handleListRef = useCallback(
     (el: HTMLDivElement | null) => {
+      listRef.current = el;
       setScrollElementRef(el);
     },
     [setScrollElementRef],

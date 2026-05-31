@@ -28,8 +28,9 @@ function truncateFilename(name: string, maxLength: number = 20): string {
 }
 
 function FilePill({ file, onRemove }: { file: PendingFile; onRemove: (id: string) => void }) {
+  const isUploading = !file.uploadedId;
   return (
-    <div className={styles.pill}>
+    <div className={`${styles.pill} ${isUploading ? styles.uploading : ''}`}>
       {file.previewUrl && (
         <img
           src={file.previewUrl}

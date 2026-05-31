@@ -1,79 +1,28 @@
 'use client';
 
-import React from 'react';
-import { Cpu, Clock, DollarSign } from 'lucide-react';
-import type { DetailedJobStep } from '@/store/jobs';
-import { formatDuration, formatTokens, formatCost } from '@/lib/format-stats';
-import CostTooltip from './CostTooltip';
-import styles from './StepStatsRow.module.css';
+import { Cpu, Clock } from 'lucide-react';
+import { formatTokens, formatDuration } from '@/lib/format';
 
 interface StepStatsRowProps {
-  step: DetailedJobStep;
+  tokens?: number;
+  duration?: number;
 }
 
-const MOCK_PRICING: Record<string, { inputCostPerToken: number; outputCostPerToken: number }> = {
-  'claude-3-opus': { inputCostPerToken: 0.000015, outputCostPerToken: 0.000075 },
-  'gpt-4': { inputCostPerToken: 0.00003, outputCostPerToken: 0.00006 },
-  'llama-3.1': { inputCostPerToken: 0.000001, outputCostPerToken: 0.000003 },
-  'gpt-4o': { inputCostPerToken: 0.000005, outputCostPerToken: 0.000015 },
-};
-
-export default function StepStatsRow({ step }: StepStatsRowProps) {
-  const modelName = step.model || 'gpt-4o';
-  const pricing = MOCK_PRICING[modelName] || MOCK_PRICING['gpt-4o'];
-
-  const promptTokens = step.prompt_tokens ?? 0;
-  const completionTokens = step.completion_tokens ?? 0;
-  const totalTokens = step.tokens ?? (promptTokens + completionTokens);
-
-  const durationMs = step.durationMs ?? step.duration_ms ?? 0;
-
-  // Calculate cost in cents
-  let costCents = step.cost ?? 0;
-  if (!step.cost && (promptTokens > 0 || completionTokens > 0)) {
-    const costUsd = (promptTokens * pricing.inputCostPerToken) + (completionTokens * pricing.outputCostPerToken);
-    costCents = costUsd * 100;
-  }
-
-  // If no stats are present, do not render the row
-  if (totalTokens === 0 && durationMs === 0 && costCents === 0) {
-    return null;
-  }
+export default function StepStatsRow({ tokens, duration }: StepStatsRowProps) {
+  const displayTokens = tokens !== undefined ? formatTokens(tokens) : '—';
+  const displayDuration = duration !== undefined ? formatDuration(duration) : '—';
 
   return (
-    <div className={styles.row}>
-      {/* Tokens Stat */}
-      {totalTokens > 0 && (
-        <div className={styles.stat} title="Tokens consumed">
-          <Cpu size={14} className={styles.icon} />
-          <span className={styles.value}>{formatTokens(totalTokens)}</span>
-        </div>
-      )}
+    <div className="flex flex-wrap items-center gap-4 py-1.5 px-2.5 mt-1 bg-muted/30 border border-border/50 rounded-md text-xs text-muted-foreground">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <Cpu className="h-3.5 w-3.5 text-muted-foreground/75 shrink-0" strokeWidth={1.5} />
+        <span className="truncate tabular-nums">{displayTokens}</span>
+      </div>
 
-      {/* Duration Stat */}
-      {durationMs > 0 && (
-        <div className={styles.stat} title="Duration">
-          <Clock size={14} className={styles.icon} />
-          <span className={styles.value}>{formatDuration(durationMs)}</span>
-        </div>
-      )}
-
-      {/* Cost Stat with Tooltip */}
-      {costCents > 0 && (
-        <CostTooltip
-          modelName={modelName}
-          promptTokens={promptTokens}
-          completionTokens={completionTokens}
-          inputRate={pricing.inputCostPerToken}
-          outputRate={pricing.outputCostPerToken}
-          totalCostCents={costCents}
-        >
-          <div className={`${styles.stat} ${styles.costStat}`}>
-            <DollarSign size={14} className={styles.icon} />
-            <span className={styles.value}>{formatCost(costCents)}</span>
-          </div>
-        </CostTooltip>
-      )}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <Clock className="h-3.5 w-3.5 text-muted-foreground/75 shrink-0" strokeWidth={1.5} />
+        <span className="truncate tabular-nums">{displayDuration}</span>
+      </div>
     </div>
   );
 }

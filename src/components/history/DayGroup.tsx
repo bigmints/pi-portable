@@ -1,11 +1,14 @@
 'use client';
 
-import type { HistoryGroup } from '@/store/history';
+import type { Conversation } from '@/types/chat';
 import ConversationEntry from './ConversationEntry';
 import styles from './DayGroup.module.css';
 
 interface DayGroupProps {
-  group: HistoryGroup;
+  group: {
+    label: string;
+    conversations: Conversation[];
+  };
 }
 
 export default function DayGroup({ group }: DayGroupProps) {

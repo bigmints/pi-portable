@@ -1,6 +1,5 @@
-/**
- * Core chat types for the Pi App
- */
+import type { ToolCall as InlineToolCall } from './tool-call';
+import type { AssistantMessageEvent, ToolCallEvent } from './tool-calls';
 
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -37,19 +36,19 @@ export interface ChatMessage {
   interrupted?: boolean;
   is_regenerating?: boolean;
   artifacts?: ArtifactFile[];
-  toolCalls?: ToolCall[];
+  toolCalls?: Record<string, InlineToolCall>;
 }
 
-export type ToolCallStatus = 'running' | 'complete' | 'error';
+export type ToolCallStatus = 'running' | 'success' | 'error';
 
 export interface ToolCall {
   id: string;
   toolName: string;
-  status: ToolCallStatus;
   input: Record<string, unknown>;
-  output?: string;
+  output?: unknown;
   error?: string;
   durationMs?: number;
+  status: ToolCallStatus;
   timestamp: number;
 }
 
@@ -93,8 +92,10 @@ export interface Conversation {
   taskId?: string;
   /** ISO timestamp when soft-deleted; cleared when restored */
   softDeletedAt?: string;
-  messages?: any[];
+  messages?: ChatMessage[];
+  toolCalls?: ToolCallEvent[];
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ConversationGroup = 'pinned' | 'today' | 'yesterday' | 'thisWeek' | 'older';
@@ -127,21 +128,7 @@ export interface QueueSettings {
 }
 
 export interface WsInboundFrame {
-  type:
-    | 'token'
-    | 'message_complete'
-    | 'job_event'
-    | 'queue_task_started'
-    | 'queue_task_complete'
-    | 'queue_task_error'
-    | 'queue_stopped'
-    | 'queue_task_output'
-    | 'queue_task_position'
-    | 'message_start'
-    | 'message_update'
-    | 'message_end'
-    | 'agent_end'
-    | 'interrupt_ack';
+  type: 'token' | 'message_complete' | 'job_event' | 'queue_task_started' | 'queue_task_complete' | 'queue_task_error' | 'queue_stopped' | 'queue_task_output' | 'queue_task_position' | 'message_update';
   messageId?: string;
   token?: string;
   conversationId?: string;
@@ -150,15 +137,8 @@ export interface WsInboundFrame {
   data?: any;
   taskId?: string;
   error?: string;
-  message?: any;
-  assistantMessageEvent?: {
-    type: 'text_delta' | 'tool_use_start' | 'tool_use_complete' | 'tool_use_error' | 'tool_result';
-    delta?: string;
-    toolName?: string;
-    toolUseId?: string;
-    toolInput?: any;
-    content?: string;
-    error?: string;
+  payload?: {
+    assistantMessageEvent?: AssistantMessageEvent;
   };
 }
 
@@ -291,9 +271,9 @@ export type StepType = 'plan' | 'tool_call' | 'result';
 export type StepStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 /**
- * Job step interface representing statistics and basic information
+ * Detailed step for the job timeline
  */
-export interface JobStep {
+export interface DetailedJobStep {
   id: string;
   title: string;
   stepType: StepType;
@@ -303,22 +283,20 @@ export interface JobStep {
   duration_ms?: number | null;
   started_at?: number;
   completed_at?: number;
+  /** LLM reasoning text for plan steps */
   reasoning?: string;
+  /** Whether this step was created by a job_event WebSocket frame */
   fromEvent?: boolean;
+  /** Prompt tokens consumed by this step */
   prompt_tokens?: number;
+  /** Completion tokens consumed by this step */
   completion_tokens?: number;
-  tokens?: number;
-  durationMs?: number;
-  cost?: number;
+  /** Model used for this step (e.g. 'gpt-4o') */
   model?: string;
-}
-
-/**
- * Detailed step for the job timeline
- */
-export interface DetailedJobStep extends JobStep {
-  /** Plan step reasoning text (Markdown) */
-  summary?: string;
+  /** Cumulative tokens */
+  tokens?: number;
+  /** Step duration */
+  duration?: number;
 }
 
 /**

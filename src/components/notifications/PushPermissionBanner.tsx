@@ -17,11 +17,9 @@ export function PushPermissionBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (permissionState === 'granted' || permissionState === 'denied' || hasPrompted) {
-      setVisible(false);
-    } else {
-      setVisible(true);
-    }
+    const shouldBeVisible = !(permissionState === 'granted' || permissionState === 'denied' || hasPrompted);
+    const t = setTimeout(() => setVisible(shouldBeVisible), 0);
+    return () => clearTimeout(t);
   }, [permissionState, hasPrompted]);
 
   if (!visible) return null;

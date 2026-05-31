@@ -150,7 +150,8 @@ export default function CommandPalette() {
 
   // Reset selection when query or items change
   useEffect(() => {
-    setSelectedIndex(0);
+    const t = setTimeout(() => setSelectedIndex(0), 0);
+    return () => clearTimeout(t);
   }, [query]);
 
   // Focus input on open
@@ -248,7 +249,6 @@ export default function CommandPalette() {
                     className={`${styles.item} ${isSelected ? styles.active : ''}`}
                     onClick={item.action}
                     onMouseEnter={() => setSelectedIndex(globalIndex)}
-                    aria-selected={isSelected}
                   >
                     <span className={styles.itemIcon}>{item.icon}</span>
                     <span className={styles.itemLabel}>{item.label}</span>

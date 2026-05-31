@@ -1,110 +1,87 @@
 'use client';
 
-import React from 'react';
-import { Cpu, Clock, DollarSign, Activity } from 'lucide-react';
-import type { AgenticJob } from '@/store/jobs';
-import { formatDuration, formatTokens, formatCost } from '@/lib/format-stats';
-import styles from './JobDetailFooter.module.css';
+import { Cpu, Clock, DollarSign } from 'lucide-react';
+import { formatTokens, formatDuration, formatCost } from '@/lib/format';
 
 interface JobDetailFooterProps {
-  job: AgenticJob;
+  steps: Array<{
+    tokens?: number;
+    duration?: number;
+    model?: string;
+  }>;
 }
 
-const MOCK_PRICING: Record<string, { inputCostPerToken: number; outputCostPerToken: number }> = {
-  'claude-3-opus': { inputCostPerToken: 0.000015, outputCostPerToken: 0.000075 },
-  'gpt-4': { inputCostPerToken: 0.00003, outputCostPerToken: 0.00006 },
-  'llama-3.1': { inputCostPerToken: 0.000001, outputCostPerToken: 0.000003 },
-  'gpt-4o': { inputCostPerToken: 0.000005, outputCostPerToken: 0.000015 },
+const LOCAL_PRICING: Record<string, { inputPricePerMillion: number; outputPricePerMillion: number }> = {
+  'gpt-4o': { inputPricePerMillion: 2.50, outputPricePerMillion: 10.00 },
+  'claude-3.5-sonnet': { inputPricePerMillion: 3.00, outputPricePerMillion: 15.00 },
+  'gemini-2.0-pro': { inputPricePerMillion: 1.25, outputPricePerMillion: 5.00 },
+  'llama-3.1-405b': { inputPricePerMillion: 2.66, outputPricePerMillion: 2.66 },
 };
 
-export default function JobDetailFooter({ job }: JobDetailFooterProps) {
-  const steps = job.steps ?? [];
-
-  // Aggregate totals
+export default function JobDetailFooter({ steps }: JobDetailFooterProps) {
   let totalTokens = 0;
-  let totalDurationMs = 0;
-  let totalCostCents = 0;
+  let totalDuration = 0;
+  let totalCost = 0;
 
   steps.forEach((step) => {
-    // 1. Tokens
-    const promptTokens = step.prompt_tokens ?? 0;
-    const completionTokens = step.completion_tokens ?? 0;
-    totalTokens += step.tokens ?? (promptTokens + completionTokens);
+    if (step.tokens) totalTokens += step.tokens;
+    if (step.duration) totalDuration += step.duration;
 
-    // 2. Duration
-    totalDurationMs += step.durationMs ?? step.duration_ms ?? 0;
-
-    // 3. Cost
-    const modelName = step.model || 'gpt-4o';
-    const pricing = MOCK_PRICING[modelName] || MOCK_PRICING['gpt-4o'];
-    let stepCostCents = step.cost ?? 0;
-    if (!step.cost && (promptTokens > 0 || completionTokens > 0)) {
-      const stepCostUsd = (promptTokens * pricing.inputCostPerToken) + (completionTokens * pricing.outputCostPerToken);
-      stepCostCents = stepCostUsd * 100;
+    if (step.tokens) {
+      const model = step.model || 'gpt-4o';
+      const activePricing = LOCAL_PRICING[model] || LOCAL_PRICING['gpt-4o'];
+      const inputTokens = Math.round(step.tokens * 0.75);
+      const outputTokens = step.tokens - inputTokens;
+      const stepCost = (inputTokens / 1_000_000) * activePricing.inputPricePerMillion +
+                       (outputTokens / 1_000_000) * activePricing.outputPricePerMillion;
+      totalCost += stepCost;
     }
-    totalCostCents += stepCostCents;
   });
 
-  // Calculate progress
-  const totalSteps = steps.length;
-  const completedSteps = steps.filter((s) => s.status === 'completed').length;
-  const failedSteps = steps.filter((s) => s.status === 'failed').length;
-  const activeSteps = steps.filter((s) => s.status === 'running').length;
-  
-  const progressPercentage = totalSteps > 0 
-    ? ((completedSteps + failedSteps) / totalSteps) * 100 
-    : 0;
-
   return (
-    <footer className={styles.footer}>
-      {/* Progress/Summary Bar */}
-      <div className={styles.progressContainer}>
-        <div 
-          className={styles.progressBar} 
-          style={{ width: `${progressPercentage}%` }} 
-        />
-      </div>
-
-      <div className={styles.container}>
-        {/* Step Counts / Status */}
-        <div className={styles.statusGroup}>
-          <Activity size={16} className={styles.activityIcon} />
-          <span className={styles.statusText}>
-            {completedSteps} / {totalSteps} step{totalSteps === 1 ? '' : 's'} completed
-            {activeSteps > 0 && ` (${activeSteps} active)`}
-          </span>
+    <div className="border border-border bg-card/60 backdrop-blur-sm rounded-xl p-5 mt-6 shadow-sm">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Job Run Aggregates</h3>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Tokens */}
+        <div className="flex items-center gap-3.5 p-3.5 bg-muted/40 border border-border/40 rounded-lg hover:border-border transition-colors">
+          <div className="p-2 bg-primary/10 border border-primary/20 rounded-md text-primary shrink-0">
+            <Cpu className="h-5 w-5" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Total Tokens</p>
+            <p className="text-base font-bold text-foreground truncate tabular-nums">
+              {totalTokens > 0 ? formatTokens(totalTokens).replace(' tokens', '') : '0'}
+            </p>
+          </div>
         </div>
 
-        {/* Aggregated Stats */}
-        <div className={styles.statsGroup}>
-          {/* Total Tokens */}
-          <div className={styles.stat} title="Total tokens consumed">
-            <Cpu size={16} className={styles.icon} />
-            <div className={styles.statLabelValue}>
-              <span className={styles.label}>Tokens:</span>
-              <span className={styles.value}>{formatTokens(totalTokens)}</span>
-            </div>
+        {/* Total Duration */}
+        <div className="flex items-center gap-3.5 p-3.5 bg-muted/40 border border-border/40 rounded-lg hover:border-border transition-colors">
+          <div className="p-2 bg-warning/10 border border-warning/20 rounded-md text-amber-500 shrink-0">
+            <Clock className="h-5 w-5" strokeWidth={1.5} />
           </div>
-
-          {/* Total Duration */}
-          <div className={styles.stat} title="Total running time">
-            <Clock size={16} className={styles.icon} />
-            <div className={styles.statLabelValue}>
-              <span className={styles.label}>Duration:</span>
-              <span className={styles.value}>{formatDuration(totalDurationMs)}</span>
-            </div>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Total Duration</p>
+            <p className="text-base font-bold text-foreground truncate tabular-nums">
+              {totalDuration > 0 ? formatDuration(totalDuration) : '0s'}
+            </p>
           </div>
+        </div>
 
-          {/* Total Cost */}
-          <div className={`${styles.stat} ${styles.costStat}`} title="Total cost incurred">
-            <DollarSign size={16} className={styles.icon} />
-            <div className={styles.statLabelValue}>
-              <span className={styles.label}>Cost:</span>
-              <span className={styles.value}>{formatCost(totalCostCents)}</span>
-            </div>
+        {/* Estimated Cost */}
+        <div className="flex items-center gap-3.5 p-3.5 bg-muted/40 border border-border/40 rounded-lg hover:border-border transition-colors">
+          <div className="p-2 bg-success/10 border border-success/20 rounded-md text-emerald-500 shrink-0">
+            <DollarSign className="h-5 w-5" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Est. Cost (USD)</p>
+            <p className="text-base font-bold text-foreground truncate tabular-nums">
+              {formatCost(totalCost)}
+            </p>
           </div>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }

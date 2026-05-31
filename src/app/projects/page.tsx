@@ -1,44 +1,20 @@
-/**
- * Projects page — displays all projects with active project indicator and adding sheet drawer
- */
-
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
-import { ProjectList, AddProjectSheet } from '@/components/projects';
-import { useProjectStore } from '@/store/projects';
-import styles from './page.module.css';
+import ProjectList from '@/components/projects/ProjectList';
 
 export default function ProjectsPage() {
-  const fetchProjects = useProjectStore((state) => state.fetchProjects);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
-
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Projects</h1>
-        <button
-          type="button"
-          onClick={() => setIsAddSheetOpen(true)}
-          className={styles.addButton}
-          aria-label="Add project"
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          <span>Add Project</span>
-        </button>
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="border-b border-border pb-5">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Projects</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your development workspaces, configure environment variables, and monitor activity.
+        </p>
       </div>
 
-      <ProjectList />
-
-      <AddProjectSheet
-        isOpen={isAddSheetOpen}
-        onClose={() => setIsAddSheetOpen(false)}
-      />
+      <div className="rounded-xl border border-border bg-card/30 p-5 md:p-6 shadow-sm">
+        <ProjectList />
+      </div>
     </div>
   );
 }

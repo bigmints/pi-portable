@@ -3,47 +3,27 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-top: 6px;
-  padding: 4px 8px;
-  background-color: var(--color-surface-2, #242437);
-  border: 1px solid var(--color-border, #313244);
+  padding: 6px 10px;
+  margin-top: 4px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  width: max-content;
-  max-width: 100%;
 }
 
 .stat {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary, #a6adc8);
+  gap: 4px;
   font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
-.icon {
-  color: var(--color-text-secondary, #a6adc8);
-  opacity: 0.8;
+.stat svg {
+  color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
 
-.value {
-  font-weight: 500;
+.stat span {
   font-variant-numeric: tabular-nums;
-}
-
-.costStat {
-  color: var(--color-success, #a6e3a1);
-  font-weight: 600;
-  cursor: help;
-}
-
-.costStat .icon {
-  color: var(--color-success, #a6e3a1);
-}
-
-@media (max-width: 480px) {
-  .row {
-    gap: 8px;
-    padding: 4px 6px;
-  }
 }

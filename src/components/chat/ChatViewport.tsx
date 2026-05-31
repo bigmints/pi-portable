@@ -76,8 +76,8 @@ export default function ChatViewport({ conversationId }: ChatViewportProps) {
   return (
     <div className={styles.viewport} ref={viewportRef}>
       <div className={styles.messageList}>
-        {messages.map((msg) => {
-          if ('toolCalls' in msg) {
+        {(messages as (ChatMessage | ToolCallMessage)[]).map((msg) => {
+          if ('toolCalls' in msg && !('role' in msg)) {
             const tc = msg as ToolCallMessage;
             return <ToolCallAnnotation key={msg.id} toolCalls={tc.toolCalls.map(t => ({
               toolName: t.toolName,
@@ -85,7 +85,7 @@ export default function ChatViewport({ conversationId }: ChatViewportProps) {
               output: t.output as Record<string, unknown> | string | undefined,
               error: t.error,
               durationMs: t.durationMs,
-              status: t.status === 'running' ? 'running' : ((t.status as string) === 'success' || t.status === 'complete') ? 'completed' : 'error',
+              status: t.status === 'running' ? 'running' : t.status === 'success' ? 'completed' : 'error',
             }))} />;
           }
           return <MessageBubble key={msg.id} message={msg as ChatMessage} />;

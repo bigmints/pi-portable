@@ -4,7 +4,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MessageRole, ToolCallMessage, ToolCall, ToolCallStatus } from '@/types/chat';
+import type { MessageRole, ToolCallMessage } from '@/types/chat';
+import type { ToolCall, ToolCallStatus } from '@/types/tool-call';
 
 export type MessageStatus = 'sending' | 'streaming' | 'complete' | 'error';
 
@@ -17,7 +18,7 @@ export interface ChatMessage {
   timestamp: number;
   interrupted?: boolean;
   is_regenerating?: boolean;
-  toolCalls?: ToolCall[];
+  toolCalls?: Record<string, ToolCall>;
 }
 
 export type AnyMessage = ChatMessage | ToolCallMessage;
@@ -41,16 +42,8 @@ interface MessagesState {
   regenerateMessage: (messageId: string) => void;
   clearRegenerating: (messageId: string) => void;
   rewindToMessage: (messageId: string) => void;
-  clearMessages: () => void;
   addToolCall: (messageId: string, toolCall: ToolCall) => void;
-  updateToolCallStatus: (
-    messageId: string,
-    toolCallId: string,
-    status: ToolCallStatus,
-    output?: string,
-    error?: string
-  ) => void;
-  getToolCalls: (messageId: string) => ToolCall[];
+  updateToolCall: (messageId: string, toolCallId: string, updates: Partial<ToolCall>) => void;
 }
 
 export const useMessagesStore = create<MessagesState>()(
@@ -60,31 +53,42 @@ export const useMessagesStore = create<MessagesState>()(
       inProgressMessageId: null,
       activeConversationId: null,
       isInterrupting: false,
-      clearMessages: () => set({ messages: {}, inProgressMessageId: null, activeConversationId: null }),
       addMessage: (message) =>
         set((s) => ({ messages: { ...s.messages, [message.id]: message } })),
       appendToken: (messageId, token) =>
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [messageId]: { ...s.messages[messageId], content: s.messages[messageId].content + token },
-          },
-        })),
+        set((s) => {
+          const msg = s.messages[messageId];
+          if (!msg) return {};
+          return {
+            messages: {
+              ...s.messages,
+              [messageId]: { ...msg, content: msg.content + token },
+            },
+          };
+        }),
       updateMessageContent: (messageId, token) =>
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [messageId]: { ...s.messages[messageId], content: s.messages[messageId].content + token },
-          },
-        })),
+        set((s) => {
+          const msg = s.messages[messageId];
+          if (!msg) return {};
+          return {
+            messages: {
+              ...s.messages,
+              [messageId]: { ...msg, content: msg.content + token },
+            },
+          };
+        }),
       completeMessage: (messageId) =>
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [messageId]: { ...s.messages[messageId], status: 'complete' as const },
-          },
-          inProgressMessageId: null,
-        })),
+        set((s) => {
+          const msg = s.messages[messageId];
+          if (!msg) return {};
+          return {
+            messages: {
+              ...s.messages,
+              [messageId]: { ...msg, status: 'complete' as const },
+            },
+            inProgressMessageId: null,
+          };
+        }),
       setInProgressMessageId: (id) => set({ inProgressMessageId: id }),
       setActiveConversationId: (id) => set({ activeConversationId: id }),
       getMessagesByConversation: (conversationId): ChatMessage[] => {
@@ -98,33 +102,41 @@ export const useMessagesStore = create<MessagesState>()(
         return inProgressMessageId !== null;
       },
       markInterrupted: (messageId) =>
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [messageId]: {
-              ...s.messages[messageId],
-              interrupted: true,
-              status: 'complete' as const,
+        set((s) => {
+          const msg = s.messages[messageId];
+          if (!msg) return {};
+          return {
+            messages: {
+              ...s.messages,
+              [messageId]: {
+                ...msg,
+                interrupted: true,
+                status: 'complete' as const,
+              },
             },
-          },
-          inProgressMessageId: null,
-        })),
+            inProgressMessageId: null,
+          };
+        }),
       setInterrupting: (isInterrupting) => set({ isInterrupting }),
       acknowledgeInterrupt: (conversationId) => {
         set({ isInterrupting: false });
       },
       regenerateMessage: (messageId) =>
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [messageId]: {
-              ...s.messages[messageId],
-              is_regenerating: true,
-              content: '',
-              status: 'streaming' as const,
+        set((s) => {
+          const msg = s.messages[messageId];
+          if (!msg) return {};
+          return {
+            messages: {
+              ...s.messages,
+              [messageId]: {
+                ...msg,
+                is_regenerating: true,
+                content: '',
+                status: 'streaming' as const,
+              },
             },
-          },
-        })),
+          };
+        }),
       clearRegenerating: (messageId) =>
         set((s) => {
           const msg = s.messages[messageId];
@@ -149,57 +161,50 @@ export const useMessagesStore = create<MessagesState>()(
           const m = allMessages[i];
           keepMessages[m.id] = m;
         }
+
         set({ messages: keepMessages });
       },
       addToolCall: (messageId, toolCall) =>
         set((s) => {
           const msg = s.messages[messageId];
-          if (!msg) return { messages: s.messages };
-          const currentCalls = msg.toolCalls || [];
-          const exists = currentCalls.some((c) => c.id === toolCall.id);
-          const newCalls = exists
-            ? currentCalls.map((c) => (c.id === toolCall.id ? toolCall : c))
-            : [...currentCalls, toolCall];
+          if (!msg) return {};
+          const toolCalls = msg.toolCalls || {};
           return {
             messages: {
               ...s.messages,
-              [messageId]: { ...msg, toolCalls: newCalls },
+              [messageId]: {
+                ...msg,
+                toolCalls: {
+                  ...toolCalls,
+                  [toolCall.id]: toolCall,
+                },
+              },
             },
           };
         }),
-      updateToolCallStatus: (messageId, toolCallId, status, output, error) =>
+      updateToolCall: (messageId, toolCallId, updates) =>
         set((s) => {
           const msg = s.messages[messageId];
-          if (!msg) return { messages: s.messages };
-          const currentCalls = msg.toolCalls || [];
-          const newCalls = currentCalls.map((c) => {
-            if (c.id === toolCallId) {
-              return {
-                ...c,
-                status,
-                ...(output !== undefined ? { output } : {}),
-                ...(error !== undefined ? { error } : {}),
-              };
-            }
-            return c;
-          });
+          if (!msg || !msg.toolCalls || !msg.toolCalls[toolCallId]) return {};
           return {
             messages: {
               ...s.messages,
-              [messageId]: { ...msg, toolCalls: newCalls },
+              [messageId]: {
+                ...msg,
+                toolCalls: {
+                  ...msg.toolCalls,
+                  [toolCallId]: {
+                    ...msg.toolCalls[toolCallId],
+                    ...updates,
+                  },
+                },
+              },
             },
           };
         }),
-      getToolCalls: (messageId) => {
-        const { messages } = get();
-        return messages[messageId]?.toolCalls || [];
-      },
     }),
     {
-      name: 'pi-messages-storage',
-      partialize: (state) => ({
-        messages: state.messages,
-      }),
+      name: 'pi-messages',
     }
   )
 );

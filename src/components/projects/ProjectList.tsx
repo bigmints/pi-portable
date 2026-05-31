@@ -1,134 +1,75 @@
 'use client';
 
-import { useState } from 'react';
-import { FolderOpen, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projects';
-import ProjectCard, { ProjectCardSkeleton } from './ProjectCard';
-import { showToast } from '@/components/common/Toast';
-import styles from './ProjectList.module.css';
+import ProjectItem from './ProjectItem';
+import NewProjectDialog from './NewProjectDialog';
+import { Plus, FolderOpen, Layers } from 'lucide-react';
 
-export default function ProjectList() {
-  const projects = useProjectStore((state) => state.projects);
-  const loading = useProjectStore((state) => state.loading);
-  const error = useProjectStore((state) => state.error);
-  const fetchProjects = useProjectStore((state) => state.fetchProjects);
-  const switchProject = useProjectStore((state) => state.switchProject);
-  const removeProject = useProjectStore((state) => state.removeProject);
+interface ProjectListProps {
+  limitHeight?: boolean;
+}
 
-  // Deletion confirmation state
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+export default function ProjectList({ limitHeight = false }: ProjectListProps) {
+  const projects = useProjectStore((s) => s.projects);
+  const selectedProjectId = useProjectStore((s) => s.selectedProjectId);
+  const selectProject = useProjectStore((s) => s.selectProject);
+  
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const activeDeleteProject = projects.find((p) => p.id === projectToDelete);
-
-  const handleDeleteConfirm = async () => {
-    if (!projectToDelete) return;
-    setIsDeleting(true);
-    try {
-      const success = await removeProject(projectToDelete);
-      if (success) {
-        showToast('Project removed successfully', 'success');
-      } else {
-        showToast('Failed to remove project', 'error');
-      }
-    } catch {
-      showToast('Error removing project', 'error');
-    } finally {
-      setIsDeleting(false);
-      setProjectToDelete(null);
-    }
+  const handleSelect = (id: string) => {
+    selectProject(id);
   };
 
-  if (loading && projects.length === 0) {
-    return (
-      <div className={styles.grid}>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <ProjectCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error && projects.length === 0) {
-    return (
-      <div className={styles.errorState}>
-        <p className={styles.errorText}>{error}</p>
-        <button className={styles.retryBtn} onClick={() => fetchProjects()}>
-          Retry
+  return (
+    <div className="w-full flex flex-col space-y-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
+        <div className="flex items-center gap-2">
+          <Layers className="h-4.5 w-4.5 text-violet-500" />
+          <h2 className="text-sm font-semibold text-foreground">Project Workspaces</h2>
+        </div>
+        <button
+          onClick={() => setIsDialogOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 active:scale-95 rounded-lg shadow-sm hover:shadow-violet-600/10 transition-all"
+        >
+          <Plus size={13} strokeWidth={2.5} />
+          New Project
         </button>
       </div>
-    );
-  }
 
-  if (projects.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <FolderOpen size={48} strokeWidth={1.5} className={styles.emptyIcon} />
-        <h3 className={styles.emptyTitle}>No projects yet</h3>
-        <p className={styles.emptyText}>
-          Add a project folder or clone a repository to get started.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className={styles.grid}>
-        {projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            onSwitch={switchProject}
-            onDelete={(id) => setProjectToDelete(id)}
-          />
-        ))}
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {projectToDelete && activeDeleteProject && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => !isDeleting && setProjectToDelete(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className={styles.modal}
-            onClick={(e) => e.stopPropagation()}
+      {projects.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-border bg-card/10">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-600/10 text-violet-400 mb-3 animate-pulse">
+            <FolderOpen size={22} strokeWidth={1.5} />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground mb-1">No projects yet</h3>
+          <p className="text-xs text-muted-foreground max-w-[240px] leading-normal mb-5">
+            Add your first project to start tracking your development workspace.
+          </p>
+          <button
+            onClick={() => setIsDialogOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-lg shadow-sm hover:shadow-violet-600/20 active:scale-95 transition-all"
           >
-            <div className={styles.modalHeader}>
-              <AlertTriangle className={styles.modalIcon} size={20} />
-              <h4 className={styles.modalTitle}>Delete Project</h4>
-            </div>
-            <div className={styles.modalBody}>
-              Are you sure you want to remove project{' '}
-              <span className={styles.projectName}>
-                "{activeDeleteProject.name}"
-              </span>{' '}
-              from the list? This will not delete the local directory or git repository, but will remove it from the pi client.
-            </div>
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.modalCancelBtn}
-                onClick={() => setProjectToDelete(null)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.modalDeleteBtn}
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
+            <Plus size={14} />
+            Create Project
+          </button>
+        </div>
+      ) : (
+        <div className={`flex flex-col w-full ${limitHeight ? 'max-h-[300px]' : ''}`}>
+          <div className="flex-1 overflow-y-auto pr-0.5 space-y-3 scrollbar-thin scrollbar-thumb-accent scrollbar-track-transparent">
+            {projects.map((project) => (
+              <ProjectItem
+                key={project.id}
+                project={project}
+                isActive={selectedProjectId === project.id}
+                onSelect={handleSelect}
+              />
+            ))}
           </div>
         </div>
       )}
-    </>
+
+      <NewProjectDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+    </div>
   );
 }

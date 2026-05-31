@@ -1,18 +1,18 @@
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'History — pi',
-  description: 'Conversation history',
-};
+import HistoryList from '@/components/history/HistoryList';
+import styles from './page.module.css';
 
 export default function HistoryPage() {
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">History</h1>
-        <p className="text-sm text-muted-foreground mt-1">Your past pi conversations</p>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>History</h1>
+        <p className={styles.description}>Your past pi conversations</p>
       </div>
-      <p className="text-muted-foreground text-sm">No conversations yet. Start a chat to see history here.</p>
+      <div className={styles.content}>
+        <HistoryList />
+      </div>
     </div>
   );
 }

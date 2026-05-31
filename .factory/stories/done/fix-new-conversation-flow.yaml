@@ -1,0 +1,28 @@
+name: "Fix: new-conversation-flow"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /home/bigmints/Projects/pi-app/.factory/stories/features/new-conversation-flow.yaml
+
+  Issue: CLI agent stalled twice with identical behavior: listed 135 files in target directory then produced no output
+  for 300+ seconds each time. The agent is not proceeding with implementation despite clear, step-by-step instructions.
+  This appears to be a CLI agent issue rather than a prompt issue - the agent may be stuck in a file enumeration loop or
+  unable to proceed with the build. Requires human intervention to diagnose CLI agent health or restart the agent.
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: "CLI agent stalled twice with identical behavior: listed 135 files in target directory then produced
+  no output for 300+ seconds each time. The agent is not proceeding with implementation despite clear, step-by-step
+  instructions. This appears to be a CLI agent issue rather than a prompt issue - the agent may be stuck in a file
+  enumeration loop or unable to proceed with the build. Requires human intervention to diagnose CLI agent health or
+  restart the agent."
+original_story: /home/bigmints/Projects/pi-app/.factory/stories/features/new-conversation-flow.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-25T21:03:34.142Z

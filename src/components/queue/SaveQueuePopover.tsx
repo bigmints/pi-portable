@@ -19,8 +19,10 @@ interface Props {
 export default function SaveQueuePopover({ open, onClose, currentTasks }: Props) {
   const [name, setName] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  const saveQueue = useSavedQueuesStore((s) => s.saveQueue);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open) setName('');
   }, [open]);
 
@@ -35,8 +37,6 @@ export default function SaveQueuePopover({ open, onClose, currentTasks }: Props)
   }, [open, onClose]);
 
   if (!open) return null;
-
-  const saveQueue = useSavedQueuesStore((s) => s.saveQueue);
 
   const handleSave = () => {
     if (name.trim()) {

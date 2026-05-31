@@ -1,0 +1,62 @@
+name: "Fix: fix-fix-file-attachment-image-paste"
+description: >-
+  Automated fix task created by Factory TPM.
+
+
+  Original story: /Users/pretheesh/Projects/pi-app/.factory/stories/features/fix-fix-file-attachment-image-paste.yaml
+
+  Issue: CLI engineer failed to implement image paste handling in chat composer. It got stuck in a loop fixing
+  pre-existing ESLint errors and build cache issues instead of implementing the paste handler feature. Two delegation
+  attempts failed (LOOP then STALL).
+status: done
+feature:
+  name: Fix
+  slug: fix
+target: {}
+stack: {}
+acceptance_criteria: []
+fix_instructions: >-
+  TASK: Add image paste handling to the chat composer component.
+
+
+  STEPS:
+
+  1. Find the chat composer/textarea component. Search for files containing "composer" or "textarea" in
+  src/components/chat/ or src/app/chat/.
+
+  2. Add an onPaste handler to the textarea that:
+     - Prevents default paste behavior
+     - Checks clipboardData.files for image files (image/png, image/jpeg, image/gif, image/webp)
+     - Also checks clipboardData.items for image data (usinggetAsFile())
+     - Calls the existing file attachment function/store with the pasted image file(s)
+  3. If the component already has an onPaste handler, fix it to properly extract images.
+
+  4. If there's no file attachment store/function, look for how files are currently handled (e.g., a useFileUpload hook,
+  or a store action) and integrate with that.
+
+
+  CONSTRAINTS:
+
+  - Do NOT run npm run build or npm run lint — pre-existing errors will fail
+
+  - Do NOT fix any ESLint errors in other files
+
+  - Do NOT clear .next cache
+
+  - Only modify files related to the chat composer and paste handling
+
+  - Write the code, then print DELIVERY COMPLETE with a summary
+
+
+  VERIFICATION:
+
+  - The paste handler code should compile (TypeScript)
+
+  - The handler should extract image files from clipboard
+
+  - The handler should integrate with existing file attachment flow
+original_story: /Users/pretheesh/Projects/pi-app/.factory/stories/features/fix-fix-file-attachment-image-paste.yaml
+phase: 0
+dependsOn: []
+createdBy: factory-tpm
+createdAt: 2026-05-30T16:12:34.779Z

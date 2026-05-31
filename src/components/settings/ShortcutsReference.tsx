@@ -24,3 +24,6 @@ export function ShortcutsReference() {
     </div>
   );
 }
+
+export default ShortcutsReference;
+

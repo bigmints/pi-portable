@@ -1,0 +1,48 @@
+name: "UI Overhaul: Sheets, Dialogs & Modals"
+description: >
+  Migrate and refactor advanced interactive features—such as `ContextMenu`, `ForkConfirmationSheet`,
+  `AttachmentStrip`, `VoiceInput`, and `CommandPalette`—to use standard Radix UI or Shadcn/UI
+  dialogs, sheets, context menus, and popover components. Replace legacy CSS modules completely.
+
+  WHAT TO CLEAN UP:
+  - Delete `src/components/chat/ContextMenu.module.css`
+  - Delete `src/components/chat/ForkConfirmationSheet.module.css`
+  - Delete `src/components/chat/AttachmentStrip.module.css`
+  - Delete `src/components/chat/VoiceInput.module.css`
+
+  WHAT TO IMPLEMENT:
+  1. File: `src/components/chat/ContextMenu.tsx`
+     - Integrate standard Shadcn ContextMenu component (derived from Radix ContextMenu).
+     - Style items and selection highlights using pure Tailwind utilities, eliminating local stylesheet overrides.
+  2. File: `src/components/chat/ForkConfirmationSheet.tsx`
+     - Overhaul confirmation panels to use the standard Shadcn `Dialog` or `Sheet` primitive.
+     - Apply standard overlay configurations and clean buttons.
+  3. File: `src/components/chat/AttachmentStrip.tsx`
+     - Rewrite the file attachment display strip to use simple, elegant Tailwind-based thumbnails, clean close buttons, and border configurations.
+  4. File: `src/components/chat/VoiceInput.tsx`
+     - Overhaul voice transcription control UI utilizing clean Tailwind-styled indicator states (recording animation, cancel controls).
+  5. File: `src/components/chat/CommandPalette.tsx`
+     - Overhaul using the standard Shadcn `Command` dialog.
+
+status: draft
+feature:
+  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  slug: ui-overhaul
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - ContextMenu, ForkConfirmationSheet, AttachmentStrip, VoiceInput, and CommandPalette contain no `.module.css` imports
+  - Command palette and interactive context menus use standard Shadcn Radix components
+  - Modals and Sheets display clean dark/light mode overlay states and enter/exit transition animations
+  - File attachments strip layout is responsive and cleanly designed using Tailwind grid or flex
+  - npx tsc --noEmit and linting pass successfully
+phase: 1
+priority: 5
+dependsOn:
+  - .factory/stories/features/ui-overhaul/003-chat-views.yaml
+createdBy: antigravity-tpm
+createdAt: 2026-05-31T11:00:00.000Z

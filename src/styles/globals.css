@@ -1,25 +1,28 @@
 @import "tailwindcss";
 
-/* ── Safe area inset fallbacks (iOS notch / home indicator) ── */
+/* iOS safe area and dynamic viewport fixes */
 :root {
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
-  --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
-/* ── Global dvh / safe-area rules ── */
-html,
+html, body {
+  min-height: 100dvh;
+}
+
 body {
-  height: 100dvh;
   padding-top: var(--safe-area-inset-top);
+  padding-right: var(--safe-area-inset-right);
   padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
 }
 
 /* iOS keyboard: scroll container uses dvh so content isn't pushed off-screen */
 main {
-  padding-top: var(--safe-area-inset-top);
-  padding-bottom: var(--safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @layer base {

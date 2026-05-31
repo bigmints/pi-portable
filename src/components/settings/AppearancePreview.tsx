@@ -12,8 +12,7 @@ export function AppearancePreview() {
         This is sample text that reflects your current font size, theme, and density settings.
       </p>
       <pre className={styles.codeBlock}>
-        <code>const greeting = "Hello, world!";
-console.log(greeting);</code>
+        <code>{`const greeting = "Hello, world!";\nconsole.log(greeting);`}</code>
       </pre>
     </div>
   );

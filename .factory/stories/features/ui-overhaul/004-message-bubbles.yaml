@@ -1,0 +1,47 @@
+name: "UI Overhaul: Message Bubbles & Code Blocks"
+description: >
+  Overhaul chat messages and output renders including `MessageBubble`, `ArtifactCard`,
+  `ArtifactDiffView`, and standard markdown code/syntax blocks to use pure Tailwind CSS and
+  standard Shadcn primitives. Remove all custom stylesheet modifications.
+
+  WHAT TO CLEAN UP:
+  - Delete `src/components/chat/MessageBubble.module.css`
+  - Delete `src/components/chat/ArtifactCard.module.css`
+  - Delete `src/components/chat/ArtifactDiffView.module.css`
+  - Delete `src/components/chat/MessageActionBar.module.css`
+
+  WHAT TO IMPLEMENT:
+  1. File: `src/components/chat/MessageBubble.tsx`
+     - Rewrite layouts utilizing pure Tailwind flex structures, custom message color schemes
+       (e.g., user bubble uses bg-primary/violet-600 text-white, assistant uses bg-muted text-foreground).
+     - Incorporate Shadcn Avatar and clean typography layout.
+  2. File: `src/components/chat/ArtifactCard.tsx`
+     - Overhaul the inline code artifact cards to use a premium, glassmorphism-styled card panel.
+     - Integrate pure Tailwind layout, border states, and action triggers. Use standard Shadcn Card components.
+  3. File: `src/components/chat/ArtifactDiffView.tsx`
+     - Style code diff containers natively using standard Next/Tailwind variables, ensuring high readability in both dark and light modes.
+  4. File: `src/components/chat/MessageActionBar.tsx`
+     - Refactor the action buttons (copy, retry, edit, raw toggle) to use standard Shadcn Button components with quiet icon layouts and pure Tailwind positioning.
+
+status: draft
+feature:
+  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  slug: ui-overhaul
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - MessageBubble, ArtifactCard, ArtifactDiffView, and MessageActionBar contain no `.module.css` imports
+  - Chat bubbles are beautifully styled with proper contrast, alignment, and spacing matching shadcn primitives
+  - Code diffs and markdown files are fully readable in both light and dark mode with consistent syntax coloring
+  - Artifact action controls utilize standard Shadcn Button icons with clean tooltips or status displays
+  - npx tsc --noEmit and linting pass successfully
+phase: 1
+priority: 4
+dependsOn:
+  - .factory/stories/features/ui-overhaul/003-chat-views.yaml
+createdBy: antigravity-tpm
+createdAt: 2026-05-31T11:00:00.000Z

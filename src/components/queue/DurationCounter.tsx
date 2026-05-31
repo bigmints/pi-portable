@@ -20,9 +20,10 @@ export default function DurationCounter({ startedAt }: DurationCounterProps) {
   }, [startedAt]);
 
   useEffect(() => {
-    updateElapsed();
+    const t = setTimeout(updateElapsed, 0);
     intervalRef.current = setInterval(updateElapsed, 1000);
     return () => {
+      clearTimeout(t);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

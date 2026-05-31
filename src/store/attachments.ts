@@ -20,7 +20,7 @@ export interface PendingFile {
 interface AttachmentState {
   files: PendingFile[];
   error: string | null;
-  addFile: (file: File) => boolean; // returns false if rejected (size/limit)
+  addFile: (file: File) => string | null; // returns id if added, null if rejected
   removeFile: (id: string) => void;
   clearFiles: () => void;
   setError: (error: string | null) => void;
@@ -36,19 +36,19 @@ export const useAttachmentsStore = create<AttachmentState>((set, get) => ({
   files: [],
   error: null,
 
-  addFile: (file: File): boolean => {
+  addFile: (file: File): string | null => {
     const { files, setError } = get();
 
     // Check size limit
     if (file.size > MAX_FILE_SIZE) {
       setError(`${file.name} exceeds 10 MB limit`);
-      return false;
+      return null;
     }
 
     // Check file count limit
     if (files.length >= MAX_FILES) {
       setError(`Maximum ${MAX_FILES} files allowed`);
-      return false;
+      return null;
     }
 
     // Clear any previous error
@@ -56,9 +56,10 @@ export const useAttachmentsStore = create<AttachmentState>((set, get) => ({
 
     const isImage = file.type.startsWith('image/');
     const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
+    const fileId = generateId();
 
     const pendingFile: PendingFile = {
-      id: generateId(),
+      id: fileId,
       file,
       name: file.name,
       size: file.size,
@@ -71,7 +72,7 @@ export const useAttachmentsStore = create<AttachmentState>((set, get) => ({
       error: null,
     }));
 
-    return true;
+    return fileId;
   },
 
   removeFile: (id: string) => {

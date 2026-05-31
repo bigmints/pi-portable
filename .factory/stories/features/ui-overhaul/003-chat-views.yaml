@@ -1,0 +1,51 @@
+name: "UI Overhaul: Chat Primitives & Views"
+description: >
+  Overhaul the core chat interface components including `ChatView`, `ChatViewport`, `ChatInput`,
+  `ConversationList`, `NewChatButton`, and `NewConversation` to use pure Tailwind CSS and
+  standard Shadcn/UI primitives. Remove all local CSS modules completely.
+
+  WHAT TO CLEAN UP:
+  - Delete `src/components/chat/ChatView.module.css`
+  - Delete `src/components/chat/ChatViewport.module.css`
+  - Delete `src/components/chat/ChatInput.module.css`
+  - Delete `src/components/chat/ConversationList.module.css`
+  - Delete `src/components/chat/NewConversation.module.css`
+  - Delete `src/components/chat/StopButton.module.css`
+
+  WHAT TO IMPLEMENT:
+  1. File: `src/components/chat/ChatView.tsx`
+     - Refactor the viewport wrapper using pure Tailwind flex layouts, high-quality dark/light background states, and clean responsive borders.
+     - Integrate standard Shadcn layout principles.
+  2. File: `src/components/chat/ChatViewport.tsx`
+     - Replace the custom scroll viewport with a standard Shadcn `ScrollArea` component.
+     - Ensure scrolling behaves smoothly and utilizes pure Tailwind utility classes for alignment, padding, and width restrictions.
+  3. File: `src/components/chat/ChatInput.tsx`
+     - Rebuild the input section using Shadcn standard `Textarea` or input primitives.
+     - Style the chat textarea with standard Tailwind border, focus rings, and background transitions (e.g. focus-visible:ring-2 focus-visible:ring-violet-500).
+     - Incorporate helper items (Send icon, stop streaming button) as nested components built strictly with Shadcn button styling.
+  4. File: `src/components/chat/ConversationList.tsx`
+     - Style item selections using standard state utility classes (e.g., hover:bg-accent hover:text-accent-foreground, bg-accent).
+     - Remove all custom hover, outline, or select override properties from local stylesheets.
+
+status: draft
+feature:
+  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  slug: ui-overhaul
+target:
+  app: pi-app
+  project_root: /home/bigmints/Projects/pi-app
+stack:
+  framework: next.js
+  language: typescript
+acceptance_criteria:
+  - All chat-related components have zero `.module.css` imports or inline custom layout styles
+  - Viewport correctly handles conversation streams utilizing the standard Shadcn ScrollArea
+  - Chat input composer is beautiful, handles multiline expansion smoothly, and shows focused visual borders
+  - Active and hovering lists show premium styling matching standard Radix/Shadcn selections
+  - npx tsc --noEmit and linting pass successfully
+phase: 1
+priority: 3
+dependsOn:
+  - .factory/stories/features/ui-overhaul/002-layout-shell.yaml
+createdBy: antigravity-tpm
+createdAt: 2026-05-31T11:00:00.000Z

@@ -1,261 +1,217 @@
-/**
- * Projects store — project list management with caching, CRUD, and LocalStorage persistence
- */
-
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Project, AddProjectRequest } from '@/types/projects';
 
-const STALE_TIME_MS = 30 * 1000; // 30 seconds
-
-interface ProjectsState {
-  projects: Project[];
-  activeProject: Project | null;
-  loading: boolean;
-  error: string | null;
-  lastFetch: number | null;
-
-  // Actions
-  fetchProjects: () => Promise<void>;
-  switchProject: (id: string) => Promise<void>;
-  addProject: (data: AddProjectRequest) => Promise<Project | null>;
-  removeProject: (id: string) => Promise<boolean>;
-  deleteProject: (id: string) => Promise<boolean>; // alias for removeProject
-  updateProject: (id: string, updates: Partial<Project>) => Promise<Project | null>;
-  isStale: () => boolean;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  
+  // Backward compatibility fields matching src/types/projects.ts's Project
+  path: string;
+  isActive: boolean;
+  status: 'active' | 'idle' | 'error';
+  lastActive: string;
+  envVars?: Record<string, string>;
+  ignorePatterns?: string[];
 }
 
-export const useProjectStore = create<ProjectsState>()(
-  persist(
-    (set, get) => ({
-      projects: [],
-      activeProject: null,
-      loading: false,
-      error: null,
-      lastFetch: null,
+export interface ProjectStore {
+  projects: Project[];
+  selectedProjectId: string | null;
+  activeProject: Project | null; // Compatibility
+  loading: boolean; // Compatibility
+  error: string | null; // Compatibility
+  
+  addProject: (project: Project) => void;
+  selectProject: (id: string) => void;
+  removeProject: (id: string) => void;
+  
+  // Compatibility actions
+  fetchProjects: () => Promise<void>;
+  switchProject: (id: string) => Promise<void>;
+}
 
-      isStale: () => {
-        const state = get();
-        if (!state.lastFetch) return true;
-        return Date.now() - state.lastFetch > STALE_TIME_MS;
-      },
+// Default initial projects for a workspace experience
+const DEFAULT_PROJECTS: Project[] = [
+  {
+    id: 'pi-default-proj-1',
+    name: 'Pi Workspace',
+    description: 'The default project workspace for managing tasks, chat and jobs.',
+    createdAt: new Date().toISOString(),
+    path: '/Users/pretheesh/Projects/pi-app',
+    isActive: true,
+    status: 'active',
+    lastActive: new Date().toISOString()
+  }
+];
 
-      setLoading: (loading: boolean) => set(() => ({ loading })),
-
-      setError: (error: string | null) => set(() => ({ error })),
-
-      fetchProjects: async () => {
-        const state = get();
-
-        // Skip if not stale and we already have data
-        if (!state.isStale() && state.projects.length > 0) {
-          return;
-        }
-
-        set(() => ({ loading: true, error: null }));
-
-        try {
-          const res = await fetch('/api/projects');
-          if (!res.ok) {
-            throw new Error(`Failed to fetch projects: ${res.status}`);
-          }
-          const data = await res.json();
-          const projects: Project[] = data.projects || [];
-          
-          // Determine active project.
-          // If we already have an active project locally, try to preserve it.
-          // Otherwise, find the active project returned by server, or default to the first one.
-          const currentActive = get().activeProject;
-          let activeProject = projects.find((p: Project) => p.isActive) || null;
-          
-          if (currentActive && projects.some((p: Project) => p.id === currentActive.id)) {
-            activeProject = projects.find((p: Project) => p.id === currentActive.id) || null;
-          }
-
-          set(() => ({
-            projects,
-            activeProject,
-            loading: false,
-            error: null,
-            lastFetch: Date.now(),
-          }));
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Unknown error';
-          set(() => ({
-            loading: false,
-            error: message,
-          }));
-        }
-      },
-
-      switchProject: async (id: string) => {
-        // Optimistic update
-        const state = get();
-        const updatedProjects = state.projects.map((p) => ({
-          ...p,
-          isActive: p.id === id,
-          lastActive: p.id === id ? new Date().toISOString() : p.lastActive,
-          status: p.id === id ? ('active' as const) : p.status,
-        }));
-        const newActive = updatedProjects.find((p) => p.id === id) || null;
-
-        set(() => ({
-          projects: updatedProjects,
-          activeProject: newActive,
-        }));
-
-        // Persist to server
-        try {
-          const res = await fetch('/api/projects/switch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id }),
-          });
-          if (!res.ok) {
-            throw new Error(`Failed to switch project: ${res.status}`);
-          }
-          const data = await res.json();
-          
-          const finalProjects: Project[] = data.projects || updatedProjects;
-          const finalActive: Project | null = data.activeProject || newActive;
-
-          set(() => ({
-            projects: finalProjects,
-            activeProject: finalActive,
-            lastFetch: Date.now(),
-          }));
-        } catch (err) {
-          // Revert on failure
-          set(() => ({
-            projects: state.projects,
-            activeProject: state.activeProject,
-            error: err instanceof Error ? err.message : 'Failed to switch project',
-          }));
-        }
-      },
-
-      addProject: async (data: AddProjectRequest): Promise<Project | null> => {
-        set(() => ({ loading: true, error: null }));
-
-        try {
-          const res = await fetch('/api/projects', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
-
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({ error: 'Validation failed' }));
-            const message = errorData.error || 'Failed to add project';
-            set(() => ({ loading: false, error: message }));
-            return null;
-          }
-
-          const result = await res.json();
-          const project: Project = result.project;
-
-          // Optimistic update
-          const currentProjects = get().projects;
-          set(() => ({
-            projects: [...currentProjects, project],
-            loading: false,
-            error: null,
-            lastFetch: Date.now(),
-          }));
-
-          return project;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Failed to add project';
-          set(() => ({ loading: false, error: message }));
-          return null;
-        }
-      },
-
-      removeProject: async (id: string): Promise<boolean> => {
-        set(() => ({ loading: true, error: null }));
-
-        try {
-          const res = await fetch(`/api/projects/${id}`, {
-            method: 'DELETE',
-          });
-
-          if (!res.ok) {
-            throw new Error(`Failed to remove project: ${res.status}`);
-          }
-
-          const currentProjects = get().projects;
-          const updated = currentProjects.filter((p) => p.id !== id);
-          const activeProject = get().activeProject;
-
-          set(() => ({
-            projects: updated,
-            activeProject: activeProject?.id === id ? null : activeProject,
-            loading: false,
-            error: null,
-            lastFetch: Date.now(),
-          }));
-
-          return true;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Failed to remove project';
-          set(() => ({ loading: false, error: message }));
-          return false;
-        }
-      },
-
-      deleteProject: async (id: string): Promise<boolean> => {
-        return get().removeProject(id);
-      },
-
-      updateProject: async (id: string, updates: Partial<Project>): Promise<Project | null> => {
-        set(() => ({ loading: true, error: null }));
-
-        try {
-          const res = await fetch(`/api/projects/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates),
-          });
-
-          if (!res.ok) {
-            throw new Error(`Failed to update project: ${res.status}`);
-          }
-
-          const result = await res.json();
-          const updatedProject: Project = result.project;
-
-          const currentProjects = get().projects;
-          const updatedProjects = currentProjects.map((p) =>
-            p.id === id ? { ...p, ...updatedProject } : p
-          );
-
-          const activeProject = get().activeProject;
-
-          set(() => ({
-            projects: updatedProjects,
-            activeProject: activeProject?.id === id ? { ...activeProject, ...updatedProject } : activeProject,
-            loading: false,
-            error: null,
-            lastFetch: Date.now(),
-          }));
-
-          return updatedProject;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Failed to update project';
-          set(() => ({ loading: false, error: message }));
-          return null;
-        }
-      },
-    }),
-    {
-      name: 'pi-projects-storage',
-      partialize: (state) => ({
-        projects: state.projects,
-        activeProject: state.activeProject,
-        lastFetch: state.lastFetch,
-      }),
+export const useProjectStore = create<ProjectStore>((set, get) => {
+  // Try to load initial state from localStorage if available in browser environment
+  let initialProjects = DEFAULT_PROJECTS;
+  let initialSelectedId = 'pi-default-proj-1';
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const savedProjects = localStorage.getItem('pi-projects');
+      const savedSelectedId = localStorage.getItem('pi-selected-project-id');
+      if (savedProjects) {
+        initialProjects = JSON.parse(savedProjects);
+      }
+      if (savedSelectedId) {
+        initialSelectedId = savedSelectedId;
+      } else if (initialProjects.length > 0) {
+        initialSelectedId = initialProjects[0].id;
+      } else {
+        initialSelectedId = '';
+      }
+    } catch (_e) {
+      // Ignore storage errors
     }
-  )
-);
+  }
+
+  const getActiveProject = (projects: Project[], selectedId: string | null): Project | null => {
+    if (!selectedId) return projects[0] || null;
+    return projects.find((p) => p.id === selectedId) || projects[0] || null;
+  };
+
+  const syncToStorage = (projects: Project[], selectedId: string | null) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('pi-projects', JSON.stringify(projects));
+        if (selectedId) {
+          localStorage.setItem('pi-selected-project-id', selectedId);
+        } else {
+          localStorage.removeItem('pi-selected-project-id');
+        }
+      } catch (_e) {
+        // Ignore storage errors
+      }
+    }
+  };
+
+  const initialActive = getActiveProject(initialProjects, initialSelectedId);
+
+  return {
+    projects: initialProjects,
+    selectedProjectId: initialSelectedId,
+    activeProject: initialActive,
+    loading: false,
+    error: null,
+
+    addProject: (project: Project) => {
+      // Defer state update using requestAnimationFrame
+      requestAnimationFrame(() => {
+        set((state) => {
+          // Ensure backward compatibility fields are set
+          const newProject: Project = {
+            ...project,
+            path: project.path || `/Users/pretheesh/Projects/${project.name.toLowerCase().replace(/\s+/g, '-')}`,
+            isActive: false,
+            status: project.status || 'idle',
+            lastActive: project.lastActive || new Date().toISOString()
+          };
+          const updatedProjects = [...state.projects, newProject];
+          
+          let nextSelectedId = state.selectedProjectId;
+          if (!nextSelectedId) {
+            nextSelectedId = newProject.id;
+          }
+          
+          const nextActive = getActiveProject(updatedProjects, nextSelectedId);
+          
+          syncToStorage(updatedProjects, nextSelectedId);
+          
+          return {
+            projects: updatedProjects,
+            selectedProjectId: nextSelectedId,
+            activeProject: nextActive
+          };
+        });
+      });
+    },
+
+    selectProject: (id: string) => {
+      // Defer state update using requestAnimationFrame
+      requestAnimationFrame(() => {
+        set((state) => {
+          const updatedProjects = state.projects.map((p) => ({
+            ...p,
+            isActive: p.id === id,
+            lastActive: p.id === id ? new Date().toISOString() : p.lastActive,
+            status: p.id === id ? ('active' as const) : p.status
+          }));
+          
+          const nextActive = getActiveProject(updatedProjects, id);
+          
+          syncToStorage(updatedProjects, id);
+          
+          return {
+            projects: updatedProjects,
+            selectedProjectId: id,
+            activeProject: nextActive
+          };
+        });
+      });
+    },
+
+    removeProject: (id: string) => {
+      // Defer state update using requestAnimationFrame
+      requestAnimationFrame(() => {
+        set((state) => {
+          const updatedProjects = state.projects.filter((p) => p.id !== id);
+          
+          let nextSelectedId = state.selectedProjectId;
+          if (nextSelectedId === id) {
+            nextSelectedId = updatedProjects.length > 0 ? updatedProjects[0].id : null;
+          }
+          
+          const nextActive = getActiveProject(updatedProjects, nextSelectedId);
+          
+          syncToStorage(updatedProjects, nextSelectedId);
+          
+          return {
+            projects: updatedProjects,
+            selectedProjectId: nextSelectedId,
+            activeProject: nextActive
+          };
+        });
+      });
+    },
+
+    // Compatibility action mapping
+    fetchProjects: async () => {
+      set(() => ({ loading: true, error: null }));
+      if (typeof window !== 'undefined') {
+        try {
+          const savedProjects = localStorage.getItem('pi-projects');
+          const savedSelectedId = localStorage.getItem('pi-selected-project-id');
+          if (savedProjects) {
+            const projects = JSON.parse(savedProjects);
+            const selectedProjectId = savedSelectedId || (projects[0]?.id || null);
+            const activeProject = getActiveProject(projects, selectedProjectId);
+            
+            set(() => ({
+              projects,
+              selectedProjectId,
+              activeProject,
+              loading: false
+            }));
+            return;
+          }
+        } catch (_e) {
+          // Ignore
+        }
+      }
+      
+      set((state) => ({
+        projects: state.projects,
+        activeProject: getActiveProject(state.projects, state.selectedProjectId),
+        loading: false
+      }));
+    },
+
+    switchProject: async (id: string) => {
+      get().selectProject(id);
+    }
+  };
+});
