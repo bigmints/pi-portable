@@ -1,13 +1,12 @@
 name: "UI Overhaul: Design Tokens & Globals Setup"
 description: >
-  Overhaul the core design tokens and globals.css file to use standard Shadcn/UI custom properties
-  mapped through standard Tailwind CSS utility classes. Clean up all custom Vanilla CSS rules
-  and legacy custom variables, aligning strictly with standard shadcn system values (slate/violet theme)
-  and preparing the codebase for pure Tailwind v4 styling.
+  Overhaul the core design tokens and globals.css file to use standard Shadcn/UI custom properties mapped through
+  standard Tailwind CSS utility classes. Clean up all custom Vanilla CSS rules and legacy custom variables, aligning
+  strictly with standard shadcn system values (slate/violet theme) and preparing the codebase for pure Tailwind v4
+  styling.
 
-  WHAT TO CLEAN UP:
-  File: src/styles/globals.css
-  - Remove all legacy, non-standard chat custom properties (e.g., --color-primary, --color-surface,
+  WHAT TO CLEAN UP: File: src/styles/globals.css - Remove all legacy, non-standard chat custom properties (e.g.,
+  --color-primary, --color-surface,
     --color-user-bubble, etc.). Standardize strictly on standard Shadcn CSS variables:
     --background, --foreground, --card, --card-foreground, --popover, --popover-foreground,
     --primary, --primary-foreground, --secondary, --secondary-foreground, --muted, --muted-foreground,
@@ -16,9 +15,8 @@ description: >
     they are applied cleanly without raw stylesheet layout overrides.
   - Delete any legacy CSS styles that are redundant with Tailwind classes (e.g. body styling, main padding).
 
-  WHAT TO IMPLEMENT:
-  - Define standard slate-based palette with violet accent as the primary color.
-  - In globals.css `@layer base`:
+  WHAT TO IMPLEMENT: - Define standard slate-based palette with violet accent as the primary color. - In globals.css
+  `@layer base`:
     - Configure `:root` with standard light mode variables (e.g., --background: 0 0% 100%, --foreground: 222.2 84% 4.9%, --primary: 262 83% 58%, etc.).
     - Configure `[data-theme="dark"]` with standard dark mode variables (e.g., --background: 222.2 84% 4.9%, --foreground: 210 40% 98%, etc.).
   - Apply clean default Tailwind resetting rules:
@@ -32,10 +30,9 @@ description: >
       }
     }
     ```
-
-status: draft
+status: done
 feature:
-  name: "🎨 UI Overhaul (Shadcn + Tailwind)"
+  name: 🎨 UI Overhaul (Shadcn + Tailwind)
   slug: ui-overhaul
 target:
   app: pi-app
@@ -44,7 +41,8 @@ stack:
   framework: next.js
   language: typescript
 acceptance_criteria:
-  - globals.css contains only @import "tailwindcss"; or standard @tailwind directives, iOS safe area helper properties, standard shadcn CSS variables, and clean tailwind base layer mappings
+  - globals.css contains only @import "tailwindcss"; or standard @tailwind directives, iOS safe area helper properties,
+    standard shadcn CSS variables, and clean tailwind base layer mappings
   - No legacy custom color variables like --color-user-bubble or --color-surface remain in the stylesheet
   - Body and standard inputs inherit themes dynamically (light & dark mode toggle is fully functional)
   - npx tsc --noEmit passes successfully without type or compilation errors
