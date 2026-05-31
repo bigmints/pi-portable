@@ -1,36 +1,28 @@
 'use client';
-
 import { useState } from 'react';
 import { useQueueStore } from '@/store/queue';
-import { Plus, ListTodo } from 'lucide-react';
 import { QueueForm } from './QueueForm';
+import type { SavedQueue } from '@/types/queue';
 
 export function QueueControls() {
   const [showForm, setShowForm] = useState(false);
-  const queues = useQueueStore((state) => state.queues);
+  const { queues } = useQueueStore();
+
+  const handleCreated = (queue: SavedQueue) => {
+    useQueueStore.getState().setActiveQueue(queue.id);
+  };
 
   if (showForm) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-4 text-left">
-        <h2 className="text-lg font-semibold text-foreground mb-4">New Queue</h2>
-        <QueueForm onCancel={() => setShowForm(false)} />
-      </div>
-    );
+    return <QueueForm onCreated={handleCreated} onCancel={() => setShowForm(false)} />;
   }
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <ListTodo className="h-5 w-5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          {queues.length} saved queue{queues.length !== 1 ? 's' : ''}
-        </span>
-      </div>
+      <div className="text-sm text-muted-foreground">{queues.length} queue{queues.length !== 1 ? 's' : ''}</div>
       <button
         onClick={() => setShowForm(true)}
-        className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+        className="px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       >
-        <Plus className="h-4 w-4" />
         New Queue
       </button>
     </div>

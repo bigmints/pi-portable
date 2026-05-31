@@ -10,12 +10,13 @@
   - Gate browser-specific APIs (`localStorage`, `clipboard`, `useSearchParams`) behind `useEffect` or `<Suspense>` boundaries to prevent prerendering crashes.
   - UI/Layout: Tailwind utilities exclusively; respect `dvh`/safe-area constraints; standardize on native `<dialog>` or Radix UI for modals/drawers.
   - File Attachments: Route via `/api/upload`; track `PendingFile` in `useAttachmentsStore`; inject resolved `uploadedId` into WS payloads.
+  - Search/Commands: Fuzzy matching utilities for command palettes; scoped CLI/grep operations to prevent unbounded traversal.
 
 ## 2. Chronology of Major Milestones & What Worked
 - **2026-05-23 | Core Architecture Ratification:** ADR-001/002/003 approved. Established modular directory structure, centralized WS client abstraction, and Zustand reactivity model. Baseline separation of concerns achieved.
 - **2026-05-25 | Lint & Build Hardening:** Resolved 3 ESLint errors & 67 warnings. Achieved clean `tsc`/`lint`/`build` pipeline. Standardized unused variable prefixing (`_`), purged dead imports, eliminated redundant local state.
 - **2026-05-30 | Factory Critique & Backlog Generation:** Post-build audit identified critical runtime gaps in WS initialization and chat protocol serialization. Generated targeted fix stories for default connectivity and payload mismatches.
-- **2026-05-30 | File Attachment & Image Paste:** Validated `Composer` paste handling via `/api/upload`. Confirmed `useAttachmentsStore` tracks `PendingFile` objects and resolves `uploadedId`. Verified `ChatView` injection. Identified `BottomNav` mobile overlap risk.
+- **2026-05-30 | File Attachment & Image Paste:** Validated `Composer` paste handling via `/api/upload`. Confirmed `useAttachmentsStore` tracks `PendingFile` objects and resolves `uploadedId`. Verified `ChatView` injection. Implemented `Set`-based clipboard deduplication.
 - **2026-05-31 | Model Appearance Settings:** Delivered `useModelSettingsStore` with `localStorage` persistence. Implemented `ModelSelector`, `AppearanceSettings`, `ThemeToggle`, `ModelSettingsPanel`. Integrated into root layout & settings page. Passed all build gates.
 - **2026-05-31 | Project Management & Routing:** Centralized `projects.ts` Zustand store with `localStorage` sync & `rAF` wrapping. Rebuilt `ProjectList`, `ProjectItem`, `NewProjectDialog` (native `<dialog>`), dynamic `[id]` route. Implemented touch-target optimization & CSS truncation.
 - **2026-05-31 | Settings Drawer & UI State:** Added `settingsOpen` to `useUIStore`. Built `SettingsDrawer` using Radix UI with Tailwind dark-mode compatibility. Integrated into `AppShell`, `Sidebar`, `BottomNav`. Fixed invalid HTML hierarchy in `settings/page.tsx`.

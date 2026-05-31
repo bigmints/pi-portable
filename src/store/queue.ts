@@ -1,81 +1,57 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SavedQueue, QueueStoreState, QueueTask } from '@/types/queue';
+import type { SavedQueue, QueueTask } from '@/types/queue';
 
-const generateId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-const now = () => new Date().toISOString();
+interface QueueStore {
+  queues: SavedQueue[];
+  activeQueueId: string | null;
+  addQueue: (_queue: SavedQueue) => void;
+  updateQueue: (_id: string, _updates: Partial<SavedQueue>) => void;
+  deleteQueue: (_id: string) => void;
+  setActiveQueue: (_id: string | null) => void;
+  addTask: (_queueId: string, _task: Omit<QueueTask, 'id' | 'createdAt'>) => void;
+  updateTask: (_queueId: string, _taskId: string, _updates: Partial<QueueTask>) => void;
+  deleteTask: (_queueId: string, _taskId: string) => void;
+}
 
-export const useQueueStore = create<QueueStoreState>()(
+export const useQueueStore = create<QueueStore>()(
   persist(
-    (set, _get) => ({
+    (set) => ({
       queues: [],
-      loading: false,
-      error: null,
-
-      addQueue: (queue) => {
-        const newQueue: SavedQueue = {
-          ...queue,
-          id: generateId(),
-          createdAt: now(),
-          updatedAt: now(),
-        };
-        set((state) => ({ queues: [...state.queues, newQueue] }));
-      },
-
-      updateQueue: (id, updates) => {
-        set((state) => ({
-          queues: state.queues.map((q) =>
-            q.id === id ? { ...q, ...updates, updatedAt: now() } : q
-          ),
-        }));
-      },
-
-      deleteQueue: (id) => {
-        set((state) => ({ queues: state.queues.filter((q) => q.id !== id) }));
-      },
-
-      addTask: (queueId, task) => {
-        const newTask: QueueTask = {
-          ...task,
-          id: generateId(),
-          createdAt: now(),
-          updatedAt: now(),
-        };
-        set((state) => ({
-          queues: state.queues.map((q) =>
-            q.id === queueId ? { ...q, tasks: [...q.tasks, newTask], updatedAt: now() } : q
-          ),
-        }));
-      },
-
-      updateTask: (queueId, taskId, updates) => {
-        set((state) => ({
-          queues: state.queues.map((q) =>
-            q.id === queueId
-              ? {
-                  ...q,
-                  tasks: q.tasks.map((t) =>
-                    t.id === taskId ? { ...t, ...updates, updatedAt: now() } : t
-                  ),
-                  updatedAt: now(),
-                }
-              : q
-          ),
-        }));
-      },
-
-      deleteTask: (queueId, taskId) => {
-        set((state) => ({
-          queues: state.queues.map((q) =>
-            q.id === queueId
-              ? { ...q, tasks: q.tasks.filter((t) => t.id !== taskId), updatedAt: now() }
-              : q
-          ),
-        }));
-      },
-
-      clearError: () => set({ error: null }),
+      activeQueueId: null,
+      addQueue: (queue) => set((state) => ({
+        queues: [...state.queues, queue],
+      })),
+      updateQueue: (id, updates) => set((state) => ({
+        queues: state.queues.map((q) =>
+          q.id === id ? { ...q, ...updates, updatedAt: new Date().toISOString() } : q
+        ),
+      })),
+      deleteQueue: (id) => set((state) => ({
+        queues: state.queues.filter((q) => q.id !== id),
+        activeQueueId: state.activeQueueId === id ? null : state.activeQueueId,
+      })),
+      setActiveQueue: (id) => set({ activeQueueId: id }),
+      addTask: (queueId, task) => set((state) => ({
+        queues: state.queues.map((q) =>
+          q.id === queueId
+            ? { ...q, tasks: [...q.tasks, { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString() }], updatedAt: new Date().toISOString() }
+            : q
+        ),
+      })),
+      updateTask: (queueId, taskId, updates) => set((state) => ({
+        queues: state.queues.map((q) =>
+          q.id === queueId
+            ? { ...q, tasks: q.tasks.map((t) => t.id === taskId ? { ...t, ...updates } : t), updatedAt: new Date().toISOString() }
+            : q
+        ),
+      })),
+      deleteTask: (queueId, taskId) => set((state) => ({
+        queues: state.queues.map((q) =>
+          q.id === queueId ? { ...q, tasks: q.tasks.filter((t) => t.id !== taskId), updatedAt: new Date().toISOString() } : q
+        ),
+      })),
     }),
-    { name: 'pi-queue-store' }
+    { name: 'pi-queues' }
   )
 );
